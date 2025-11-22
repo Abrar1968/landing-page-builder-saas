@@ -13,6 +13,7 @@ use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\FormSubmissionController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\BillingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -97,6 +98,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/subscription/billing', [SubscriptionController::class, 'billingPortal'])->name('subscription.billing');
     Route::post('/subscription/cancel-action', [SubscriptionController::class, 'cancelSubscription'])->name('subscription.cancel.action');
     Route::post('/subscription/resume', [SubscriptionController::class, 'resumeSubscription'])->name('subscription.resume');
+
+    // Billing routes
+    Route::get('/billing/history', [BillingController::class, 'history'])->name('billing.history');
+    Route::get('/billing/invoice/{payment}', [BillingController::class, 'downloadInvoice'])->name('billing.invoice');
+    Route::get('/billing/payment-method', [BillingController::class, 'updatePaymentMethod'])->name('billing.payment-method');
 });
 
 // Stripe webhook (no CSRF)

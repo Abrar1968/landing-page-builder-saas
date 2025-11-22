@@ -72,11 +72,11 @@ Show upgrade prompts when limits approached.
 - `docs/04-IMPLEMENTATION-FLOW.md` - Day 12 billing UI
 
 ## Expected Deliverables
-- [ ] Feature gating working
-- [ ] Pricing page
-- [ ] Billing history view
-- [ ] Invoice downloads
-- [ ] Upsell modals
+- [x] Feature gating working
+- [x] Pricing page
+- [x] Billing history view
+- [x] Invoice downloads
+- [x] Upsell modals
 
 ## Day 12 Complete - Milestone M4: Monetization Live
 → Proceed to Day 13: Performance & Security
