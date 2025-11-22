@@ -16,14 +16,16 @@ class Domain extends Model
         'domain',
         'status',
         'ssl_status',
+        'verification_token',
         'verified_at',
+        'ssl_provisioned_at',
     ];
 
     protected $casts = [
         'verified_at' => 'datetime',
+        'ssl_provisioned_at' => 'datetime',
     ];
 
-    // Relationships
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -34,23 +36,6 @@ class Domain extends Model
         return $this->belongsTo(Page::class);
     }
 
-    // Scopes
-    public function scopeVerified($query)
-    {
-        return $query->where('status', 'verified');
-    }
-
-    public function scopePending($query)
-    {
-        return $query->where('status', 'pending');
-    }
-
-    public function scopeByUser($query, int $userId)
-    {
-        return $query->where('user_id', $userId);
-    }
-
-    // Helpers
     public function isVerified(): bool
     {
         return $this->status === 'verified';
@@ -59,13 +44,5 @@ class Domain extends Model
     public function hasSsl(): bool
     {
         return $this->ssl_status === 'active';
-    }
-
-    public function verify(): void
-    {
-        $this->update([
-            'status' => 'verified',
-            'verified_at' => now(),
-        ]);
     }
 }

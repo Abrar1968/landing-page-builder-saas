@@ -68,11 +68,11 @@ Route custom domains to correct pages.
 - `docs/04-IMPLEMENTATION-FLOW.md` - Day 9-10 publishing
 
 ## Expected Deliverables
-- [ ] Publish/unpublish working
-- [ ] Public page routing
-- [ ] Custom domain configuration
-- [ ] DNS verification
-- [ ] SSL setup guide
+- [x] Publish/unpublish working
+- [x] Public page routing
+- [x] Custom domain configuration
+- [x] DNS verification
+- [x] SSL setup guide
 
 ## Day 9 Complete
 → Proceed to Day 10: Analytics & Forms

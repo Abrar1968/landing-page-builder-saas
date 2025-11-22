@@ -7,6 +7,13 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\Api\MediaController as ApiMediaController;
+use App\Http\Controllers\PublishController;
+use App\Http\Controllers\DomainController;
+use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\FormSubmissionController;
+use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\BillingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -59,14 +66,52 @@ Route::middleware('auth')->group(function () {
     Route::patch('/api/media/{media}', [ApiMediaController::class, 'update']);
     Route::delete('/api/media/{media}', [ApiMediaController::class, 'destroy']);
     Route::post('/api/media/bulk-delete', [ApiMediaController::class, 'bulkDestroy']);
+
+    // Domain routes
+    Route::get('/domains', [DomainController::class, 'index'])->name('domains.index');
+    Route::post('/domains', [DomainController::class, 'store'])->name('domains.store');
+    Route::post('/domains/{domain}/verify', [DomainController::class, 'verify'])->name('domains.verify');
+    Route::delete('/domains/{domain}', [DomainController::class, 'destroy'])->name('domains.destroy');
+    Route::get('/domains/{domain}/ssl', [DomainController::class, 'checkSsl'])->name('domains.ssl');
+
+    // Publish routes
+    Route::post('/api/pages/{page}/publish', [PublishController::class, 'publish'])->name('pages.publish');
+    Route::post('/api/pages/{page}/unpublish', [PublishController::class, 'unpublish'])->name('pages.unpublish');
+
+    // Analytics routes
+    Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+    Route::get('/analytics/{page}', [AnalyticsController::class, 'show'])->name('analytics.show');
+    Route::get('/api/analytics/{page}', [AnalyticsController::class, 'data'])->name('analytics.data');
+
+    // Form submission routes
+    Route::get('/pages/{page}/submissions', [FormSubmissionController::class, 'index'])->name('submissions.index');
+    Route::get('/submissions/{submission}', [FormSubmissionController::class, 'show'])->name('submissions.show');
+    Route::delete('/submissions/{submission}', [FormSubmissionController::class, 'destroy'])->name('submissions.destroy');
+    Route::get('/pages/{page}/submissions/export', [FormSubmissionController::class, 'export'])->name('submissions.export');
+
+    // Subscription routes
+    Route::get('/pricing', [SubscriptionController::class, 'pricing'])->name('subscription.pricing');
+    Route::post('/subscription/checkout', [SubscriptionController::class, 'checkout'])->name('subscription.checkout');
+    Route::get('/subscription/success', [SubscriptionController::class, 'success'])->name('subscription.success');
+    Route::get('/subscription/cancel', [SubscriptionController::class, 'cancel'])->name('subscription.cancel');
+    Route::get('/subscription/manage', [SubscriptionController::class, 'manage'])->name('subscription.manage');
+    Route::get('/subscription/billing', [SubscriptionController::class, 'billingPortal'])->name('subscription.billing');
+    Route::post('/subscription/cancel-action', [SubscriptionController::class, 'cancelSubscription'])->name('subscription.cancel.action');
+    Route::post('/subscription/resume', [SubscriptionController::class, 'resumeSubscription'])->name('subscription.resume');
+
+    // Billing routes
+    Route::get('/billing/history', [BillingController::class, 'history'])->name('billing.history');
+    Route::get('/billing/invoice/{payment}', [BillingController::class, 'downloadInvoice'])->name('billing.invoice');
+    Route::get('/billing/payment-method', [BillingController::class, 'updatePaymentMethod'])->name('billing.payment-method');
 });
 
+// Stripe webhook (no CSRF)
+Route::post('/webhook/stripe', [WebhookController::class, 'handleStripe'])->name('webhook.stripe');
+
+// Public form submission route
+Route::post('/p/{page}/submit', [FormSubmissionController::class, 'store'])->name('form.submit');
+
 // Public page route
-Route::get('/p/{slug}', function ($slug) {
-    $page = \App\Models\Page::where('slug', $slug)
-        ->where('status', 'published')
-        ->firstOrFail();
-    return view('pages.show', compact('page'));
-})->name('page.show');
+Route::get('/p/{slug}', [PublishController::class, 'show'])->name('page.show');
 
 require __DIR__.'/auth.php';

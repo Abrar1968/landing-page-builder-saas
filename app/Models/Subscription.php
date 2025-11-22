@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Subscription extends Model
 {
@@ -14,11 +15,13 @@ class Subscription extends Model
         'user_id',
         'plan',
         'stripe_subscription_id',
+        'stripe_price_id',
         'stripe_customer_id',
         'status',
         'trial_ends_at',
         'current_period_start',
         'current_period_end',
+        'cancel_at_period_end',
         'canceled_at',
     ];
 
@@ -27,12 +30,18 @@ class Subscription extends Model
         'current_period_start' => 'datetime',
         'current_period_end' => 'datetime',
         'canceled_at' => 'datetime',
+        'cancel_at_period_end' => 'boolean',
     ];
 
     // Relationships
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 
     // Scopes

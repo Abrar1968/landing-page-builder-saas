@@ -68,11 +68,11 @@ Process Stripe webhooks for payment events.
 - `docs/04-IMPLEMENTATION-FLOW.md` - Day 11-12 payments
 
 ## Expected Deliverables
-- [ ] Stripe SDK integrated
-- [ ] PaymentGateway interface
-- [ ] StripeGateway implementation
-- [ ] Subscription creation working
-- [ ] Webhook handling
+- [x] Stripe SDK integrated
+- [x] PaymentGateway interface
+- [x] StripeGateway implementation
+- [x] Subscription creation working
+- [x] Webhook handling
 
 ## Day 11 Complete
 → Proceed to Day 12: Plan Limitations & Billing UI
