@@ -4,7 +4,7 @@
 
 This document covers the Service Layer implementation for the Landing Page Builder SaaS application. Services encapsulate business logic, coordinate between repositories, and handle transactions.
 
-**Framework:** Laravel 11
+**Framework:** Laravel 12
 **Pattern:** Service Layer with Repository Pattern
 
 ## Architecture

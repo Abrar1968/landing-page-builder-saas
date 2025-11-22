@@ -1,6 +1,6 @@
 # API Endpoints Documentation
 
-## Laravel 11 Backend API Reference
+## Laravel 12 Backend API Reference
 
 This document provides complete API endpoint documentation including route definitions, controllers, and Form Request validation classes.
 
@@ -1782,7 +1782,7 @@ class UpdatePaymentRequest extends FormRequest
 // Laravel Sanctum is used for API authentication
 // Configuration in config/sanctum.php
 
-// In bootstrap/app.php (Laravel 11)
+// In bootstrap/app.php (Laravel 12)
 return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->statefulApi();
@@ -1845,7 +1845,7 @@ class CheckSubscription
 ```php
 <?php
 
-// In bootstrap/app.php (Laravel 11)
+// In bootstrap/app.php (Laravel 12)
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
@@ -1894,7 +1894,7 @@ return Application::configure(basePath: dirname(__DIR__))
 ```php
 <?php
 
-// bootstrap/app.php (Laravel 11)
+// bootstrap/app.php (Laravel 12)
 
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Middleware;

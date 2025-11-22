@@ -1,7 +1,7 @@
 # Backend Architecture Documentation
 
 ## Tech Stack
-- **Framework:** Laravel 11
+- **Framework:** Laravel 12
 - **Database:** MySQL
 - **Design Patterns:** Service-Repository, Observer, Strategy
 
@@ -2318,4 +2318,4 @@ This architecture documentation provides a complete implementation of:
 6. **Logging** - Comprehensive logging with dedicated channels
 7. **Queue Structure** - Async processing with proper error handling
 
-All code is namespace-compliant and ready for copy-paste implementation in Laravel 11.
+All code is namespace-compliant and ready for copy-paste implementation in Laravel 12.

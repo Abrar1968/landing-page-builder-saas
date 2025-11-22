@@ -5,7 +5,7 @@
 The Templates feature provides pre-built landing page designs that users can browse, preview, and apply to quickly create professional landing pages. Users can also save their own designs as templates for reuse.
 
 ## Tech Stack
-- **Backend**: Laravel 11
+- **Backend**: Laravel 12
 - **Frontend**: AlpineJS, TailwindCSS v4
 - **Views**: Blade Templates
 

@@ -8,7 +8,7 @@
 **End Date:** Day 14
 
 ### Tech Stack
-- **Backend:** Laravel 11 (Service-Repository, Observer, Strategy patterns)
+- **Backend:** Laravel 12 (Service-Repository, Observer, Strategy patterns)
 - **Frontend:** TailwindCSS v4, AlpineJS, Blade Templates
 - **Database:** MySQL 8.0
 - **Additional:** Redis (caching), Laravel Sanctum (API auth)

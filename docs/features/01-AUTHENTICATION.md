@@ -2,7 +2,7 @@
 
 ## Overview
 
-Complete authentication system for Laravel 11 with TailwindCSS v4, AlpineJS, and Blade templates. Includes registration, login, email verification, password reset, and security features.
+Complete authentication system for Laravel 12 with TailwindCSS v4, AlpineJS, and Blade templates. Includes registration, login, email verification, password reset, and security features.
 
 ---
 
@@ -2086,7 +2086,7 @@ class PasswordResetTest extends TestCase
 
 ## Summary
 
-This documentation covers the complete authentication system for the Landing Page Builder SaaS application using Laravel 11, TailwindCSS v4, AlpineJS, and Blade templates. Key features include:
+This documentation covers the complete authentication system for the Landing Page Builder SaaS application using Laravel 12, TailwindCSS v4, AlpineJS, and Blade templates. Key features include:
 
 - **Registration**: Complete user registration with validation, password strength indicator, terms acceptance, and social OAuth options
 - **Login**: Secure login with remember me functionality, rate limiting, and social authentication
