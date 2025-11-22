@@ -3,6 +3,7 @@ $navigation = [
     ['name' => 'Dashboard', 'href' => route('dashboard'), 'icon' => 'home', 'route' => 'dashboard'],
     ['name' => 'Pages', 'href' => route('pages.index'), 'icon' => 'document-duplicate', 'route' => 'pages.*'],
     ['name' => 'Templates', 'href' => route('templates.index'), 'icon' => 'template', 'route' => 'templates.*'],
+    ['name' => 'Media', 'href' => route('media.index'), 'icon' => 'photo', 'route' => 'media.*'],
 ];
 @endphp
 

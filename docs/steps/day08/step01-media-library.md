@@ -58,11 +58,11 @@ public function optimizeImage(string $path): void
 - `docs/04-IMPLEMENTATION-FLOW.md` - Day 8 media code
 
 ## Expected Deliverables
-- [ ] Upload working
-- [ ] Media grid view
-- [ ] Delete functionality
-- [ ] Storage tracking
-- [ ] Image optimization
+- [x] Upload working
+- [x] Media grid view
+- [x] Delete functionality
+- [x] Storage tracking
+- [x] Image optimization
 
 ## Day 8 Complete
 → Proceed to Day 9: Publishing & Domains
