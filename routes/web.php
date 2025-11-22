@@ -5,6 +5,8 @@ use App\Http\Controllers\TemplateController;
 use App\Http\Controllers\BuilderController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\MediaController;
+use App\Http\Controllers\Api\MediaController as ApiMediaController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -46,6 +48,17 @@ Route::middleware('auth')->group(function () {
     Route::post('/builder/{page}/autosave', [BuilderController::class, 'autosave'])->name('builder.autosave');
     Route::post('/builder/{page}/publish', [BuilderController::class, 'publish'])->name('builder.publish');
     Route::get('/builder/{page}/preview', [BuilderController::class, 'preview'])->name('builder.preview');
+
+    // Media routes
+    Route::get('/media', [MediaController::class, 'index'])->name('media.index');
+
+    // Media API routes
+    Route::get('/api/media', [ApiMediaController::class, 'index']);
+    Route::post('/api/media/upload', [ApiMediaController::class, 'store']);
+    Route::get('/api/media/{media}', [ApiMediaController::class, 'show']);
+    Route::patch('/api/media/{media}', [ApiMediaController::class, 'update']);
+    Route::delete('/api/media/{media}', [ApiMediaController::class, 'destroy']);
+    Route::post('/api/media/bulk-delete', [ApiMediaController::class, 'bulkDestroy']);
 });
 
 // Public page route
