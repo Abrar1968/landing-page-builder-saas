@@ -61,7 +61,7 @@ Route::middleware('auth')->group(function () {
 
     // Media API routes
     Route::get('/api/media', [ApiMediaController::class, 'index']);
-    Route::post('/api/media/upload', [ApiMediaController::class, 'store']);
+    Route::post('/api/media/upload', [ApiMediaController::class, 'store'])->middleware('throttle:upload');
     Route::get('/api/media/{media}', [ApiMediaController::class, 'show']);
     Route::patch('/api/media/{media}', [ApiMediaController::class, 'update']);
     Route::delete('/api/media/{media}', [ApiMediaController::class, 'destroy']);
@@ -108,8 +108,10 @@ Route::middleware('auth')->group(function () {
 // Stripe webhook (no CSRF)
 Route::post('/webhook/stripe', [WebhookController::class, 'handleStripe'])->name('webhook.stripe');
 
-// Public form submission route
-Route::post('/p/{page}/submit', [FormSubmissionController::class, 'store'])->name('form.submit');
+// Public form submission route (rate limited)
+Route::post('/p/{page}/submit', [FormSubmissionController::class, 'store'])
+    ->middleware('throttle:form-submit')
+    ->name('form.submit');
 
 // Public page route
 Route::get('/p/{slug}', [PublishController::class, 'show'])->name('page.show');
