@@ -4,6 +4,7 @@ $navigation = [
     ['name' => 'Pages', 'href' => route('pages.index'), 'icon' => 'document-duplicate', 'route' => 'pages.*'],
     ['name' => 'Templates', 'href' => route('templates.index'), 'icon' => 'template', 'route' => 'templates.*'],
     ['name' => 'Media', 'href' => route('media.index'), 'icon' => 'photo', 'route' => 'media.*'],
+    ['name' => 'Analytics', 'href' => route('analytics.index'), 'icon' => 'chart-bar', 'route' => 'analytics.*'],
     ['name' => 'Domains', 'href' => route('domains.index'), 'icon' => 'globe', 'route' => 'domains.*'],
 ];
 @endphp

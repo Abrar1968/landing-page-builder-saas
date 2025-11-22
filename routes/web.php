@@ -9,6 +9,8 @@ use App\Http\Controllers\MediaController;
 use App\Http\Controllers\Api\MediaController as ApiMediaController;
 use App\Http\Controllers\PublishController;
 use App\Http\Controllers\DomainController;
+use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\FormSubmissionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -72,7 +74,21 @@ Route::middleware('auth')->group(function () {
     // Publish routes
     Route::post('/api/pages/{page}/publish', [PublishController::class, 'publish'])->name('pages.publish');
     Route::post('/api/pages/{page}/unpublish', [PublishController::class, 'unpublish'])->name('pages.unpublish');
+
+    // Analytics routes
+    Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+    Route::get('/analytics/{page}', [AnalyticsController::class, 'show'])->name('analytics.show');
+    Route::get('/api/analytics/{page}', [AnalyticsController::class, 'data'])->name('analytics.data');
+
+    // Form submission routes
+    Route::get('/pages/{page}/submissions', [FormSubmissionController::class, 'index'])->name('submissions.index');
+    Route::get('/submissions/{submission}', [FormSubmissionController::class, 'show'])->name('submissions.show');
+    Route::delete('/submissions/{submission}', [FormSubmissionController::class, 'destroy'])->name('submissions.destroy');
+    Route::get('/pages/{page}/submissions/export', [FormSubmissionController::class, 'export'])->name('submissions.export');
 });
+
+// Public form submission route
+Route::post('/p/{page}/submit', [FormSubmissionController::class, 'store'])->name('form.submit');
 
 // Public page route
 Route::get('/p/{slug}', [PublishController::class, 'show'])->name('page.show');

@@ -2,45 +2,34 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FormSubmission extends Model
 {
-    public $timestamps = false;
+    use HasFactory;
 
     protected $fillable = [
         'page_id',
         'form_id',
         'data',
         'ip_address',
-        'created_at',
+        'user_agent',
+        'is_read',
     ];
 
     protected $casts = [
         'data' => 'array',
-        'created_at' => 'datetime',
+        'is_read' => 'boolean',
     ];
 
-    // Relationships
-    public function page(): BelongsTo
+    public function page()
     {
         return $this->belongsTo(Page::class);
     }
 
-    // Scopes
-    public function scopeByPage($query, int $pageId)
+    public function markAsRead(): void
     {
-        return $query->where('page_id', $pageId);
-    }
-
-    public function scopeByForm($query, string $formId)
-    {
-        return $query->where('form_id', $formId);
-    }
-
-    public function scopeRecent($query, int $days = 30)
-    {
-        return $query->where('created_at', '>=', now()->subDays($days));
+        $this->update(['is_read' => true]);
     }
 }
