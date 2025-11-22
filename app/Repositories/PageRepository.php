@@ -3,22 +3,34 @@
 namespace App\Repositories;
 
 use App\Models\Page;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
-class PageRepository extends BaseRepository
+class PageRepository
 {
-    public function __construct(Page $model)
+    public function __construct(
+        protected Page $model
+    ) {}
+
+    public function create(array $data): Page
     {
-        $this->model = $model;
+        return $this->model->create($data);
     }
 
-    public function getByUser(int $userId, int $perPage = 10): LengthAwarePaginator
+    public function update(Page $page, array $data): bool
     {
-        return $this->model
-            ->where('user_id', $userId)
-            ->with(['template'])
-            ->latest()
-            ->paginate($perPage);
+        return $page->update($data);
+    }
+
+    public function delete(Page $page): bool
+    {
+        return $page->delete();
+    }
+
+    public function find(int $id): ?Page
+    {
+        return $this->model->find($id);
     }
 
     public function findBySlug(string $slug): ?Page
@@ -26,33 +38,42 @@ class PageRepository extends BaseRepository
         return $this->model->where('slug', $slug)->first();
     }
 
-    public function getPublished()
+    public function getUserPages(User $user, int $perPage = 10): LengthAwarePaginator
     {
-        return $this->model->published()->get();
+        return $user->pages()
+            ->latest('updated_at')
+            ->paginate($perPage);
     }
 
-    public function getPublishedByUser(int $userId)
+    public function getUserPagesCollection(User $user): Collection
     {
-        return $this->model
-            ->where('user_id', $userId)
-            ->published()
+        return $user->pages()
+            ->latest('updated_at')
             ->get();
     }
 
-    public function countByUser(int $userId): int
+    public function getRecentPages(User $user, int $limit = 6): Collection
     {
-        return $this->model->where('user_id', $userId)->count();
+        return $user->pages()
+            ->latest('updated_at')
+            ->take($limit)
+            ->get();
     }
 
-    public function search(int $userId, string $term, int $perPage = 10): LengthAwarePaginator
+    public function countByStatus(User $user, string $status): int
     {
-        return $this->model
-            ->where('user_id', $userId)
-            ->where(function ($q) use ($term) {
-                $q->where('title', 'like', "%{$term}%")
-                  ->orWhere('slug', 'like', "%{$term}%");
-            })
-            ->latest()
-            ->paginate($perPage);
+        return $user->pages()
+            ->where('status', $status)
+            ->count();
+    }
+
+    public function getTotalViews(User $user): int
+    {
+        return $user->pages()->sum('views') ?? 0;
+    }
+
+    public function getTotalConversions(User $user): int
+    {
+        return $user->pages()->sum('conversions') ?? 0;
     }
 }
