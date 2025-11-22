@@ -1,0 +1,59 @@
+<header class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 shrink-0">
+    <div class="flex items-center gap-4">
+        <a href="{{ route('dashboard') }}" class="text-gray-600 hover:text-gray-900">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+        </a>
+        <input type="text"
+               x-model="pageSettings.title"
+               @change="markDirty()"
+               class="text-lg font-semibold bg-transparent border-none focus:ring-0 focus:outline-none w-64"
+               placeholder="Page Title">
+    </div>
+
+    <div class="flex items-center gap-3">
+        {{-- Save Status --}}
+        <span x-show="isDirty && !isSaving" x-cloak class="text-sm text-amber-600">Unsaved changes</span>
+        <span x-show="isSaving" x-cloak class="text-sm text-blue-600">
+            <svg class="animate-spin inline w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+            </svg>
+            Saving...
+        </span>
+        <span x-show="lastSaved && !isDirty && !isSaving" x-cloak class="text-sm text-gray-500" x-text="'Saved ' + lastSaved"></span>
+
+        {{-- Undo/Redo --}}
+        <div class="flex items-center border-r border-gray-200 pr-3 mr-1">
+            <button @click="undo()" :disabled="historyIndex <= 0" class="p-1.5 text-gray-600 hover:bg-gray-100 rounded disabled:opacity-30" title="Undo (Ctrl+Z)">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                </svg>
+            </button>
+            <button @click="redo()" :disabled="historyIndex >= history.length - 1" class="p-1.5 text-gray-600 hover:bg-gray-100 rounded disabled:opacity-30" title="Redo (Ctrl+Y)">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6"/>
+                </svg>
+            </button>
+        </div>
+
+        {{-- Actions --}}
+        <button @click="showPageSettings = true" class="px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded">
+            Settings
+        </button>
+        <button @click="preview()" class="px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded">
+            Preview
+        </button>
+        <button @click="save()"
+                :disabled="isSaving"
+                class="px-4 py-1.5 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50">
+            Save
+        </button>
+        <button @click="publish()"
+                :disabled="isSaving"
+                class="px-4 py-1.5 text-sm bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50">
+            Publish
+        </button>
+    </div>
+</header>

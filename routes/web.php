@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TemplateController;
+use App\Http\Controllers\BuilderController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -27,10 +28,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/templates', [TemplateController::class, 'store'])->name('templates.store');
     Route::delete('/templates/{template}', [TemplateController::class, 'destroy'])->name('templates.destroy');
 
-    // Placeholder route for builder (will be implemented in Day 5)
-    Route::get('/builder/{page}/edit', function ($page) {
-        return redirect()->route('dashboard')->with('message', 'Builder coming soon!');
-    })->name('builder.edit');
+    // Builder routes
+    Route::get('/builder/{page}/edit', [BuilderController::class, 'edit'])->name('builder.edit');
+    Route::post('/builder/{page}/save', [BuilderController::class, 'save'])->name('builder.save');
+    Route::post('/builder/{page}/autosave', [BuilderController::class, 'autosave'])->name('builder.autosave');
+    Route::post('/builder/{page}/publish', [BuilderController::class, 'publish'])->name('builder.publish');
+    Route::get('/builder/{page}/preview', [BuilderController::class, 'preview'])->name('builder.preview');
 });
 
 require __DIR__.'/auth.php';
