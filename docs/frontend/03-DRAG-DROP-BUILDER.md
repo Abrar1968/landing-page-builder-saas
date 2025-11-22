@@ -6,2737 +6,1689 @@ The drag-and-drop builder is the core feature of the Landing Page Builder SaaS. 
 
 ## Technology Stack
 
-- **React 18** - UI framework
+- **Laravel Blade** - Templating engine
+- **AlpineJS** - Reactive JavaScript
 - **SortableJS** - Drag-and-drop library
-- **react-sortablejs** - React bindings for SortableJS
-- **Zustand** - State management
-- **TypeScript** - Type safety
+- **TailwindCSS v4** - Styling
+- **Vanilla JS fetch()** - API calls
 
-## SortableJS Integration
+**FORBIDDEN**: React, Vue, TypeScript, or any JS framework
+
+---
+
+## SortableJS + AlpineJS Integration
 
 ### Installation
 
 ```bash
-npm install sortablejs react-sortablejs @types/sortablejs
+npm install sortablejs
 ```
 
-### Core Sortable Configuration
+Include in your main layout:
 
-```typescript
-// src/builder/components/Canvas.tsx
-import { ReactSortable, SortableEvent } from 'react-sortablejs';
-import { useBuilderStore } from '../store/builderStore';
-
-interface CanvasProps {
-  pageId: string;
-}
-
-export const Canvas: React.FC<CanvasProps> = ({ pageId }) => {
-  const { elements, setElements, addToHistory } = useBuilderStore();
-
-  const handleSort = (evt: SortableEvent) => {
-    addToHistory();
-  };
-
-  const handleAdd = (evt: SortableEvent) => {
-    addToHistory();
-  };
-
-  return (
-    <ReactSortable
-      list={elements}
-      setList={setElements}
-      group={{ name: 'builder', pull: true, put: true }}
-      animation={200}
-      ghostClass="element-ghost"
-      chosenClass="element-chosen"
-      dragClass="element-drag"
-      handle=".drag-handle"
-      onSort={handleSort}
-      onAdd={handleAdd}
-      className="canvas-container"
-    >
-      {elements.map((element) => (
-        <BuilderElement key={element.id} element={element} />
-      ))}
-    </ReactSortable>
-  );
-};
-```
-
-### Element Palette (Sidebar)
-
-```typescript
-// src/builder/components/ElementPalette.tsx
-import { ReactSortable } from 'react-sortablejs';
-import { v4 as uuidv4 } from 'uuid';
-import { ElementType, BuilderElement } from '../types';
-
-const paletteElements: BuilderElement[] = [
-  { id: 'palette-section', type: 'section', label: 'Section', props: {} },
-  { id: 'palette-heading', type: 'heading', label: 'Heading', props: {} },
-  { id: 'palette-paragraph', type: 'paragraph', label: 'Paragraph', props: {} },
-  { id: 'palette-image', type: 'image', label: 'Image', props: {} },
-  { id: 'palette-button', type: 'button', label: 'Button', props: {} },
-  { id: 'palette-video', type: 'video', label: 'Video', props: {} },
-  { id: 'palette-form', type: 'form', label: 'Form', props: {} },
-  { id: 'palette-columns', type: 'columns', label: 'Columns', props: {} },
-];
-
-export const ElementPalette: React.FC = () => {
-  return (
-    <div className="element-palette">
-      <h3>Elements</h3>
-      <ReactSortable
-        list={paletteElements}
-        setList={() => {}}
-        group={{ name: 'builder', pull: 'clone', put: false }}
-        sort={false}
-        clone={(item) => ({
-          ...item,
-          id: uuidv4(),
-          props: getDefaultProps(item.type),
-        })}
-        className="palette-list"
-      >
-        {paletteElements.map((element) => (
-          <div key={element.id} className="palette-item">
-            <ElementIcon type={element.type} />
-            <span>{element.label}</span>
-          </div>
-        ))}
-      </ReactSortable>
+```blade
+{{-- resources/views/layouts/builder.blade.php --}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Page Builder</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+</head>
+<body class="bg-gray-100">
+    <div x-data="builderApp()" x-init="init()">
+        @yield('content')
     </div>
-  );
-};
+
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    @stack('scripts')
+</body>
+</html>
 ```
 
----
+### Core Builder Alpine Component
 
-## Builder Elements
+```blade
+{{-- resources/views/builder/index.blade.php --}}
+@extends('layouts.builder')
 
-### Type Definitions
+@section('content')
+<div class="h-screen flex flex-col">
+    {{-- Toolbar --}}
+    @include('builder.partials.toolbar')
 
-```typescript
-// src/builder/types/elements.ts
-export type ElementType =
-  | 'section'
-  | 'heading'
-  | 'paragraph'
-  | 'image'
-  | 'button'
-  | 'video'
-  | 'form'
-  | 'columns';
+    {{-- Main Builder Area --}}
+    <div class="flex flex-1 overflow-hidden">
+        {{-- Element Palette --}}
+        @include('builder.partials.palette')
 
-export interface BaseElement {
-  id: string;
-  type: ElementType;
-  label: string;
-  props: Record<string, any>;
-  children?: BuilderElement[];
-  styles?: ElementStyles;
-}
+        {{-- Canvas --}}
+        @include('builder.partials.canvas')
 
-export interface ElementStyles {
-  margin?: string;
-  padding?: string;
-  backgroundColor?: string;
-  borderRadius?: string;
-  border?: string;
-  boxShadow?: string;
-  width?: string;
-  maxWidth?: string;
-  textAlign?: 'left' | 'center' | 'right';
-}
-
-// Section Element
-export interface SectionElement extends BaseElement {
-  type: 'section';
-  props: {
-    backgroundColor?: string;
-    backgroundImage?: string;
-    backgroundSize?: 'cover' | 'contain' | 'auto';
-    minHeight?: string;
-    fullWidth?: boolean;
-  };
-  children: BuilderElement[];
-}
-
-// Heading Element
-export interface HeadingElement extends BaseElement {
-  type: 'heading';
-  props: {
-    text: string;
-    level: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
-    color?: string;
-    fontSize?: string;
-    fontWeight?: string;
-    fontFamily?: string;
-  };
-}
-
-// Paragraph Element
-export interface ParagraphElement extends BaseElement {
-  type: 'paragraph';
-  props: {
-    text: string;
-    color?: string;
-    fontSize?: string;
-    lineHeight?: string;
-    fontFamily?: string;
-  };
-}
-
-// Image Element
-export interface ImageElement extends BaseElement {
-  type: 'image';
-  props: {
-    src: string;
-    alt: string;
-    width?: string;
-    height?: string;
-    objectFit?: 'cover' | 'contain' | 'fill' | 'none';
-    link?: string;
-    linkTarget?: '_blank' | '_self';
-  };
-}
-
-// Button Element
-export interface ButtonElement extends BaseElement {
-  type: 'button';
-  props: {
-    text: string;
-    link?: string;
-    linkTarget?: '_blank' | '_self';
-    variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-    size?: 'sm' | 'md' | 'lg';
-    backgroundColor?: string;
-    textColor?: string;
-    borderRadius?: string;
-    fullWidth?: boolean;
-  };
-}
-
-// Video Element
-export interface VideoElement extends BaseElement {
-  type: 'video';
-  props: {
-    src: string;
-    provider?: 'youtube' | 'vimeo' | 'custom';
-    autoplay?: boolean;
-    muted?: boolean;
-    loop?: boolean;
-    controls?: boolean;
-    aspectRatio?: '16:9' | '4:3' | '1:1';
-  };
-}
-
-// Form Element
-export interface FormElement extends BaseElement {
-  type: 'form';
-  props: {
-    fields: FormField[];
-    submitText: string;
-    submitAction: string;
-    successMessage: string;
-    buttonColor?: string;
-    buttonTextColor?: string;
-  };
-}
-
-export interface FormField {
-  id: string;
-  type: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox';
-  label: string;
-  placeholder?: string;
-  required?: boolean;
-  options?: string[]; // For select fields
-}
-
-// Columns Element
-export interface ColumnsElement extends BaseElement {
-  type: 'columns';
-  props: {
-    columns: number;
-    gap?: string;
-    layout?: string; // e.g., '1:1', '1:2', '2:1', '1:1:1'
-  };
-  children: ColumnChild[];
-}
-
-export interface ColumnChild {
-  id: string;
-  elements: BuilderElement[];
-}
-
-export type BuilderElement =
-  | SectionElement
-  | HeadingElement
-  | ParagraphElement
-  | ImageElement
-  | ButtonElement
-  | VideoElement
-  | FormElement
-  | ColumnsElement;
-```
-
-### Default Props Factory
-
-```typescript
-// src/builder/utils/defaultProps.ts
-import { ElementType } from '../types';
-
-export const getDefaultProps = (type: ElementType): Record<string, any> => {
-  switch (type) {
-    case 'section':
-      return {
-        backgroundColor: '#ffffff',
-        minHeight: '200px',
-        fullWidth: false,
-      };
-
-    case 'heading':
-      return {
-        text: 'Heading Text',
-        level: 'h2',
-        color: '#000000',
-        fontSize: '32px',
-        fontWeight: '700',
-      };
-
-    case 'paragraph':
-      return {
-        text: 'Enter your text here. Click to edit this paragraph.',
-        color: '#333333',
-        fontSize: '16px',
-        lineHeight: '1.6',
-      };
-
-    case 'image':
-      return {
-        src: '/placeholder-image.jpg',
-        alt: 'Image description',
-        width: '100%',
-        objectFit: 'cover',
-      };
-
-    case 'button':
-      return {
-        text: 'Click Me',
-        variant: 'primary',
-        size: 'md',
-        backgroundColor: '#3b82f6',
-        textColor: '#ffffff',
-        borderRadius: '6px',
-      };
-
-    case 'video':
-      return {
-        src: '',
-        provider: 'youtube',
-        autoplay: false,
-        muted: false,
-        loop: false,
-        controls: true,
-        aspectRatio: '16:9',
-      };
-
-    case 'form':
-      return {
-        fields: [
-          { id: '1', type: 'text', label: 'Name', placeholder: 'Your name', required: true },
-          { id: '2', type: 'email', label: 'Email', placeholder: 'your@email.com', required: true },
-        ],
-        submitText: 'Submit',
-        submitAction: '/api/forms/submit',
-        successMessage: 'Thank you for your submission!',
-        buttonColor: '#3b82f6',
-        buttonTextColor: '#ffffff',
-      };
-
-    case 'columns':
-      return {
-        columns: 2,
-        gap: '24px',
-        layout: '1:1',
-      };
-
-    default:
-      return {};
-  }
-};
-```
-
-### Element Components
-
-```typescript
-// src/builder/components/elements/index.tsx
-import React from 'react';
-import { BuilderElement } from '../../types';
-import { SectionElement } from './SectionElement';
-import { HeadingElement } from './HeadingElement';
-import { ParagraphElement } from './ParagraphElement';
-import { ImageElement } from './ImageElement';
-import { ButtonElement } from './ButtonElement';
-import { VideoElement } from './VideoElement';
-import { FormElement } from './FormElement';
-import { ColumnsElement } from './ColumnsElement';
-
-interface ElementRendererProps {
-  element: BuilderElement;
-  isEditing?: boolean;
-  onSelect?: (id: string) => void;
-  isSelected?: boolean;
-}
-
-export const ElementRenderer: React.FC<ElementRendererProps> = ({
-  element,
-  isEditing = false,
-  onSelect,
-  isSelected = false,
-}) => {
-  const components: Record<string, React.FC<any>> = {
-    section: SectionElement,
-    heading: HeadingElement,
-    paragraph: ParagraphElement,
-    image: ImageElement,
-    button: ButtonElement,
-    video: VideoElement,
-    form: FormElement,
-    columns: ColumnsElement,
-  };
-
-  const Component = components[element.type];
-
-  if (!Component) {
-    return <div>Unknown element type: {element.type}</div>;
-  }
-
-  return (
-    <div
-      className={`element-wrapper ${isSelected ? 'selected' : ''}`}
-      onClick={(e) => {
-        e.stopPropagation();
-        onSelect?.(element.id);
-      }}
-    >
-      {isEditing && (
-        <div className="element-toolbar">
-          <button className="drag-handle" title="Drag">
-            <GripIcon />
-          </button>
-          <span className="element-type-label">{element.label}</span>
-        </div>
-      )}
-      <Component element={element} isEditing={isEditing} />
+        {{-- Properties Panel --}}
+        @include('builder.partials.properties-panel')
     </div>
-  );
-};
-```
+</div>
+@endsection
 
-#### Section Element
+@push('scripts')
+<script>
+function builderApp() {
+    return {
+        // Core state
+        pageId: '{{ $page->id }}',
+        elements: @json($page->elements ?? []),
+        selectedElement: null,
+        isDirty: false,
 
-```typescript
-// src/builder/components/elements/SectionElement.tsx
-import React from 'react';
-import { ReactSortable } from 'react-sortablejs';
-import { SectionElement as SectionType } from '../../types';
-import { useBuilderStore } from '../../store/builderStore';
-import { ElementRenderer } from './index';
+        // History for undo/redo
+        history: [],
+        historyIndex: -1,
 
-interface Props {
-  element: SectionType;
-  isEditing?: boolean;
-}
+        // Clipboard
+        clipboard: null,
 
-export const SectionElement: React.FC<Props> = ({ element, isEditing }) => {
-  const { updateElementChildren, selectedElement, setSelectedElement } = useBuilderStore();
+        // Preview mode
+        previewMode: 'desktop',
 
-  const style: React.CSSProperties = {
-    backgroundColor: element.props.backgroundColor,
-    backgroundImage: element.props.backgroundImage
-      ? `url(${element.props.backgroundImage})`
-      : undefined,
-    backgroundSize: element.props.backgroundSize,
-    minHeight: element.props.minHeight,
-    width: element.props.fullWidth ? '100vw' : '100%',
-    padding: element.styles?.padding || '40px 20px',
-  };
+        // Sortable instances
+        canvasSortable: null,
+        paletteSortable: null,
 
-  if (isEditing) {
-    return (
-      <section style={style} className="builder-section">
-        <ReactSortable
-          list={element.children || []}
-          setList={(newChildren) => updateElementChildren(element.id, newChildren)}
-          group={{ name: 'builder', pull: true, put: true }}
-          animation={200}
-          className="section-dropzone"
-        >
-          {(element.children || []).map((child) => (
-            <ElementRenderer
-              key={child.id}
-              element={child}
-              isEditing={isEditing}
-              onSelect={setSelectedElement}
-              isSelected={selectedElement === child.id}
-            />
-          ))}
-        </ReactSortable>
-        {(!element.children || element.children.length === 0) && (
-          <div className="empty-section-placeholder">
-            Drop elements here
-          </div>
-        )}
-      </section>
-    );
-  }
+        // Initialize
+        init() {
+            this.initSortables();
+            this.initKeyboardShortcuts();
+            this.initAutoSave();
+            this.addToHistory();
+        },
 
-  return (
-    <section style={style} className="builder-section">
-      {(element.children || []).map((child) => (
-        <ElementRenderer key={child.id} element={child} />
-      ))}
-    </section>
-  );
-};
-```
+        // Initialize SortableJS
+        initSortables() {
+            // Palette sortable (clone elements)
+            this.paletteSortable = new Sortable(this.$refs.palette, {
+                group: {
+                    name: 'builder',
+                    pull: 'clone',
+                    put: false
+                },
+                sort: false,
+                animation: 200,
+                ghostClass: 'opacity-40',
+                onClone: (evt) => {
+                    const type = evt.item.dataset.type;
+                    evt.item.dataset.element = JSON.stringify(this.createNewElement(type));
+                }
+            });
 
-#### Heading Element
+            // Canvas sortable
+            this.canvasSortable = new Sortable(this.$refs.canvas, {
+                group: {
+                    name: 'builder',
+                    pull: true,
+                    put: true
+                },
+                animation: 200,
+                handle: '.drag-handle',
+                ghostClass: 'opacity-40',
+                chosenClass: 'ring-2 ring-blue-500',
+                onAdd: (evt) => {
+                    this.addToHistory();
+                    const elementData = evt.item.dataset.element;
+                    if (elementData) {
+                        const element = JSON.parse(elementData);
+                        this.elements.splice(evt.newIndex, 0, element);
+                        evt.item.remove();
+                        this.isDirty = true;
+                        this.$nextTick(() => this.reinitCanvasSortable());
+                    }
+                },
+                onSort: (evt) => {
+                    this.addToHistory();
+                    this.reorderElements(evt.oldIndex, evt.newIndex);
+                    this.isDirty = true;
+                }
+            });
+        },
 
-```typescript
-// src/builder/components/elements/HeadingElement.tsx
-import React from 'react';
-import { HeadingElement as HeadingType } from '../../types';
+        reinitCanvasSortable() {
+            if (this.canvasSortable) {
+                this.canvasSortable.destroy();
+            }
+            this.$nextTick(() => {
+                this.canvasSortable = new Sortable(this.$refs.canvas, {
+                    group: { name: 'builder', pull: true, put: true },
+                    animation: 200,
+                    handle: '.drag-handle',
+                    ghostClass: 'opacity-40',
+                    onAdd: (evt) => {
+                        this.addToHistory();
+                        const elementData = evt.item.dataset.element;
+                        if (elementData) {
+                            const element = JSON.parse(elementData);
+                            this.elements.splice(evt.newIndex, 0, element);
+                            evt.item.remove();
+                            this.isDirty = true;
+                            this.$nextTick(() => this.reinitCanvasSortable());
+                        }
+                    },
+                    onSort: (evt) => {
+                        this.addToHistory();
+                        this.reorderElements(evt.oldIndex, evt.newIndex);
+                        this.isDirty = true;
+                    }
+                });
+            });
+        },
 
-interface Props {
-  element: HeadingType;
-  isEditing?: boolean;
-}
+        // Create new element with default props
+        createNewElement(type) {
+            const id = this.generateId();
+            const defaults = {
+                section: {
+                    id, type: 'section', label: 'Section',
+                    props: { backgroundColor: '#ffffff', minHeight: '200px', fullWidth: false },
+                    children: [], styles: { padding: '40px 20px' }
+                },
+                heading: {
+                    id, type: 'heading', label: 'Heading',
+                    props: { text: 'Heading Text', level: 'h2', color: '#000000', fontSize: '32px', fontWeight: '700' },
+                    styles: { margin: '0 0 16px 0' }
+                },
+                paragraph: {
+                    id, type: 'paragraph', label: 'Paragraph',
+                    props: { text: 'Enter your text here. Click to edit this paragraph.', color: '#333333', fontSize: '16px', lineHeight: '1.6' },
+                    styles: { margin: '0 0 16px 0' }
+                },
+                image: {
+                    id, type: 'image', label: 'Image',
+                    props: { src: '/placeholder-image.jpg', alt: 'Image description', width: '100%', objectFit: 'cover' },
+                    styles: {}
+                },
+                button: {
+                    id, type: 'button', label: 'Button',
+                    props: { text: 'Click Me', variant: 'primary', size: 'md', backgroundColor: '#3b82f6', textColor: '#ffffff', borderRadius: '6px' },
+                    styles: {}
+                },
+                video: {
+                    id, type: 'video', label: 'Video',
+                    props: { src: '', provider: 'youtube', autoplay: false, muted: false, loop: false, controls: true, aspectRatio: '16:9' },
+                    styles: {}
+                },
+                form: {
+                    id, type: 'form', label: 'Form',
+                    props: {
+                        fields: [
+                            { id: '1', type: 'text', label: 'Name', placeholder: 'Your name', required: true },
+                            { id: '2', type: 'email', label: 'Email', placeholder: 'your@email.com', required: true }
+                        ],
+                        submitText: 'Submit',
+                        submitAction: '/api/forms/submit',
+                        successMessage: 'Thank you!',
+                        buttonColor: '#3b82f6',
+                        buttonTextColor: '#ffffff'
+                    },
+                    styles: {}
+                },
+                columns: {
+                    id, type: 'columns', label: 'Columns',
+                    props: { columns: 2, gap: '24px', layout: '1:1' },
+                    children: [
+                        { id: this.generateId(), elements: [] },
+                        { id: this.generateId(), elements: [] }
+                    ],
+                    styles: {}
+                }
+            };
+            return defaults[type] || defaults.paragraph;
+        },
 
-export const HeadingElement: React.FC<Props> = ({ element, isEditing }) => {
-  const Tag = element.props.level as keyof JSX.IntrinsicElements;
+        generateId() {
+            return 'el_' + Math.random().toString(36).substr(2, 9);
+        },
 
-  const style: React.CSSProperties = {
-    color: element.props.color,
-    fontSize: element.props.fontSize,
-    fontWeight: element.props.fontWeight,
-    fontFamily: element.props.fontFamily,
-    margin: element.styles?.margin || '0 0 16px 0',
-    textAlign: element.styles?.textAlign,
-  };
+        reorderElements(oldIndex, newIndex) {
+            const element = this.elements.splice(oldIndex, 1)[0];
+            this.elements.splice(newIndex, 0, element);
+        },
 
-  return (
-    <Tag style={style} className="builder-heading">
-      {element.props.text}
-    </Tag>
-  );
-};
-```
+        // Element selection
+        selectElement(id) {
+            this.selectedElement = id;
+        },
 
-#### Paragraph Element
+        deselectElement() {
+            this.selectedElement = null;
+        },
 
-```typescript
-// src/builder/components/elements/ParagraphElement.tsx
-import React from 'react';
-import { ParagraphElement as ParagraphType } from '../../types';
+        getSelectedElement() {
+            return this.findElementById(this.elements, this.selectedElement);
+        },
 
-interface Props {
-  element: ParagraphType;
-  isEditing?: boolean;
-}
+        findElementById(elements, id) {
+            for (const el of elements) {
+                if (el.id === id) return el;
+                if (el.children) {
+                    if (el.type === 'columns') {
+                        for (const col of el.children) {
+                            const found = this.findElementById(col.elements || [], id);
+                            if (found) return found;
+                        }
+                    } else {
+                        const found = this.findElementById(el.children, id);
+                        if (found) return found;
+                    }
+                }
+            }
+            return null;
+        },
 
-export const ParagraphElement: React.FC<Props> = ({ element }) => {
-  const style: React.CSSProperties = {
-    color: element.props.color,
-    fontSize: element.props.fontSize,
-    lineHeight: element.props.lineHeight,
-    fontFamily: element.props.fontFamily,
-    margin: element.styles?.margin || '0 0 16px 0',
-    textAlign: element.styles?.textAlign,
-  };
+        // Update element properties
+        updateElementProps(id, newProps) {
+            this.addToHistory();
+            this.updateElementInTree(this.elements, id, (el) => {
+                el.props = { ...el.props, ...newProps };
+            });
+            this.isDirty = true;
+        },
 
-  return (
-    <p style={style} className="builder-paragraph">
-      {element.props.text}
-    </p>
-  );
-};
-```
+        updateElementStyles(id, newStyles) {
+            this.addToHistory();
+            this.updateElementInTree(this.elements, id, (el) => {
+                el.styles = { ...el.styles, ...newStyles };
+            });
+            this.isDirty = true;
+        },
 
-#### Image Element
+        updateElementInTree(elements, id, updater) {
+            for (let i = 0; i < elements.length; i++) {
+                if (elements[i].id === id) {
+                    updater(elements[i]);
+                    return true;
+                }
+                if (elements[i].children) {
+                    if (elements[i].type === 'columns') {
+                        for (const col of elements[i].children) {
+                            if (this.updateElementInTree(col.elements || [], id, updater)) return true;
+                        }
+                    } else {
+                        if (this.updateElementInTree(elements[i].children, id, updater)) return true;
+                    }
+                }
+            }
+            return false;
+        },
 
-```typescript
-// src/builder/components/elements/ImageElement.tsx
-import React from 'react';
-import { ImageElement as ImageType } from '../../types';
+        // Delete element
+        deleteElement(id) {
+            this.addToHistory();
+            this.removeElementFromTree(this.elements, id);
+            if (this.selectedElement === id) {
+                this.selectedElement = null;
+            }
+            this.isDirty = true;
+        },
 
-interface Props {
-  element: ImageType;
-  isEditing?: boolean;
-}
+        removeElementFromTree(elements, id) {
+            for (let i = 0; i < elements.length; i++) {
+                if (elements[i].id === id) {
+                    elements.splice(i, 1);
+                    return true;
+                }
+                if (elements[i].children) {
+                    if (elements[i].type === 'columns') {
+                        for (const col of elements[i].children) {
+                            if (this.removeElementFromTree(col.elements || [], id)) return true;
+                        }
+                    } else {
+                        if (this.removeElementFromTree(elements[i].children, id)) return true;
+                    }
+                }
+            }
+            return false;
+        },
 
-export const ImageElement: React.FC<Props> = ({ element, isEditing }) => {
-  const imgStyle: React.CSSProperties = {
-    width: element.props.width,
-    height: element.props.height,
-    objectFit: element.props.objectFit,
-    borderRadius: element.styles?.borderRadius,
-  };
+        // Duplicate element
+        duplicateElement(id) {
+            const element = this.findElementById(this.elements, id);
+            if (!element) return;
 
-  const img = (
-    <img
-      src={element.props.src}
-      alt={element.props.alt}
-      style={imgStyle}
-      className="builder-image"
-      loading="lazy"
-    />
-  );
+            this.addToHistory();
+            const duplicated = this.deepCloneWithNewIds(element);
 
-  if (element.props.link && !isEditing) {
-    return (
-      <a
-        href={element.props.link}
-        target={element.props.linkTarget}
-        rel={element.props.linkTarget === '_blank' ? 'noopener noreferrer' : undefined}
-      >
-        {img}
-      </a>
-    );
-  }
+            const index = this.elements.findIndex(el => el.id === id);
+            if (index !== -1) {
+                this.elements.splice(index + 1, 0, duplicated);
+            }
 
-  return img;
-};
-```
+            this.selectedElement = duplicated.id;
+            this.isDirty = true;
+        },
 
-#### Button Element
+        deepCloneWithNewIds(element) {
+            const cloned = JSON.parse(JSON.stringify(element));
+            const assignNewIds = (el) => {
+                el.id = this.generateId();
+                if (el.children) {
+                    if (Array.isArray(el.children)) {
+                        el.children.forEach(child => {
+                            if (child.elements) {
+                                child.id = this.generateId();
+                                child.elements.forEach(assignNewIds);
+                            } else {
+                                assignNewIds(child);
+                            }
+                        });
+                    }
+                }
+            };
+            assignNewIds(cloned);
+            return cloned;
+        },
 
-```typescript
-// src/builder/components/elements/ButtonElement.tsx
-import React from 'react';
-import { ButtonElement as ButtonType } from '../../types';
+        // History (Undo/Redo)
+        addToHistory() {
+            const state = JSON.stringify({
+                elements: this.elements,
+                selectedElement: this.selectedElement
+            });
 
-interface Props {
-  element: ButtonType;
-  isEditing?: boolean;
-}
+            this.history = this.history.slice(0, this.historyIndex + 1);
+            this.history.push(state);
 
-export const ButtonElement: React.FC<Props> = ({ element, isEditing }) => {
-  const sizeStyles = {
-    sm: { padding: '8px 16px', fontSize: '14px' },
-    md: { padding: '12px 24px', fontSize: '16px' },
-    lg: { padding: '16px 32px', fontSize: '18px' },
-  };
+            if (this.history.length > 50) {
+                this.history.shift();
+            }
 
-  const style: React.CSSProperties = {
-    backgroundColor: element.props.backgroundColor,
-    color: element.props.textColor,
-    borderRadius: element.props.borderRadius,
-    width: element.props.fullWidth ? '100%' : 'auto',
-    border: element.props.variant === 'outline'
-      ? `2px solid ${element.props.backgroundColor}`
-      : 'none',
-    ...sizeStyles[element.props.size || 'md'],
-    cursor: isEditing ? 'default' : 'pointer',
-    display: 'inline-block',
-    textDecoration: 'none',
-    textAlign: 'center',
-    fontWeight: '600',
-  };
+            this.historyIndex = this.history.length - 1;
+        },
 
-  if (element.props.variant === 'outline') {
-    style.backgroundColor = 'transparent';
-    style.color = element.props.backgroundColor;
-  }
+        undo() {
+            if (this.historyIndex <= 0) return;
 
-  if (element.props.variant === 'ghost') {
-    style.backgroundColor = 'transparent';
-    style.color = element.props.backgroundColor;
-    style.border = 'none';
-  }
+            this.historyIndex--;
+            const state = JSON.parse(this.history[this.historyIndex]);
+            this.elements = state.elements;
+            this.selectedElement = state.selectedElement;
+            this.isDirty = true;
+            this.$nextTick(() => this.reinitCanvasSortable());
+        },
 
-  const handleClick = (e: React.MouseEvent) => {
-    if (isEditing) {
-      e.preventDefault();
-    }
-  };
+        redo() {
+            if (this.historyIndex >= this.history.length - 1) return;
 
-  if (element.props.link && !isEditing) {
-    return (
-      <a
-        href={element.props.link}
-        target={element.props.linkTarget}
-        rel={element.props.linkTarget === '_blank' ? 'noopener noreferrer' : undefined}
-        style={style}
-        className="builder-button"
-      >
-        {element.props.text}
-      </a>
-    );
-  }
+            this.historyIndex++;
+            const state = JSON.parse(this.history[this.historyIndex]);
+            this.elements = state.elements;
+            this.selectedElement = state.selectedElement;
+            this.isDirty = true;
+            this.$nextTick(() => this.reinitCanvasSortable());
+        },
 
-  return (
-    <button style={style} className="builder-button" onClick={handleClick}>
-      {element.props.text}
-    </button>
-  );
-};
-```
+        // Clipboard (Copy/Paste/Cut)
+        copy() {
+            if (!this.selectedElement) return;
+            const element = this.findElementById(this.elements, this.selectedElement);
+            if (element) {
+                this.clipboard = JSON.parse(JSON.stringify(element));
+            }
+        },
 
-#### Video Element
+        paste() {
+            if (!this.clipboard) return;
 
-```typescript
-// src/builder/components/elements/VideoElement.tsx
-import React from 'react';
-import { VideoElement as VideoType } from '../../types';
+            this.addToHistory();
+            const pasted = this.deepCloneWithNewIds(this.clipboard);
 
-interface Props {
-  element: VideoType;
-  isEditing?: boolean;
-}
+            if (this.selectedElement) {
+                const index = this.elements.findIndex(el => el.id === this.selectedElement);
+                if (index !== -1) {
+                    this.elements.splice(index + 1, 0, pasted);
+                } else {
+                    this.elements.push(pasted);
+                }
+            } else {
+                this.elements.push(pasted);
+            }
 
-export const VideoElement: React.FC<Props> = ({ element, isEditing }) => {
-  const aspectRatios = {
-    '16:9': '56.25%',
-    '4:3': '75%',
-    '1:1': '100%',
-  };
+            this.selectedElement = pasted.id;
+            this.isDirty = true;
+            this.$nextTick(() => this.reinitCanvasSortable());
+        },
 
-  const containerStyle: React.CSSProperties = {
-    position: 'relative',
-    paddingBottom: aspectRatios[element.props.aspectRatio || '16:9'],
-    height: 0,
-    overflow: 'hidden',
-    borderRadius: element.styles?.borderRadius,
-  };
+        cut() {
+            if (!this.selectedElement) return;
+            this.copy();
+            this.deleteElement(this.selectedElement);
+        },
 
-  const mediaStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-  };
+        // Keyboard shortcuts
+        initKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                const isCtrlOrCmd = e.ctrlKey || e.metaKey;
 
-  const getYouTubeEmbedUrl = (url: string): string => {
-    const videoId = url.match(/(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/watch\?.+&v=))([^&?]+)/)?.[1];
-    if (!videoId) return url;
+                // Undo
+                if (isCtrlOrCmd && e.key === 'z' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.undo();
+                }
 
-    const params = new URLSearchParams();
-    if (element.props.autoplay) params.set('autoplay', '1');
-    if (element.props.muted) params.set('mute', '1');
-    if (element.props.loop) params.set('loop', '1');
-    if (!element.props.controls) params.set('controls', '0');
+                // Redo
+                if ((isCtrlOrCmd && e.shiftKey && e.key === 'z') || (isCtrlOrCmd && e.key === 'y')) {
+                    e.preventDefault();
+                    this.redo();
+                }
 
-    return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
-  };
+                // Copy
+                if (isCtrlOrCmd && e.key === 'c') {
+                    if (this.selectedElement) {
+                        e.preventDefault();
+                        this.copy();
+                    }
+                }
 
-  const getVimeoEmbedUrl = (url: string): string => {
-    const videoId = url.match(/vimeo\.com\/(\d+)/)?.[1];
-    if (!videoId) return url;
+                // Paste
+                if (isCtrlOrCmd && e.key === 'v') {
+                    if (this.clipboard) {
+                        e.preventDefault();
+                        this.paste();
+                    }
+                }
 
-    const params = new URLSearchParams();
-    if (element.props.autoplay) params.set('autoplay', '1');
-    if (element.props.muted) params.set('muted', '1');
-    if (element.props.loop) params.set('loop', '1');
+                // Cut
+                if (isCtrlOrCmd && e.key === 'x') {
+                    if (this.selectedElement) {
+                        e.preventDefault();
+                        this.cut();
+                    }
+                }
 
-    return `https://player.vimeo.com/video/${videoId}?${params.toString()}`;
-  };
+                // Delete
+                if ((e.key === 'Delete' || e.key === 'Backspace') && this.selectedElement) {
+                    const target = e.target;
+                    if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+                        e.preventDefault();
+                        this.deleteElement(this.selectedElement);
+                    }
+                }
 
-  if (element.props.provider === 'youtube' || element.props.provider === 'vimeo') {
-    const embedUrl = element.props.provider === 'youtube'
-      ? getYouTubeEmbedUrl(element.props.src)
-      : getVimeoEmbedUrl(element.props.src);
+                // Save
+                if (isCtrlOrCmd && e.key === 's') {
+                    e.preventDefault();
+                    this.savePage();
+                }
 
-    return (
-      <div style={containerStyle} className="builder-video">
-        <iframe
-          src={embedUrl}
-          style={mediaStyle}
-          frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          title="Video"
-        />
-      </div>
-    );
-  }
+                // Escape
+                if (e.key === 'Escape') {
+                    this.deselectElement();
+                }
+            });
+        },
 
-  return (
-    <div style={containerStyle} className="builder-video">
-      <video
-        src={element.props.src}
-        style={mediaStyle}
-        autoPlay={element.props.autoplay && !isEditing}
-        muted={element.props.muted}
-        loop={element.props.loop}
-        controls={element.props.controls}
-      />
-    </div>
-  );
-};
-```
+        // Auto-save
+        initAutoSave() {
+            let saveTimeout = null;
 
-#### Form Element
+            this.$watch('elements', () => {
+                if (saveTimeout) clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    if (this.isDirty) {
+                        this.savePage();
+                    }
+                }, 30000);
+            }, { deep: true });
 
-```typescript
-// src/builder/components/elements/FormElement.tsx
-import React, { useState } from 'react';
-import { FormElement as FormType, FormField } from '../../types';
+            // Warn before leaving with unsaved changes
+            window.addEventListener('beforeunload', (e) => {
+                if (this.isDirty) {
+                    e.preventDefault();
+                    e.returnValue = 'You have unsaved changes.';
+                    return e.returnValue;
+                }
+            });
+        },
 
-interface Props {
-  element: FormType;
-  isEditing?: boolean;
-}
+        // Save page
+        async savePage() {
+            try {
+                const response = await fetch(`/api/pages/${this.pageId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({ elements: this.elements })
+                });
 
-export const FormElement: React.FC<Props> = ({ element, isEditing }) => {
-  const [formData, setFormData] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+                if (response.ok) {
+                    this.isDirty = false;
+                    console.log('Saved at', new Date().toLocaleTimeString());
+                } else {
+                    console.error('Save failed');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+            }
+        },
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+        // Preview mode
+        setPreviewMode(mode) {
+            this.previewMode = mode;
+        },
 
-    if (isEditing) return;
-
-    setIsSubmitting(true);
-    try {
-      const response = await fetch(element.props.submitAction, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        setIsSuccess(true);
-        setFormData({});
-      }
-    } catch (error) {
-      console.error('Form submission error:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleChange = (fieldId: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [fieldId]: value }));
-  };
-
-  const renderField = (field: FormField) => {
-    const commonProps = {
-      id: field.id,
-      name: field.id,
-      placeholder: field.placeholder,
-      required: field.required,
-      value: formData[field.id] || '',
-      onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-        handleChange(field.id, e.target.value),
-      disabled: isEditing,
+        getPreviewWidth() {
+            const widths = {
+                desktop: '100%',
+                tablet: '768px',
+                mobile: '375px'
+            };
+            return widths[this.previewMode];
+        }
     };
-
-    switch (field.type) {
-      case 'textarea':
-        return <textarea {...commonProps} rows={4} className="form-textarea" />;
-
-      case 'select':
-        return (
-          <select {...commonProps} className="form-select">
-            <option value="">{field.placeholder || 'Select...'}</option>
-            {field.options?.map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
-        );
-
-      case 'checkbox':
-        return (
-          <label className="form-checkbox-label">
-            <input
-              type="checkbox"
-              {...commonProps}
-              checked={formData[field.id] === 'true'}
-              onChange={(e) => handleChange(field.id, String(e.target.checked))}
-            />
-            {field.label}
-          </label>
-        );
-
-      default:
-        return (
-          <input
-            type={field.type}
-            {...commonProps}
-            className="form-input"
-          />
-        );
-    }
-  };
-
-  if (isSuccess) {
-    return (
-      <div className="form-success">
-        {element.props.successMessage}
-      </div>
-    );
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="builder-form">
-      {element.props.fields.map((field) => (
-        <div key={field.id} className="form-field">
-          {field.type !== 'checkbox' && (
-            <label htmlFor={field.id} className="form-label">
-              {field.label}
-              {field.required && <span className="required">*</span>}
-            </label>
-          )}
-          {renderField(field)}
-        </div>
-      ))}
-      <button
-        type="submit"
-        disabled={isSubmitting || isEditing}
-        style={{
-          backgroundColor: element.props.buttonColor,
-          color: element.props.buttonTextColor,
-        }}
-        className="form-submit"
-      >
-        {isSubmitting ? 'Submitting...' : element.props.submitText}
-      </button>
-    </form>
-  );
-};
-```
-
-#### Columns Element
-
-```typescript
-// src/builder/components/elements/ColumnsElement.tsx
-import React from 'react';
-import { ReactSortable } from 'react-sortablejs';
-import { ColumnsElement as ColumnsType } from '../../types';
-import { useBuilderStore } from '../../store/builderStore';
-import { ElementRenderer } from './index';
-
-interface Props {
-  element: ColumnsType;
-  isEditing?: boolean;
 }
-
-export const ColumnsElement: React.FC<Props> = ({ element, isEditing }) => {
-  const { updateColumnChildren, selectedElement, setSelectedElement } = useBuilderStore();
-
-  const parseLayout = (layout: string): number[] => {
-    return layout.split(':').map(Number);
-  };
-
-  const layoutRatios = parseLayout(element.props.layout || '1:1');
-  const totalRatio = layoutRatios.reduce((a, b) => a + b, 0);
-
-  const containerStyle: React.CSSProperties = {
-    display: 'grid',
-    gridTemplateColumns: layoutRatios
-      .map((ratio) => `${(ratio / totalRatio) * 100}%`)
-      .join(' '),
-    gap: element.props.gap,
-  };
-
-  return (
-    <div style={containerStyle} className="builder-columns">
-      {element.children.map((column, index) => (
-        <div key={column.id} className="builder-column">
-          {isEditing ? (
-            <ReactSortable
-              list={column.elements}
-              setList={(newElements) =>
-                updateColumnChildren(element.id, column.id, newElements)
-              }
-              group={{ name: 'builder', pull: true, put: true }}
-              animation={200}
-              className="column-dropzone"
-            >
-              {column.elements.map((child) => (
-                <ElementRenderer
-                  key={child.id}
-                  element={child}
-                  isEditing={isEditing}
-                  onSelect={setSelectedElement}
-                  isSelected={selectedElement === child.id}
-                />
-              ))}
-            </ReactSortable>
-          ) : (
-            column.elements.map((child) => (
-              <ElementRenderer key={child.id} element={child} />
-            ))
-          )}
-          {isEditing && column.elements.length === 0 && (
-            <div className="empty-column-placeholder">
-              Column {index + 1}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-};
+</script>
+@endpush
 ```
 
 ---
 
-## Element Editing
+## Builder Elements as Blade Components
+
+### Element Palette
+
+```blade
+{{-- resources/views/builder/partials/palette.blade.php --}}
+<div class="w-64 bg-white border-r border-gray-200 p-4 overflow-y-auto">
+    <h3 class="text-sm font-semibold text-gray-700 mb-4">Elements</h3>
+
+    <div x-ref="palette" class="grid grid-cols-2 gap-2">
+        @foreach(['section', 'heading', 'paragraph', 'image', 'button', 'video', 'form', 'columns'] as $type)
+        <div
+            data-type="{{ $type }}"
+            class="flex flex-col items-center p-3 border border-gray-200 rounded-lg cursor-grab hover:border-blue-500 hover:bg-blue-50 transition-colors"
+        >
+            <x-builder.icons :type="$type" class="w-6 h-6 text-gray-500 mb-1" />
+            <span class="text-xs text-gray-600 capitalize">{{ $type }}</span>
+        </div>
+        @endforeach
+    </div>
+</div>
+```
+
+### Canvas
+
+```blade
+{{-- resources/views/builder/partials/canvas.blade.php --}}
+<div class="flex-1 overflow-auto p-6 bg-gray-100" @click.self="deselectElement()">
+    <div
+        class="mx-auto bg-white shadow-lg min-h-[600px] transition-all duration-300"
+        :style="{ width: getPreviewWidth() }"
+    >
+        <div
+            x-ref="canvas"
+            class="min-h-[400px] p-5"
+        >
+            <template x-for="element in elements" :key="element.id">
+                <div
+                    class="relative group my-1"
+                    :class="{ 'ring-2 ring-blue-500 ring-offset-2': selectedElement === element.id }"
+                    @click.stop="selectElement(element.id)"
+                >
+                    {{-- Element toolbar --}}
+                    <div
+                        class="absolute -top-8 left-0 flex items-center gap-2 px-2 py-1 bg-blue-500 text-white text-xs rounded-t"
+                        x-show="selectedElement === element.id"
+                    >
+                        <span class="drag-handle cursor-grab">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z"/>
+                            </svg>
+                        </span>
+                        <span x-text="element.label"></span>
+                    </div>
+
+                    {{-- Element content --}}
+                    <div x-html="renderElement(element)"></div>
+                </div>
+            </template>
+
+            {{-- Empty state --}}
+            <div
+                x-show="elements.length === 0"
+                class="flex items-center justify-center h-64 border-2 border-dashed border-gray-300 rounded-lg text-gray-400"
+            >
+                Drag elements here to start building
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+// Add to builderApp()
+function builderApp() {
+    return {
+        // ... previous code ...
+
+        // Render element to HTML
+        renderElement(element) {
+            switch (element.type) {
+                case 'heading':
+                    return this.renderHeading(element);
+                case 'paragraph':
+                    return this.renderParagraph(element);
+                case 'image':
+                    return this.renderImage(element);
+                case 'button':
+                    return this.renderButton(element);
+                case 'video':
+                    return this.renderVideo(element);
+                case 'section':
+                    return this.renderSection(element);
+                case 'form':
+                    return this.renderForm(element);
+                case 'columns':
+                    return this.renderColumns(element);
+                default:
+                    return `<div>Unknown element: ${element.type}</div>`;
+            }
+        },
+
+        renderHeading(el) {
+            const tag = el.props.level || 'h2';
+            const style = `
+                color: ${el.props.color || '#000'};
+                font-size: ${el.props.fontSize || '32px'};
+                font-weight: ${el.props.fontWeight || '700'};
+                ${el.props.fontFamily ? `font-family: ${el.props.fontFamily};` : ''}
+                ${el.styles?.margin ? `margin: ${el.styles.margin};` : ''}
+                ${el.styles?.textAlign ? `text-align: ${el.styles.textAlign};` : ''}
+            `;
+            return `<${tag} style="${style}">${this.escapeHtml(el.props.text)}</${tag}>`;
+        },
+
+        renderParagraph(el) {
+            const style = `
+                color: ${el.props.color || '#333'};
+                font-size: ${el.props.fontSize || '16px'};
+                line-height: ${el.props.lineHeight || '1.6'};
+                ${el.props.fontFamily ? `font-family: ${el.props.fontFamily};` : ''}
+                ${el.styles?.margin ? `margin: ${el.styles.margin};` : ''}
+            `;
+            return `<p style="${style}">${this.escapeHtml(el.props.text)}</p>`;
+        },
+
+        renderImage(el) {
+            const style = `
+                width: ${el.props.width || '100%'};
+                ${el.props.height ? `height: ${el.props.height};` : ''}
+                object-fit: ${el.props.objectFit || 'cover'};
+                ${el.styles?.borderRadius ? `border-radius: ${el.styles.borderRadius};` : ''}
+            `;
+            const img = `<img src="${this.escapeHtml(el.props.src)}" alt="${this.escapeHtml(el.props.alt)}" style="${style}" loading="lazy">`;
+
+            if (el.props.link) {
+                return `<a href="${this.escapeHtml(el.props.link)}" target="${el.props.linkTarget || '_self'}">${img}</a>`;
+            }
+            return img;
+        },
+
+        renderButton(el) {
+            const sizes = {
+                sm: 'padding: 8px 16px; font-size: 14px;',
+                md: 'padding: 12px 24px; font-size: 16px;',
+                lg: 'padding: 16px 32px; font-size: 18px;'
+            };
+
+            let style = `
+                background-color: ${el.props.backgroundColor || '#3b82f6'};
+                color: ${el.props.textColor || '#fff'};
+                border-radius: ${el.props.borderRadius || '6px'};
+                ${el.props.fullWidth ? 'width: 100%;' : ''}
+                ${sizes[el.props.size || 'md']}
+                border: none;
+                cursor: pointer;
+                display: inline-block;
+                text-decoration: none;
+                text-align: center;
+                font-weight: 600;
+            `;
+
+            if (el.props.variant === 'outline') {
+                style += `
+                    background-color: transparent;
+                    color: ${el.props.backgroundColor || '#3b82f6'};
+                    border: 2px solid ${el.props.backgroundColor || '#3b82f6'};
+                `;
+            }
+
+            if (el.props.link) {
+                return `<a href="${this.escapeHtml(el.props.link)}" target="${el.props.linkTarget || '_self'}" style="${style}">${this.escapeHtml(el.props.text)}</a>`;
+            }
+            return `<button style="${style}">${this.escapeHtml(el.props.text)}</button>`;
+        },
+
+        renderVideo(el) {
+            const ratios = { '16:9': '56.25%', '4:3': '75%', '1:1': '100%' };
+            const containerStyle = `
+                position: relative;
+                padding-bottom: ${ratios[el.props.aspectRatio || '16:9']};
+                height: 0;
+                overflow: hidden;
+            `;
+            const mediaStyle = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%;';
+
+            if (el.props.provider === 'youtube') {
+                const match = el.props.src.match(/(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/watch\?.+&v=))([^&?]+)/);
+                if (match) {
+                    const params = new URLSearchParams();
+                    if (el.props.autoplay) params.set('autoplay', '1');
+                    if (el.props.muted) params.set('mute', '1');
+                    return `<div style="${containerStyle}">
+                        <iframe src="https://www.youtube.com/embed/${match[1]}?${params}" style="${mediaStyle}" frameborder="0" allowfullscreen></iframe>
+                    </div>`;
+                }
+            }
+
+            return `<div style="${containerStyle}">
+                <video src="${this.escapeHtml(el.props.src)}" style="${mediaStyle}" ${el.props.controls ? 'controls' : ''}></video>
+            </div>`;
+        },
+
+        renderSection(el) {
+            const style = `
+                background-color: ${el.props.backgroundColor || '#fff'};
+                ${el.props.backgroundImage ? `background-image: url(${el.props.backgroundImage});` : ''}
+                ${el.props.backgroundSize ? `background-size: ${el.props.backgroundSize};` : ''}
+                min-height: ${el.props.minHeight || 'auto'};
+                ${el.styles?.padding ? `padding: ${el.styles.padding};` : 'padding: 40px 20px;'}
+            `;
+
+            const children = (el.children || []).map(child => this.renderElement(child)).join('');
+            return `<section style="${style}">${children || '<div class="border-2 border-dashed border-gray-300 p-8 text-center text-gray-400">Drop elements here</div>'}</section>`;
+        },
+
+        renderForm(el) {
+            const fields = el.props.fields.map(field => {
+                const required = field.required ? 'required' : '';
+                let input = '';
+
+                switch (field.type) {
+                    case 'textarea':
+                        input = `<textarea name="${field.id}" placeholder="${this.escapeHtml(field.placeholder || '')}" ${required} rows="4" class="w-full p-2 border rounded"></textarea>`;
+                        break;
+                    case 'select':
+                        const options = (field.options || []).map(opt => `<option value="${this.escapeHtml(opt)}">${this.escapeHtml(opt)}</option>`).join('');
+                        input = `<select name="${field.id}" ${required} class="w-full p-2 border rounded"><option value="">${this.escapeHtml(field.placeholder || 'Select...')}</option>${options}</select>`;
+                        break;
+                    default:
+                        input = `<input type="${field.type}" name="${field.id}" placeholder="${this.escapeHtml(field.placeholder || '')}" ${required} class="w-full p-2 border rounded">`;
+                }
+
+                return `<div class="mb-4">
+                    <label class="block mb-1 font-medium">${this.escapeHtml(field.label)}${field.required ? '<span class="text-red-500">*</span>' : ''}</label>
+                    ${input}
+                </div>`;
+            }).join('');
+
+            return `<form>
+                ${fields}
+                <button type="submit" style="background-color: ${el.props.buttonColor}; color: ${el.props.buttonTextColor};" class="px-6 py-3 rounded font-semibold">
+                    ${this.escapeHtml(el.props.submitText)}
+                </button>
+            </form>`;
+        },
+
+        renderColumns(el) {
+            const layout = el.props.layout || '1:1';
+            const ratios = layout.split(':').map(Number);
+            const total = ratios.reduce((a, b) => a + b, 0);
+            const gridTemplate = ratios.map(r => `${(r / total) * 100}%`).join(' ');
+
+            const columns = el.children.map((col, i) => {
+                const content = col.elements.map(child => this.renderElement(child)).join('');
+                return `<div class="column">${content || `<div class="border-2 border-dashed border-gray-300 p-4 text-center text-gray-400">Column ${i + 1}</div>`}</div>`;
+            }).join('');
+
+            return `<div style="display: grid; grid-template-columns: ${gridTemplate}; gap: ${el.props.gap || '24px'};">${columns}</div>`;
+        },
+
+        escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+    };
+}
+</script>
+@endpush
+```
+
+---
+
+## Element Editing with Alpine x-data
 
 ### Properties Panel
 
-```typescript
-// src/builder/components/PropertiesPanel.tsx
-import React from 'react';
-import { useBuilderStore } from '../store/builderStore';
-import { BuilderElement } from '../types';
-import {
-  HeadingPropsEditor,
-  ParagraphPropsEditor,
-  ImagePropsEditor,
-  ButtonPropsEditor,
-  VideoPropsEditor,
-  FormPropsEditor,
-  SectionPropsEditor,
-  ColumnsPropsEditor,
-  StylesEditor,
-} from './editors';
+```blade
+{{-- resources/views/builder/partials/properties-panel.blade.php --}}
+<div class="w-80 bg-white border-l border-gray-200 overflow-y-auto">
+    <template x-if="selectedElement">
+        <div>
+            {{-- Panel Header --}}
+            <div class="flex items-center justify-between p-4 border-b border-gray-200">
+                <h3 class="font-semibold text-gray-700" x-text="getSelectedElement()?.label + ' Properties'"></h3>
+                <div class="flex gap-2">
+                    <button
+                        @click="duplicateElement(selectedElement)"
+                        class="p-1 text-gray-500 hover:text-blue-500"
+                        title="Duplicate"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                    </button>
+                    <button
+                        @click="deleteElement(selectedElement)"
+                        class="p-1 text-gray-500 hover:text-red-500"
+                        title="Delete"
+                    >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
 
-export const PropertiesPanel: React.FC = () => {
-  const { selectedElement, elements, updateElementProps, updateElementStyles, deleteElement, duplicateElement } = useBuilderStore();
+            {{-- Properties Content --}}
+            <div class="p-4">
+                {{-- Heading Properties --}}
+                <template x-if="getSelectedElement()?.type === 'heading'">
+                    <div x-data="{ el: getSelectedElement() }">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Text</label>
+                            <textarea
+                                x-model="el.props.text"
+                                @input="updateElementProps(el.id, { text: el.props.text })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                                rows="2"
+                            ></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Level</label>
+                            <select
+                                x-model="el.props.level"
+                                @change="updateElementProps(el.id, { level: el.props.level })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                            >
+                                <option value="h1">H1</option>
+                                <option value="h2">H2</option>
+                                <option value="h3">H3</option>
+                                <option value="h4">H4</option>
+                                <option value="h5">H5</option>
+                                <option value="h6">H6</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Color</label>
+                            <input
+                                type="color"
+                                x-model="el.props.color"
+                                @input="updateElementProps(el.id, { color: el.props.color })"
+                                class="w-full h-10 p-1 border border-gray-300 rounded"
+                            >
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Font Size</label>
+                            <input
+                                type="text"
+                                x-model="el.props.fontSize"
+                                @input="updateElementProps(el.id, { fontSize: el.props.fontSize })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                                placeholder="32px"
+                            >
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Font Weight</label>
+                            <select
+                                x-model="el.props.fontWeight"
+                                @change="updateElementProps(el.id, { fontWeight: el.props.fontWeight })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                            >
+                                <option value="400">Normal</option>
+                                <option value="500">Medium</option>
+                                <option value="600">Semibold</option>
+                                <option value="700">Bold</option>
+                            </select>
+                        </div>
+                    </div>
+                </template>
 
-  const findElement = (
-    elements: BuilderElement[],
-    id: string
-  ): BuilderElement | null => {
-    for (const el of elements) {
-      if (el.id === id) return el;
-      if ('children' in el && el.children) {
-        const found = findElement(el.children as BuilderElement[], id);
-        if (found) return found;
-      }
-    }
-    return null;
-  };
+                {{-- Paragraph Properties --}}
+                <template x-if="getSelectedElement()?.type === 'paragraph'">
+                    <div x-data="{ el: getSelectedElement() }">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Text</label>
+                            <textarea
+                                x-model="el.props.text"
+                                @input="updateElementProps(el.id, { text: el.props.text })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                                rows="4"
+                            ></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Color</label>
+                            <input
+                                type="color"
+                                x-model="el.props.color"
+                                @input="updateElementProps(el.id, { color: el.props.color })"
+                                class="w-full h-10 p-1 border border-gray-300 rounded"
+                            >
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Font Size</label>
+                            <input
+                                type="text"
+                                x-model="el.props.fontSize"
+                                @input="updateElementProps(el.id, { fontSize: el.props.fontSize })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                                placeholder="16px"
+                            >
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Line Height</label>
+                            <input
+                                type="text"
+                                x-model="el.props.lineHeight"
+                                @input="updateElementProps(el.id, { lineHeight: el.props.lineHeight })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                                placeholder="1.6"
+                            >
+                        </div>
+                    </div>
+                </template>
 
-  const element = selectedElement ? findElement(elements, selectedElement) : null;
+                {{-- Image Properties --}}
+                <template x-if="getSelectedElement()?.type === 'image'">
+                    <div x-data="{ el: getSelectedElement() }">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
+                            <input
+                                type="text"
+                                x-model="el.props.src"
+                                @input="updateElementProps(el.id, { src: el.props.src })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                                placeholder="https://..."
+                            >
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Alt Text</label>
+                            <input
+                                type="text"
+                                x-model="el.props.alt"
+                                @input="updateElementProps(el.id, { alt: el.props.alt })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                            >
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Width</label>
+                            <input
+                                type="text"
+                                x-model="el.props.width"
+                                @input="updateElementProps(el.id, { width: el.props.width })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                                placeholder="100%"
+                            >
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Object Fit</label>
+                            <select
+                                x-model="el.props.objectFit"
+                                @change="updateElementProps(el.id, { objectFit: el.props.objectFit })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                            >
+                                <option value="cover">Cover</option>
+                                <option value="contain">Contain</option>
+                                <option value="fill">Fill</option>
+                                <option value="none">None</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Link URL</label>
+                            <input
+                                type="text"
+                                x-model="el.props.link"
+                                @input="updateElementProps(el.id, { link: el.props.link })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                                placeholder="https://..."
+                            >
+                        </div>
+                    </div>
+                </template>
 
-  if (!element) {
-    return (
-      <div className="properties-panel empty">
-        <p>Select an element to edit its properties</p>
-      </div>
-    );
-  }
+                {{-- Button Properties --}}
+                <template x-if="getSelectedElement()?.type === 'button'">
+                    <div x-data="{ el: getSelectedElement() }">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Text</label>
+                            <input
+                                type="text"
+                                x-model="el.props.text"
+                                @input="updateElementProps(el.id, { text: el.props.text })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                            >
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Link URL</label>
+                            <input
+                                type="text"
+                                x-model="el.props.link"
+                                @input="updateElementProps(el.id, { link: el.props.link })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                            >
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Variant</label>
+                            <select
+                                x-model="el.props.variant"
+                                @change="updateElementProps(el.id, { variant: el.props.variant })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                            >
+                                <option value="primary">Primary</option>
+                                <option value="secondary">Secondary</option>
+                                <option value="outline">Outline</option>
+                                <option value="ghost">Ghost</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Size</label>
+                            <select
+                                x-model="el.props.size"
+                                @change="updateElementProps(el.id, { size: el.props.size })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                            >
+                                <option value="sm">Small</option>
+                                <option value="md">Medium</option>
+                                <option value="lg">Large</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Background Color</label>
+                            <input
+                                type="color"
+                                x-model="el.props.backgroundColor"
+                                @input="updateElementProps(el.id, { backgroundColor: el.props.backgroundColor })"
+                                class="w-full h-10 p-1 border border-gray-300 rounded"
+                            >
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Text Color</label>
+                            <input
+                                type="color"
+                                x-model="el.props.textColor"
+                                @input="updateElementProps(el.id, { textColor: el.props.textColor })"
+                                class="w-full h-10 p-1 border border-gray-300 rounded"
+                            >
+                        </div>
+                        <div class="mb-4">
+                            <label class="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    x-model="el.props.fullWidth"
+                                    @change="updateElementProps(el.id, { fullWidth: el.props.fullWidth })"
+                                    class="rounded border-gray-300"
+                                >
+                                <span class="text-sm text-gray-700">Full Width</span>
+                            </label>
+                        </div>
+                    </div>
+                </template>
 
-  const editors: Record<string, React.FC<any>> = {
-    heading: HeadingPropsEditor,
-    paragraph: ParagraphPropsEditor,
-    image: ImagePropsEditor,
-    button: ButtonPropsEditor,
-    video: VideoPropsEditor,
-    form: FormPropsEditor,
-    section: SectionPropsEditor,
-    columns: ColumnsPropsEditor,
-  };
+                {{-- Section Properties --}}
+                <template x-if="getSelectedElement()?.type === 'section'">
+                    <div x-data="{ el: getSelectedElement() }">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Background Color</label>
+                            <input
+                                type="color"
+                                x-model="el.props.backgroundColor"
+                                @input="updateElementProps(el.id, { backgroundColor: el.props.backgroundColor })"
+                                class="w-full h-10 p-1 border border-gray-300 rounded"
+                            >
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Background Image URL</label>
+                            <input
+                                type="text"
+                                x-model="el.props.backgroundImage"
+                                @input="updateElementProps(el.id, { backgroundImage: el.props.backgroundImage })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                            >
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Min Height</label>
+                            <input
+                                type="text"
+                                x-model="el.props.minHeight"
+                                @input="updateElementProps(el.id, { minHeight: el.props.minHeight })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                                placeholder="200px"
+                            >
+                        </div>
+                    </div>
+                </template>
 
-  const PropsEditor = editors[element.type];
-
-  return (
-    <div className="properties-panel">
-      <div className="panel-header">
-        <h3>{element.label} Properties</h3>
-        <div className="panel-actions">
-          <button onClick={() => duplicateElement(element.id)} title="Duplicate">
-            <CopyIcon />
-          </button>
-          <button onClick={() => deleteElement(element.id)} title="Delete">
-            <TrashIcon />
-          </button>
+                {{-- Styles Editor (common for all) --}}
+                <div class="mt-6 pt-4 border-t border-gray-200">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-3">Styles</h4>
+                    <div x-data="{ el: getSelectedElement() }">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Margin</label>
+                            <input
+                                type="text"
+                                x-model="el.styles.margin"
+                                @input="updateElementStyles(el.id, { margin: el.styles.margin })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                                placeholder="10px 20px"
+                            >
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Padding</label>
+                            <input
+                                type="text"
+                                x-model="el.styles.padding"
+                                @input="updateElementStyles(el.id, { padding: el.styles.padding })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                                placeholder="20px"
+                            >
+                        </div>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Border Radius</label>
+                            <input
+                                type="text"
+                                x-model="el.styles.borderRadius"
+                                @input="updateElementStyles(el.id, { borderRadius: el.styles.borderRadius })"
+                                class="w-full p-2 border border-gray-300 rounded text-sm"
+                                placeholder="8px"
+                            >
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
+    </template>
 
-      <div className="panel-content">
-        {PropsEditor && (
-          <PropsEditor
-            props={element.props}
-            onChange={(newProps: Record<string, any>) =>
-              updateElementProps(element.id, newProps)
-            }
-          />
-        )}
-
-        <StylesEditor
-          styles={element.styles || {}}
-          onChange={(newStyles) => updateElementStyles(element.id, newStyles)}
-        />
-      </div>
-    </div>
-  );
-};
-```
-
-### Property Editors
-
-```typescript
-// src/builder/components/editors/HeadingPropsEditor.tsx
-import React from 'react';
-import { HeadingElement } from '../../types';
-import { ColorPicker, Select, TextInput, FontPicker } from '../ui';
-
-interface Props {
-  props: HeadingElement['props'];
-  onChange: (props: HeadingElement['props']) => void;
-}
-
-export const HeadingPropsEditor: React.FC<Props> = ({ props, onChange }) => {
-  const update = (key: string, value: any) => {
-    onChange({ ...props, [key]: value });
-  };
-
-  return (
-    <div className="props-editor">
-      <div className="editor-section">
-        <h4>Content</h4>
-        <TextInput
-          label="Text"
-          value={props.text}
-          onChange={(value) => update('text', value)}
-          multiline
-        />
-        <Select
-          label="Level"
-          value={props.level}
-          onChange={(value) => update('level', value)}
-          options={[
-            { value: 'h1', label: 'H1' },
-            { value: 'h2', label: 'H2' },
-            { value: 'h3', label: 'H3' },
-            { value: 'h4', label: 'H4' },
-            { value: 'h5', label: 'H5' },
-            { value: 'h6', label: 'H6' },
-          ]}
-        />
-      </div>
-
-      <div className="editor-section">
-        <h4>Typography</h4>
-        <ColorPicker
-          label="Color"
-          value={props.color || '#000000'}
-          onChange={(value) => update('color', value)}
-        />
-        <TextInput
-          label="Font Size"
-          value={props.fontSize || '32px'}
-          onChange={(value) => update('fontSize', value)}
-        />
-        <Select
-          label="Font Weight"
-          value={props.fontWeight || '700'}
-          onChange={(value) => update('fontWeight', value)}
-          options={[
-            { value: '400', label: 'Normal' },
-            { value: '500', label: 'Medium' },
-            { value: '600', label: 'Semibold' },
-            { value: '700', label: 'Bold' },
-          ]}
-        />
-        <FontPicker
-          label="Font Family"
-          value={props.fontFamily}
-          onChange={(value) => update('fontFamily', value)}
-        />
-      </div>
-    </div>
-  );
-};
-```
-
-### Styles Editor
-
-```typescript
-// src/builder/components/editors/StylesEditor.tsx
-import React from 'react';
-import { ElementStyles } from '../../types';
-import { ColorPicker, TextInput, Select } from '../ui';
-
-interface Props {
-  styles: ElementStyles;
-  onChange: (styles: ElementStyles) => void;
-}
-
-export const StylesEditor: React.FC<Props> = ({ styles, onChange }) => {
-  const update = (key: keyof ElementStyles, value: any) => {
-    onChange({ ...styles, [key]: value });
-  };
-
-  return (
-    <div className="styles-editor">
-      <h4>Styles</h4>
-
-      <div className="editor-section">
-        <h5>Spacing</h5>
-        <TextInput
-          label="Margin"
-          value={styles.margin || ''}
-          onChange={(value) => update('margin', value)}
-          placeholder="e.g., 10px 20px"
-        />
-        <TextInput
-          label="Padding"
-          value={styles.padding || ''}
-          onChange={(value) => update('padding', value)}
-          placeholder="e.g., 20px"
-        />
-      </div>
-
-      <div className="editor-section">
-        <h5>Background</h5>
-        <ColorPicker
-          label="Background Color"
-          value={styles.backgroundColor || '#ffffff'}
-          onChange={(value) => update('backgroundColor', value)}
-        />
-      </div>
-
-      <div className="editor-section">
-        <h5>Border</h5>
-        <TextInput
-          label="Border Radius"
-          value={styles.borderRadius || ''}
-          onChange={(value) => update('borderRadius', value)}
-          placeholder="e.g., 8px"
-        />
-        <TextInput
-          label="Border"
-          value={styles.border || ''}
-          onChange={(value) => update('border', value)}
-          placeholder="e.g., 1px solid #ccc"
-        />
-        <TextInput
-          label="Box Shadow"
-          value={styles.boxShadow || ''}
-          onChange={(value) => update('boxShadow', value)}
-          placeholder="e.g., 0 2px 4px rgba(0,0,0,0.1)"
-        />
-      </div>
-
-      <div className="editor-section">
-        <h5>Layout</h5>
-        <TextInput
-          label="Width"
-          value={styles.width || ''}
-          onChange={(value) => update('width', value)}
-          placeholder="e.g., 100% or 500px"
-        />
-        <TextInput
-          label="Max Width"
-          value={styles.maxWidth || ''}
-          onChange={(value) => update('maxWidth', value)}
-          placeholder="e.g., 1200px"
-        />
-        <Select
-          label="Text Align"
-          value={styles.textAlign || 'left'}
-          onChange={(value) => update('textAlign', value as ElementStyles['textAlign'])}
-          options={[
-            { value: 'left', label: 'Left' },
-            { value: 'center', label: 'Center' },
-            { value: 'right', label: 'Right' },
-          ]}
-        />
-      </div>
-    </div>
-  );
-};
+    {{-- Empty state --}}
+    <template x-if="!selectedElement">
+        <div class="flex items-center justify-center h-full text-gray-400 p-4 text-center">
+            Select an element to edit its properties
+        </div>
+    </template>
+</div>
 ```
 
 ---
 
-## Canvas Features
-
-### Builder Store with Full Features
-
-```typescript
-// src/builder/store/builderStore.ts
-import { create } from 'zustand';
-import { subscribeWithSelector } from 'zustand/middleware';
-import { BuilderElement, ColumnChild } from '../types';
-
-interface HistoryState {
-  elements: BuilderElement[];
-  selectedElement: string | null;
-}
-
-interface Clipboard {
-  element: BuilderElement | null;
-}
-
-interface BuilderState {
-  // Core state
-  elements: BuilderElement[];
-  selectedElement: string | null;
-  pageId: string | null;
-  isDirty: boolean;
-
-  // History for undo/redo
-  history: HistoryState[];
-  historyIndex: number;
-
-  // Clipboard
-  clipboard: Clipboard;
-
-  // Responsive preview
-  previewMode: 'desktop' | 'tablet' | 'mobile';
-
-  // Actions
-  setElements: (elements: BuilderElement[]) => void;
-  setSelectedElement: (id: string | null) => void;
-  updateElementProps: (id: string, props: Record<string, any>) => void;
-  updateElementStyles: (id: string, styles: Record<string, any>) => void;
-  updateElementChildren: (id: string, children: BuilderElement[]) => void;
-  updateColumnChildren: (elementId: string, columnId: string, elements: BuilderElement[]) => void;
-  deleteElement: (id: string) => void;
-  duplicateElement: (id: string) => void;
-
-  // History actions
-  addToHistory: () => void;
-  undo: () => void;
-  redo: () => void;
-
-  // Clipboard actions
-  copy: () => void;
-  paste: () => void;
-  cut: () => void;
-
-  // Preview
-  setPreviewMode: (mode: 'desktop' | 'tablet' | 'mobile') => void;
-
-  // Persistence
-  loadPage: (pageId: string) => Promise<void>;
-  savePage: () => Promise<void>;
-  setDirty: (dirty: boolean) => void;
-}
-
-export const useBuilderStore = create<BuilderState>()(
-  subscribeWithSelector((set, get) => ({
-    elements: [],
-    selectedElement: null,
-    pageId: null,
-    isDirty: false,
-    history: [],
-    historyIndex: -1,
-    clipboard: { element: null },
-    previewMode: 'desktop',
-
-    setElements: (elements) => {
-      set({ elements, isDirty: true });
-    },
-
-    setSelectedElement: (id) => {
-      set({ selectedElement: id });
-    },
-
-    updateElementProps: (id, newProps) => {
-      const { addToHistory } = get();
-      addToHistory();
-
-      set((state) => ({
-        elements: updateElementInTree(state.elements, id, (el) => ({
-          ...el,
-          props: { ...el.props, ...newProps },
-        })),
-        isDirty: true,
-      }));
-    },
-
-    updateElementStyles: (id, newStyles) => {
-      const { addToHistory } = get();
-      addToHistory();
-
-      set((state) => ({
-        elements: updateElementInTree(state.elements, id, (el) => ({
-          ...el,
-          styles: { ...el.styles, ...newStyles },
-        })),
-        isDirty: true,
-      }));
-    },
-
-    updateElementChildren: (id, children) => {
-      set((state) => ({
-        elements: updateElementInTree(state.elements, id, (el) => ({
-          ...el,
-          children,
-        })),
-        isDirty: true,
-      }));
-    },
-
-    updateColumnChildren: (elementId, columnId, newElements) => {
-      set((state) => ({
-        elements: updateElementInTree(state.elements, elementId, (el) => {
-          if (el.type !== 'columns') return el;
-          return {
-            ...el,
-            children: el.children.map((col: ColumnChild) =>
-              col.id === columnId ? { ...col, elements: newElements } : col
-            ),
-          };
-        }),
-        isDirty: true,
-      }));
-    },
-
-    deleteElement: (id) => {
-      const { addToHistory } = get();
-      addToHistory();
-
-      set((state) => ({
-        elements: removeElementFromTree(state.elements, id),
-        selectedElement: state.selectedElement === id ? null : state.selectedElement,
-        isDirty: true,
-      }));
-    },
-
-    duplicateElement: (id) => {
-      const { addToHistory, elements } = get();
-      const element = findElementInTree(elements, id);
-
-      if (!element) return;
-
-      addToHistory();
-      const duplicated = deepCloneWithNewIds(element);
-
-      set((state) => ({
-        elements: insertAfterElement(state.elements, id, duplicated),
-        selectedElement: duplicated.id,
-        isDirty: true,
-      }));
-    },
-
-    // History Management
-    addToHistory: () => {
-      const { elements, selectedElement, history, historyIndex } = get();
-      const newHistory = history.slice(0, historyIndex + 1);
-      newHistory.push({
-        elements: JSON.parse(JSON.stringify(elements)),
-        selectedElement,
-      });
-
-      // Limit history to 50 states
-      if (newHistory.length > 50) {
-        newHistory.shift();
-      }
-
-      set({
-        history: newHistory,
-        historyIndex: newHistory.length - 1,
-      });
-    },
-
-    undo: () => {
-      const { history, historyIndex } = get();
-      if (historyIndex <= 0) return;
-
-      const newIndex = historyIndex - 1;
-      const prevState = history[newIndex];
-
-      set({
-        elements: JSON.parse(JSON.stringify(prevState.elements)),
-        selectedElement: prevState.selectedElement,
-        historyIndex: newIndex,
-        isDirty: true,
-      });
-    },
-
-    redo: () => {
-      const { history, historyIndex } = get();
-      if (historyIndex >= history.length - 1) return;
-
-      const newIndex = historyIndex + 1;
-      const nextState = history[newIndex];
-
-      set({
-        elements: JSON.parse(JSON.stringify(nextState.elements)),
-        selectedElement: nextState.selectedElement,
-        historyIndex: newIndex,
-        isDirty: true,
-      });
-    },
-
-    // Clipboard
-    copy: () => {
-      const { selectedElement, elements } = get();
-      if (!selectedElement) return;
-
-      const element = findElementInTree(elements, selectedElement);
-      if (element) {
-        set({ clipboard: { element: JSON.parse(JSON.stringify(element)) } });
-      }
-    },
-
-    paste: () => {
-      const { clipboard, addToHistory, selectedElement, elements } = get();
-      if (!clipboard.element) return;
-
-      addToHistory();
-      const pasted = deepCloneWithNewIds(clipboard.element);
-
-      if (selectedElement) {
-        set((state) => ({
-          elements: insertAfterElement(state.elements, selectedElement, pasted),
-          selectedElement: pasted.id,
-          isDirty: true,
-        }));
-      } else {
-        set((state) => ({
-          elements: [...state.elements, pasted],
-          selectedElement: pasted.id,
-          isDirty: true,
-        }));
-      }
-    },
-
-    cut: () => {
-      const { copy, deleteElement, selectedElement } = get();
-      if (!selectedElement) return;
-
-      copy();
-      deleteElement(selectedElement);
-    },
-
-    setPreviewMode: (mode) => {
-      set({ previewMode: mode });
-    },
-
-    // Persistence
-    loadPage: async (pageId) => {
-      try {
-        const response = await fetch(`/api/pages/${pageId}`);
-        const data = await response.json();
-
-        set({
-          pageId,
-          elements: data.elements || [],
-          isDirty: false,
-          history: [{
-            elements: data.elements || [],
-            selectedElement: null,
-          }],
-          historyIndex: 0,
-        });
-      } catch (error) {
-        console.error('Failed to load page:', error);
-        throw error;
-      }
-    },
-
-    savePage: async () => {
-      const { pageId, elements } = get();
-      if (!pageId) return;
-
-      try {
-        await fetch(`/api/pages/${pageId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ elements }),
-        });
-
-        set({ isDirty: false });
-      } catch (error) {
-        console.error('Failed to save page:', error);
-        throw error;
-      }
-    },
-
-    setDirty: (dirty) => {
-      set({ isDirty: dirty });
-    },
-  }))
-);
-
-// Helper functions
-function updateElementInTree(
-  elements: BuilderElement[],
-  id: string,
-  updater: (el: BuilderElement) => BuilderElement
-): BuilderElement[] {
-  return elements.map((el) => {
-    if (el.id === id) {
-      return updater(el);
-    }
-    if ('children' in el && Array.isArray(el.children)) {
-      if (el.type === 'columns') {
-        return {
-          ...el,
-          children: el.children.map((col: ColumnChild) => ({
-            ...col,
-            elements: updateElementInTree(col.elements, id, updater),
-          })),
-        };
-      }
-      return {
-        ...el,
-        children: updateElementInTree(el.children as BuilderElement[], id, updater),
-      };
-    }
-    return el;
-  });
-}
-
-function removeElementFromTree(elements: BuilderElement[], id: string): BuilderElement[] {
-  return elements
-    .filter((el) => el.id !== id)
-    .map((el) => {
-      if ('children' in el && Array.isArray(el.children)) {
-        if (el.type === 'columns') {
-          return {
-            ...el,
-            children: el.children.map((col: ColumnChild) => ({
-              ...col,
-              elements: removeElementFromTree(col.elements, id),
-            })),
-          };
-        }
-        return {
-          ...el,
-          children: removeElementFromTree(el.children as BuilderElement[], id),
-        };
-      }
-      return el;
-    });
-}
-
-function findElementInTree(elements: BuilderElement[], id: string): BuilderElement | null {
-  for (const el of elements) {
-    if (el.id === id) return el;
-    if ('children' in el && Array.isArray(el.children)) {
-      if (el.type === 'columns') {
-        for (const col of el.children as ColumnChild[]) {
-          const found = findElementInTree(col.elements, id);
-          if (found) return found;
-        }
-      } else {
-        const found = findElementInTree(el.children as BuilderElement[], id);
-        if (found) return found;
-      }
-    }
-  }
-  return null;
-}
-
-function insertAfterElement(
-  elements: BuilderElement[],
-  afterId: string,
-  newElement: BuilderElement
-): BuilderElement[] {
-  const result: BuilderElement[] = [];
-  for (const el of elements) {
-    result.push(el);
-    if (el.id === afterId) {
-      result.push(newElement);
-    }
-  }
-  return result;
-}
-
-function deepCloneWithNewIds(element: BuilderElement): BuilderElement {
-  const cloned = JSON.parse(JSON.stringify(element));
-
-  const assignNewIds = (el: any) => {
-    el.id = crypto.randomUUID();
-    if (el.children) {
-      if (Array.isArray(el.children)) {
-        el.children.forEach((child: any) => {
-          if (child.elements) {
-            child.id = crypto.randomUUID();
-            child.elements.forEach(assignNewIds);
-          } else {
-            assignNewIds(child);
-          }
-        });
-      }
-    }
-  };
-
-  assignNewIds(cloned);
-  return cloned;
-}
-```
-
-### Keyboard Shortcuts
-
-```typescript
-// src/builder/hooks/useKeyboardShortcuts.ts
-import { useEffect } from 'react';
-import { useBuilderStore } from '../store/builderStore';
-
-export const useKeyboardShortcuts = () => {
-  const {
-    undo,
-    redo,
-    copy,
-    paste,
-    cut,
-    deleteElement,
-    selectedElement,
-    savePage,
-  } = useBuilderStore();
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const isCtrlOrCmd = e.ctrlKey || e.metaKey;
-
-      // Undo: Ctrl/Cmd + Z
-      if (isCtrlOrCmd && e.key === 'z' && !e.shiftKey) {
-        e.preventDefault();
-        undo();
-      }
-
-      // Redo: Ctrl/Cmd + Shift + Z or Ctrl/Cmd + Y
-      if ((isCtrlOrCmd && e.shiftKey && e.key === 'z') || (isCtrlOrCmd && e.key === 'y')) {
-        e.preventDefault();
-        redo();
-      }
-
-      // Copy: Ctrl/Cmd + C
-      if (isCtrlOrCmd && e.key === 'c') {
-        e.preventDefault();
-        copy();
-      }
-
-      // Paste: Ctrl/Cmd + V
-      if (isCtrlOrCmd && e.key === 'v') {
-        e.preventDefault();
-        paste();
-      }
-
-      // Cut: Ctrl/Cmd + X
-      if (isCtrlOrCmd && e.key === 'x') {
-        e.preventDefault();
-        cut();
-      }
-
-      // Delete: Delete or Backspace
-      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedElement) {
-        const target = e.target as HTMLElement;
-        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
-          e.preventDefault();
-          deleteElement(selectedElement);
-        }
-      }
-
-      // Save: Ctrl/Cmd + S
-      if (isCtrlOrCmd && e.key === 's') {
-        e.preventDefault();
-        savePage();
-      }
-
-      // Escape: Deselect
-      if (e.key === 'Escape') {
-        useBuilderStore.getState().setSelectedElement(null);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [undo, redo, copy, paste, cut, deleteElement, selectedElement, savePage]);
-};
-```
-
-### Responsive Preview
-
-```typescript
-// src/builder/components/PreviewToolbar.tsx
-import React from 'react';
-import { useBuilderStore } from '../store/builderStore';
-import { Monitor, Tablet, Smartphone } from 'lucide-react';
-
-export const PreviewToolbar: React.FC = () => {
-  const { previewMode, setPreviewMode, undo, redo, savePage, isDirty } = useBuilderStore();
-
-  const previewSizes = {
-    desktop: { width: '100%', icon: Monitor },
-    tablet: { width: '768px', icon: Tablet },
-    mobile: { width: '375px', icon: Smartphone },
-  };
-
-  return (
-    <div className="preview-toolbar">
-      <div className="preview-modes">
-        {Object.entries(previewSizes).map(([mode, { icon: Icon }]) => (
-          <button
-            key={mode}
-            className={`preview-btn ${previewMode === mode ? 'active' : ''}`}
-            onClick={() => setPreviewMode(mode as any)}
-            title={mode.charAt(0).toUpperCase() + mode.slice(1)}
-          >
-            <Icon size={18} />
-          </button>
-        ))}
-      </div>
-
-      <div className="toolbar-actions">
-        <button onClick={undo} title="Undo (Ctrl+Z)">
-          <UndoIcon />
-        </button>
-        <button onClick={redo} title="Redo (Ctrl+Y)">
-          <RedoIcon />
+## Toolbar with Preview Modes
+
+```blade
+{{-- resources/views/builder/partials/toolbar.blade.php --}}
+<div class="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200">
+    {{-- Preview Modes --}}
+    <div class="flex gap-1">
+        <button
+            @click="setPreviewMode('desktop')"
+            :class="previewMode === 'desktop' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'"
+            class="p-2 border border-gray-200 rounded transition-colors"
+            title="Desktop"
+        >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
         </button>
         <button
-          onClick={savePage}
-          className={isDirty ? 'unsaved' : ''}
-          title="Save (Ctrl+S)"
+            @click="setPreviewMode('tablet')"
+            :class="previewMode === 'tablet' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'"
+            class="p-2 border border-gray-200 rounded transition-colors"
+            title="Tablet"
         >
-          <SaveIcon />
-          {isDirty && <span className="unsaved-indicator" />}
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+            </svg>
         </button>
-      </div>
+        <button
+            @click="setPreviewMode('mobile')"
+            :class="previewMode === 'mobile' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'"
+            class="p-2 border border-gray-200 rounded transition-colors"
+            title="Mobile"
+        >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+            </svg>
+        </button>
     </div>
-  );
-};
-```
 
-### Canvas Wrapper with Responsive Preview
-
-```typescript
-// src/builder/components/CanvasWrapper.tsx
-import React from 'react';
-import { useBuilderStore } from '../store/builderStore';
-import { Canvas } from './Canvas';
-
-export const CanvasWrapper: React.FC = () => {
-  const { previewMode } = useBuilderStore();
-
-  const previewWidths = {
-    desktop: '100%',
-    tablet: '768px',
-    mobile: '375px',
-  };
-
-  return (
-    <div className="canvas-wrapper">
-      <div
-        className="canvas-viewport"
-        style={{
-          width: previewWidths[previewMode],
-          margin: previewMode !== 'desktop' ? '0 auto' : undefined,
-          transition: 'width 0.3s ease',
-        }}
-      >
-        <Canvas pageId={useBuilderStore.getState().pageId!} />
-      </div>
+    {{-- Page Title --}}
+    <div class="text-sm font-medium text-gray-600">
+        {{ $page->name }}
     </div>
-  );
-};
+
+    {{-- Actions --}}
+    <div class="flex items-center gap-2">
+        <button
+            @click="undo()"
+            class="p-2 text-gray-600 hover:bg-gray-100 rounded"
+            title="Undo (Ctrl+Z)"
+        >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+            </svg>
+        </button>
+        <button
+            @click="redo()"
+            class="p-2 text-gray-600 hover:bg-gray-100 rounded"
+            title="Redo (Ctrl+Y)"
+        >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10h-10a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6"/>
+            </svg>
+        </button>
+        <div class="w-px h-6 bg-gray-200 mx-2"></div>
+        <button
+            @click="savePage()"
+            class="relative px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm font-medium"
+        >
+            Save
+            <span
+                x-show="isDirty"
+                class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"
+            ></span>
+        </button>
+        <a
+            href="{{ route('pages.preview', $page) }}"
+            target="_blank"
+            class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors text-sm font-medium"
+        >
+            Preview
+        </a>
+    </div>
+</div>
 ```
 
 ---
 
-## Data Persistence
+## JSON to HTML Renderer in PHP
 
-### Auto-Save Hook
+```php
+<?php
+// app/Services/PageRenderer.php
 
-```typescript
-// src/builder/hooks/useAutoSave.ts
-import { useEffect, useRef } from 'react';
-import { useBuilderStore } from '../store/builderStore';
+namespace App\Services;
 
-interface AutoSaveOptions {
-  interval?: number; // milliseconds
-  enabled?: boolean;
-}
+use App\Models\Page;
 
-export const useAutoSave = (options: AutoSaveOptions = {}) => {
-  const { interval = 30000, enabled = true } = options;
-  const { isDirty, savePage, elements } = useBuilderStore();
-  const timeoutRef = useRef<NodeJS.Timeout>();
-  const lastSavedRef = useRef<string>('');
+class PageRenderer
+{
+    public function render(Page $page): string
+    {
+        $elementsHtml = $this->renderElements($page->elements ?? []);
 
-  useEffect(() => {
-    if (!enabled) return;
+        return view('builder.render.page', [
+            'page' => $page,
+            'content' => $elementsHtml,
+        ])->render();
+    }
 
-    const currentState = JSON.stringify(elements);
-
-    // Only set up auto-save if there are actual changes
-    if (isDirty && currentState !== lastSavedRef.current) {
-      // Debounce save
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-
-      timeoutRef.current = setTimeout(async () => {
-        try {
-          await savePage();
-          lastSavedRef.current = currentState;
-          console.log('Auto-saved at', new Date().toLocaleTimeString());
-        } catch (error) {
-          console.error('Auto-save failed:', error);
+    public function renderElements(array $elements): string
+    {
+        $html = '';
+        foreach ($elements as $element) {
+            $html .= $this->renderElement($element);
         }
-      }, interval);
+        return $html;
     }
 
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [elements, isDirty, enabled, interval, savePage]);
+    public function renderElement(array $element): string
+    {
+        $type = $element['type'] ?? 'unknown';
+        $method = 'render' . ucfirst($type);
 
-  // Save on beforeunload if dirty
-  useEffect(() => {
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDirty) {
-        e.preventDefault();
-        e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
-        return e.returnValue;
-      }
-    };
+        if (method_exists($this, $method)) {
+            return $this->$method($element);
+        }
 
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [isDirty]);
-};
-```
+        return "<!-- Unknown element type: {$type} -->";
+    }
 
-### Page Data Schema
+    protected function renderHeading(array $el): string
+    {
+        $tag = $el['props']['level'] ?? 'h2';
+        $text = e($el['props']['text'] ?? '');
+        $style = $this->buildStyle([
+            'color' => $el['props']['color'] ?? '#000',
+            'font-size' => $el['props']['fontSize'] ?? null,
+            'font-weight' => $el['props']['fontWeight'] ?? null,
+            'font-family' => $el['props']['fontFamily'] ?? null,
+            'margin' => $el['styles']['margin'] ?? null,
+            'text-align' => $el['styles']['textAlign'] ?? null,
+        ]);
 
-```typescript
-// src/builder/types/page.ts
-import { BuilderElement } from './elements';
+        return "<{$tag} style=\"{$style}\">{$text}</{$tag}>";
+    }
 
-export interface PageData {
-  id: string;
-  name: string;
-  slug: string;
-  elements: BuilderElement[];
-  settings: PageSettings;
-  metadata: PageMetadata;
-  createdAt: string;
-  updatedAt: string;
-  publishedAt?: string;
-  status: 'draft' | 'published' | 'archived';
+    protected function renderParagraph(array $el): string
+    {
+        $text = e($el['props']['text'] ?? '');
+        $style = $this->buildStyle([
+            'color' => $el['props']['color'] ?? '#333',
+            'font-size' => $el['props']['fontSize'] ?? '16px',
+            'line-height' => $el['props']['lineHeight'] ?? '1.6',
+            'font-family' => $el['props']['fontFamily'] ?? null,
+            'margin' => $el['styles']['margin'] ?? null,
+        ]);
+
+        return "<p style=\"{$style}\">{$text}</p>";
+    }
+
+    protected function renderImage(array $el): string
+    {
+        $src = e($el['props']['src'] ?? '');
+        $alt = e($el['props']['alt'] ?? '');
+        $style = $this->buildStyle([
+            'width' => $el['props']['width'] ?? '100%',
+            'height' => $el['props']['height'] ?? null,
+            'object-fit' => $el['props']['objectFit'] ?? 'cover',
+            'border-radius' => $el['styles']['borderRadius'] ?? null,
+        ]);
+
+        $img = "<img src=\"{$src}\" alt=\"{$alt}\" style=\"{$style}\" loading=\"lazy\">";
+
+        if (!empty($el['props']['link'])) {
+            $link = e($el['props']['link']);
+            $target = $el['props']['linkTarget'] ?? '_self';
+            $rel = $target === '_blank' ? 'rel="noopener noreferrer"' : '';
+            return "<a href=\"{$link}\" target=\"{$target}\" {$rel}>{$img}</a>";
+        }
+
+        return $img;
+    }
+
+    protected function renderButton(array $el): string
+    {
+        $text = e($el['props']['text'] ?? 'Button');
+        $sizes = [
+            'sm' => 'padding: 8px 16px; font-size: 14px;',
+            'md' => 'padding: 12px 24px; font-size: 16px;',
+            'lg' => 'padding: 16px 32px; font-size: 18px;',
+        ];
+
+        $bgColor = $el['props']['backgroundColor'] ?? '#3b82f6';
+        $textColor = $el['props']['textColor'] ?? '#fff';
+
+        $baseStyle = implode(' ', [
+            "background-color: {$bgColor};",
+            "color: {$textColor};",
+            "border-radius: " . ($el['props']['borderRadius'] ?? '6px') . ";",
+            $el['props']['fullWidth'] ?? false ? 'width: 100%;' : '',
+            $sizes[$el['props']['size'] ?? 'md'],
+            'border: none;',
+            'cursor: pointer;',
+            'display: inline-block;',
+            'text-decoration: none;',
+            'text-align: center;',
+            'font-weight: 600;',
+        ]);
+
+        if (($el['props']['variant'] ?? 'primary') === 'outline') {
+            $baseStyle .= " background-color: transparent; color: {$bgColor}; border: 2px solid {$bgColor};";
+        }
+
+        if (!empty($el['props']['link'])) {
+            $link = e($el['props']['link']);
+            $target = $el['props']['linkTarget'] ?? '_self';
+            return "<a href=\"{$link}\" target=\"{$target}\" style=\"{$baseStyle}\">{$text}</a>";
+        }
+
+        return "<button style=\"{$baseStyle}\">{$text}</button>";
+    }
+
+    protected function renderVideo(array $el): string
+    {
+        $ratios = ['16:9' => '56.25%', '4:3' => '75%', '1:1' => '100%'];
+        $ratio = $ratios[$el['props']['aspectRatio'] ?? '16:9'];
+
+        $containerStyle = "position: relative; padding-bottom: {$ratio}; height: 0; overflow: hidden;";
+        $mediaStyle = "position: absolute; top: 0; left: 0; width: 100%; height: 100%;";
+
+        $src = $el['props']['src'] ?? '';
+        $provider = $el['props']['provider'] ?? 'custom';
+
+        if ($provider === 'youtube') {
+            preg_match('/(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/watch\?.+&v=))([^&?]+)/', $src, $matches);
+            if (!empty($matches[1])) {
+                $videoId = $matches[1];
+                $params = [];
+                if ($el['props']['autoplay'] ?? false) $params[] = 'autoplay=1';
+                if ($el['props']['muted'] ?? false) $params[] = 'mute=1';
+                if ($el['props']['loop'] ?? false) $params[] = 'loop=1';
+                $query = implode('&', $params);
+
+                return "<div style=\"{$containerStyle}\">
+                    <iframe src=\"https://www.youtube.com/embed/{$videoId}?{$query}\" style=\"{$mediaStyle}\" frameborder=\"0\" allowfullscreen></iframe>
+                </div>";
+            }
+        }
+
+        if ($provider === 'vimeo') {
+            preg_match('/vimeo\.com\/(\d+)/', $src, $matches);
+            if (!empty($matches[1])) {
+                $videoId = $matches[1];
+                return "<div style=\"{$containerStyle}\">
+                    <iframe src=\"https://player.vimeo.com/video/{$videoId}\" style=\"{$mediaStyle}\" frameborder=\"0\" allowfullscreen></iframe>
+                </div>";
+            }
+        }
+
+        $attrs = [];
+        if ($el['props']['controls'] ?? true) $attrs[] = 'controls';
+        if ($el['props']['autoplay'] ?? false) $attrs[] = 'autoplay';
+        if ($el['props']['muted'] ?? false) $attrs[] = 'muted';
+        if ($el['props']['loop'] ?? false) $attrs[] = 'loop';
+
+        return "<div style=\"{$containerStyle}\">
+            <video src=\"" . e($src) . "\" style=\"{$mediaStyle}\" " . implode(' ', $attrs) . "></video>
+        </div>";
+    }
+
+    protected function renderSection(array $el): string
+    {
+        $style = $this->buildStyle([
+            'background-color' => $el['props']['backgroundColor'] ?? '#fff',
+            'background-image' => isset($el['props']['backgroundImage']) ? "url({$el['props']['backgroundImage']})" : null,
+            'background-size' => $el['props']['backgroundSize'] ?? null,
+            'min-height' => $el['props']['minHeight'] ?? null,
+            'padding' => $el['styles']['padding'] ?? '40px 20px',
+        ]);
+
+        $children = $this->renderElements($el['children'] ?? []);
+
+        return "<section style=\"{$style}\">{$children}</section>";
+    }
+
+    protected function renderForm(array $el): string
+    {
+        $action = e($el['props']['submitAction'] ?? '');
+        $fields = '';
+
+        foreach ($el['props']['fields'] ?? [] as $field) {
+            $label = e($field['label'] ?? '');
+            $name = e($field['id'] ?? '');
+            $placeholder = e($field['placeholder'] ?? '');
+            $required = ($field['required'] ?? false) ? 'required' : '';
+            $requiredMark = ($field['required'] ?? false) ? '<span class="text-red-500">*</span>' : '';
+
+            $input = match($field['type'] ?? 'text') {
+                'textarea' => "<textarea name=\"{$name}\" placeholder=\"{$placeholder}\" {$required} rows=\"4\" class=\"w-full p-2 border rounded\"></textarea>",
+                'select' => $this->renderSelectField($field),
+                default => "<input type=\"{$field['type']}\" name=\"{$name}\" placeholder=\"{$placeholder}\" {$required} class=\"w-full p-2 border rounded\">",
+            };
+
+            $fields .= "<div class=\"mb-4\">
+                <label class=\"block mb-1 font-medium\">{$label}{$requiredMark}</label>
+                {$input}
+            </div>";
+        }
+
+        $buttonStyle = "background-color: " . ($el['props']['buttonColor'] ?? '#3b82f6') . "; color: " . ($el['props']['buttonTextColor'] ?? '#fff') . ";";
+        $submitText = e($el['props']['submitText'] ?? 'Submit');
+
+        return "<form action=\"{$action}\" method=\"POST\">
+            {$fields}
+            <button type=\"submit\" style=\"{$buttonStyle}\" class=\"px-6 py-3 rounded font-semibold\">{$submitText}</button>
+        </form>";
+    }
+
+    protected function renderSelectField(array $field): string
+    {
+        $name = e($field['id'] ?? '');
+        $placeholder = e($field['placeholder'] ?? 'Select...');
+        $required = ($field['required'] ?? false) ? 'required' : '';
+
+        $options = "<option value=\"\">{$placeholder}</option>";
+        foreach ($field['options'] ?? [] as $option) {
+            $opt = e($option);
+            $options .= "<option value=\"{$opt}\">{$opt}</option>";
+        }
+
+        return "<select name=\"{$name}\" {$required} class=\"w-full p-2 border rounded\">{$options}</select>";
+    }
+
+    protected function renderColumns(array $el): string
+    {
+        $layout = $el['props']['layout'] ?? '1:1';
+        $ratios = array_map('intval', explode(':', $layout));
+        $total = array_sum($ratios);
+        $gridTemplate = implode(' ', array_map(fn($r) => (($r / $total) * 100) . '%', $ratios));
+
+        $gap = $el['props']['gap'] ?? '24px';
+        $style = "display: grid; grid-template-columns: {$gridTemplate}; gap: {$gap};";
+
+        $columns = '';
+        foreach ($el['children'] ?? [] as $col) {
+            $colContent = $this->renderElements($col['elements'] ?? []);
+            $columns .= "<div class=\"column\">{$colContent}</div>";
+        }
+
+        return "<div style=\"{$style}\">{$columns}</div>";
+    }
+
+    protected function buildStyle(array $properties): string
+    {
+        $styles = [];
+        foreach ($properties as $property => $value) {
+            if ($value !== null && $value !== '') {
+                $styles[] = "{$property}: {$value}";
+            }
+        }
+        return implode('; ', $styles);
+    }
 }
-
-export interface PageSettings {
-  favicon?: string;
-  customCss?: string;
-  customJs?: string;
-  bodyClass?: string;
-  fonts?: string[];
-}
-
-export interface PageMetadata {
-  title: string;
-  description?: string;
-  keywords?: string[];
-  ogImage?: string;
-  ogTitle?: string;
-  ogDescription?: string;
-  twitterCard?: 'summary' | 'summary_large_image';
-  canonicalUrl?: string;
-  noIndex?: boolean;
-}
 ```
 
-### API Service
+### Page Render Template
 
-```typescript
-// src/builder/services/pageService.ts
-import { PageData, BuilderElement } from '../types';
-
-const API_BASE = '/api';
-
-export const pageService = {
-  async getPage(pageId: string): Promise<PageData> {
-    const response = await fetch(`${API_BASE}/pages/${pageId}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch page');
-    }
-    return response.json();
-  },
-
-  async savePage(pageId: string, elements: BuilderElement[]): Promise<void> {
-    const response = await fetch(`${API_BASE}/pages/${pageId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ elements }),
-    });
-    if (!response.ok) {
-      throw new Error('Failed to save page');
-    }
-  },
-
-  async createPage(data: Partial<PageData>): Promise<PageData> {
-    const response = await fetch(`${API_BASE}/pages`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      throw new Error('Failed to create page');
-    }
-    return response.json();
-  },
-
-  async deletePage(pageId: string): Promise<void> {
-    const response = await fetch(`${API_BASE}/pages/${pageId}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      throw new Error('Failed to delete page');
-    }
-  },
-
-  async publishPage(pageId: string): Promise<PageData> {
-    const response = await fetch(`${API_BASE}/pages/${pageId}/publish`, {
-      method: 'POST',
-    });
-    if (!response.ok) {
-      throw new Error('Failed to publish page');
-    }
-    return response.json();
-  },
-
-  async duplicatePage(pageId: string): Promise<PageData> {
-    const response = await fetch(`${API_BASE}/pages/${pageId}/duplicate`, {
-      method: 'POST',
-    });
-    if (!response.ok) {
-      throw new Error('Failed to duplicate page');
-    }
-    return response.json();
-  },
-
-  async exportPage(pageId: string): Promise<string> {
-    const response = await fetch(`${API_BASE}/pages/${pageId}/export`);
-    if (!response.ok) {
-      throw new Error('Failed to export page');
-    }
-    const data = await response.json();
-    return JSON.stringify(data, null, 2);
-  },
-
-  async importPage(data: string): Promise<PageData> {
-    const parsed = JSON.parse(data);
-    const response = await fetch(`${API_BASE}/pages/import`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(parsed),
-    });
-    if (!response.ok) {
-      throw new Error('Failed to import page');
-    }
-    return response.json();
-  },
-};
-```
-
-### Local Storage Backup
-
-```typescript
-// src/builder/hooks/useLocalStorageBackup.ts
-import { useEffect } from 'react';
-import { useBuilderStore } from '../store/builderStore';
-
-export const useLocalStorageBackup = () => {
-  const { elements, pageId } = useBuilderStore();
-
-  // Save to localStorage on changes
-  useEffect(() => {
-    if (!pageId || elements.length === 0) return;
-
-    const key = `builder_backup_${pageId}`;
-    const backup = {
-      elements,
-      timestamp: Date.now(),
-    };
-
-    localStorage.setItem(key, JSON.stringify(backup));
-  }, [elements, pageId]);
-
-  // Restore from localStorage
-  const restoreBackup = (pageId: string): BuilderElement[] | null => {
-    const key = `builder_backup_${pageId}`;
-    const data = localStorage.getItem(key);
-
-    if (!data) return null;
-
-    try {
-      const backup = JSON.parse(data);
-      // Only restore if backup is less than 24 hours old
-      if (Date.now() - backup.timestamp < 24 * 60 * 60 * 1000) {
-        return backup.elements;
-      }
-    } catch {
-      return null;
-    }
-
-    return null;
-  };
-
-  // Clear backup after successful save
-  const clearBackup = (pageId: string) => {
-    const key = `builder_backup_${pageId}`;
-    localStorage.removeItem(key);
-  };
-
-  return { restoreBackup, clearBackup };
-};
-```
-
----
-
-## Render Engine
-
-### Static HTML Renderer
-
-```typescript
-// src/builder/renderer/renderToHtml.ts
-import { BuilderElement, PageData, FormField } from '../types';
-
-export const renderPageToHtml = (page: PageData): string => {
-  const elementsHtml = page.elements.map(renderElement).join('\n');
-
-  return `<!DOCTYPE html>
+```blade
+{{-- resources/views/builder/render/page.blade.php --}}
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${escapeHtml(page.metadata.title)}</title>
-  ${page.metadata.description ? `<meta name="description" content="${escapeHtml(page.metadata.description)}">` : ''}
-  ${page.metadata.keywords?.length ? `<meta name="keywords" content="${escapeHtml(page.metadata.keywords.join(', '))}">` : ''}
-  ${page.metadata.ogTitle ? `<meta property="og:title" content="${escapeHtml(page.metadata.ogTitle)}">` : ''}
-  ${page.metadata.ogDescription ? `<meta property="og:description" content="${escapeHtml(page.metadata.ogDescription)}">` : ''}
-  ${page.metadata.ogImage ? `<meta property="og:image" content="${escapeHtml(page.metadata.ogImage)}">` : ''}
-  ${page.metadata.canonicalUrl ? `<link rel="canonical" href="${escapeHtml(page.metadata.canonicalUrl)}">` : ''}
-  ${page.metadata.noIndex ? '<meta name="robots" content="noindex">' : ''}
-  ${page.settings.favicon ? `<link rel="icon" href="${escapeHtml(page.settings.favicon)}">` : ''}
-  ${page.settings.fonts?.map(font => `<link href="${font}" rel="stylesheet">`).join('\n') || ''}
-  <style>
-    ${getBaseStyles()}
-    ${page.settings.customCss || ''}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ $page->metadata['title'] ?? $page->name }}</title>
+
+    @if($page->metadata['description'] ?? null)
+    <meta name="description" content="{{ $page->metadata['description'] }}">
+    @endif
+
+    @if($page->metadata['ogTitle'] ?? null)
+    <meta property="og:title" content="{{ $page->metadata['ogTitle'] }}">
+    @endif
+
+    @if($page->metadata['ogDescription'] ?? null)
+    <meta property="og:description" content="{{ $page->metadata['ogDescription'] }}">
+    @endif
+
+    @if($page->metadata['ogImage'] ?? null)
+    <meta property="og:image" content="{{ $page->metadata['ogImage'] }}">
+    @endif
+
+    @if($page->settings['favicon'] ?? null)
+    <link rel="icon" href="{{ $page->settings['favicon'] }}">
+    @endif
+
+    @vite(['resources/css/app.css'])
+
+    @if($page->settings['customCss'] ?? null)
+    <style>{{ $page->settings['customCss'] }}</style>
+    @endif
 </head>
-<body class="${page.settings.bodyClass || ''}">
-  ${elementsHtml}
-  ${page.settings.customJs ? `<script>${page.settings.customJs}</script>` : ''}
+<body class="{{ $page->settings['bodyClass'] ?? '' }}">
+    {!! $content !!}
+
+    @if($page->settings['customJs'] ?? null)
+    <script>{{ $page->settings['customJs'] }}</script>
+    @endif
 </body>
-</html>`;
-};
-
-const renderElement = (element: BuilderElement): string => {
-  const styleAttr = element.styles ? `style="${styleObjectToString(element.styles)}"` : '';
-
-  switch (element.type) {
-    case 'section':
-      return renderSection(element, styleAttr);
-    case 'heading':
-      return renderHeading(element, styleAttr);
-    case 'paragraph':
-      return renderParagraph(element, styleAttr);
-    case 'image':
-      return renderImage(element, styleAttr);
-    case 'button':
-      return renderButton(element, styleAttr);
-    case 'video':
-      return renderVideo(element, styleAttr);
-    case 'form':
-      return renderForm(element, styleAttr);
-    case 'columns':
-      return renderColumns(element, styleAttr);
-    default:
-      return '';
-  }
-};
-
-const renderSection = (element: any, styleAttr: string): string => {
-  const sectionStyle = `
-    background-color: ${element.props.backgroundColor || '#ffffff'};
-    ${element.props.backgroundImage ? `background-image: url(${element.props.backgroundImage});` : ''}
-    ${element.props.backgroundSize ? `background-size: ${element.props.backgroundSize};` : ''}
-    min-height: ${element.props.minHeight || 'auto'};
-    ${element.props.fullWidth ? 'width: 100vw; margin-left: calc(-50vw + 50%);' : ''}
-  `;
-
-  const children = (element.children || []).map(renderElement).join('\n');
-
-  return `<section style="${sectionStyle}" ${styleAttr}>${children}</section>`;
-};
-
-const renderHeading = (element: any, styleAttr: string): string => {
-  const Tag = element.props.level;
-  const style = `
-    color: ${element.props.color || '#000000'};
-    font-size: ${element.props.fontSize || 'inherit'};
-    font-weight: ${element.props.fontWeight || 'inherit'};
-    ${element.props.fontFamily ? `font-family: ${element.props.fontFamily};` : ''}
-  `;
-
-  return `<${Tag} style="${style}" ${styleAttr}>${escapeHtml(element.props.text)}</${Tag}>`;
-};
-
-const renderParagraph = (element: any, styleAttr: string): string => {
-  const style = `
-    color: ${element.props.color || '#333333'};
-    font-size: ${element.props.fontSize || '16px'};
-    line-height: ${element.props.lineHeight || '1.6'};
-    ${element.props.fontFamily ? `font-family: ${element.props.fontFamily};` : ''}
-  `;
-
-  return `<p style="${style}" ${styleAttr}>${escapeHtml(element.props.text)}</p>`;
-};
-
-const renderImage = (element: any, styleAttr: string): string => {
-  const style = `
-    width: ${element.props.width || '100%'};
-    ${element.props.height ? `height: ${element.props.height};` : ''}
-    object-fit: ${element.props.objectFit || 'cover'};
-  `;
-
-  const img = `<img src="${escapeHtml(element.props.src)}" alt="${escapeHtml(element.props.alt)}" style="${style}" ${styleAttr} loading="lazy">`;
-
-  if (element.props.link) {
-    const rel = element.props.linkTarget === '_blank' ? 'rel="noopener noreferrer"' : '';
-    return `<a href="${escapeHtml(element.props.link)}" target="${element.props.linkTarget || '_self'}" ${rel}>${img}</a>`;
-  }
-
-  return img;
-};
-
-const renderButton = (element: any, styleAttr: string): string => {
-  const sizeStyles: Record<string, string> = {
-    sm: 'padding: 8px 16px; font-size: 14px;',
-    md: 'padding: 12px 24px; font-size: 16px;',
-    lg: 'padding: 16px 32px; font-size: 18px;',
-  };
-
-  let style = `
-    background-color: ${element.props.backgroundColor || '#3b82f6'};
-    color: ${element.props.textColor || '#ffffff'};
-    border-radius: ${element.props.borderRadius || '6px'};
-    ${element.props.fullWidth ? 'width: 100%;' : ''}
-    ${sizeStyles[element.props.size || 'md']}
-    border: none;
-    cursor: pointer;
-    display: inline-block;
-    text-decoration: none;
-    text-align: center;
-    font-weight: 600;
-  `;
-
-  if (element.props.variant === 'outline') {
-    style = `
-      ${style}
-      background-color: transparent;
-      color: ${element.props.backgroundColor || '#3b82f6'};
-      border: 2px solid ${element.props.backgroundColor || '#3b82f6'};
-    `;
-  }
-
-  if (element.props.variant === 'ghost') {
-    style = `
-      ${style}
-      background-color: transparent;
-      color: ${element.props.backgroundColor || '#3b82f6'};
-    `;
-  }
-
-  if (element.props.link) {
-    const rel = element.props.linkTarget === '_blank' ? 'rel="noopener noreferrer"' : '';
-    return `<a href="${escapeHtml(element.props.link)}" target="${element.props.linkTarget || '_self'}" style="${style}" ${styleAttr} ${rel}>${escapeHtml(element.props.text)}</a>`;
-  }
-
-  return `<button style="${style}" ${styleAttr}>${escapeHtml(element.props.text)}</button>`;
-};
-
-const renderVideo = (element: any, styleAttr: string): string => {
-  const aspectRatios: Record<string, string> = {
-    '16:9': '56.25%',
-    '4:3': '75%',
-    '1:1': '100%',
-  };
-
-  const containerStyle = `
-    position: relative;
-    padding-bottom: ${aspectRatios[element.props.aspectRatio || '16:9']};
-    height: 0;
-    overflow: hidden;
-  `;
-
-  const mediaStyle = `
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-  `;
-
-  if (element.props.provider === 'youtube') {
-    const videoId = element.props.src.match(/(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/watch\?.+&v=))([^&?]+)/)?.[1];
-    if (videoId) {
-      const params = new URLSearchParams();
-      if (element.props.autoplay) params.set('autoplay', '1');
-      if (element.props.muted) params.set('mute', '1');
-      if (element.props.loop) params.set('loop', '1');
-      if (!element.props.controls) params.set('controls', '0');
-
-      return `<div style="${containerStyle}" ${styleAttr}>
-        <iframe src="https://www.youtube.com/embed/${videoId}?${params.toString()}" style="${mediaStyle}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-      </div>`;
-    }
-  }
-
-  if (element.props.provider === 'vimeo') {
-    const videoId = element.props.src.match(/vimeo\.com\/(\d+)/)?.[1];
-    if (videoId) {
-      const params = new URLSearchParams();
-      if (element.props.autoplay) params.set('autoplay', '1');
-      if (element.props.muted) params.set('muted', '1');
-      if (element.props.loop) params.set('loop', '1');
-
-      return `<div style="${containerStyle}" ${styleAttr}>
-        <iframe src="https://player.vimeo.com/video/${videoId}?${params.toString()}" style="${mediaStyle}" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
-      </div>`;
-    }
-  }
-
-  return `<div style="${containerStyle}" ${styleAttr}>
-    <video src="${escapeHtml(element.props.src)}" style="${mediaStyle}" ${element.props.autoplay ? 'autoplay' : ''} ${element.props.muted ? 'muted' : ''} ${element.props.loop ? 'loop' : ''} ${element.props.controls ? 'controls' : ''}></video>
-  </div>`;
-};
-
-const renderForm = (element: any, styleAttr: string): string => {
-  const fields = element.props.fields.map((field: FormField) => {
-    const required = field.required ? 'required' : '';
-    const fieldHtml = (() => {
-      switch (field.type) {
-        case 'textarea':
-          return `<textarea name="${field.id}" placeholder="${escapeHtml(field.placeholder || '')}" ${required} rows="4"></textarea>`;
-        case 'select':
-          return `<select name="${field.id}" ${required}>
-            <option value="">${escapeHtml(field.placeholder || 'Select...')}</option>
-            ${field.options?.map(opt => `<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`).join('')}
-          </select>`;
-        case 'checkbox':
-          return `<label><input type="checkbox" name="${field.id}" ${required}> ${escapeHtml(field.label)}</label>`;
-        default:
-          return `<input type="${field.type}" name="${field.id}" placeholder="${escapeHtml(field.placeholder || '')}" ${required}>`;
-      }
-    })();
-
-    if (field.type === 'checkbox') {
-      return `<div class="form-field">${fieldHtml}</div>`;
-    }
-
-    return `<div class="form-field">
-      <label for="${field.id}">${escapeHtml(field.label)}${field.required ? '<span class="required">*</span>' : ''}</label>
-      ${fieldHtml}
-    </div>`;
-  }).join('\n');
-
-  return `<form action="${escapeHtml(element.props.submitAction)}" method="POST" ${styleAttr}>
-    ${fields}
-    <button type="submit" style="background-color: ${element.props.buttonColor || '#3b82f6'}; color: ${element.props.buttonTextColor || '#ffffff'};">
-      ${escapeHtml(element.props.submitText)}
-    </button>
-  </form>`;
-};
-
-const renderColumns = (element: any, styleAttr: string): string => {
-  const layout = element.props.layout || '1:1';
-  const ratios = layout.split(':').map(Number);
-  const total = ratios.reduce((a: number, b: number) => a + b, 0);
-  const gridTemplate = ratios.map((r: number) => `${(r / total) * 100}%`).join(' ');
-
-  const style = `
-    display: grid;
-    grid-template-columns: ${gridTemplate};
-    gap: ${element.props.gap || '24px'};
-  `;
-
-  const columns = element.children.map((col: any) => {
-    const colContent = col.elements.map(renderElement).join('\n');
-    return `<div class="column">${colContent}</div>`;
-  }).join('\n');
-
-  return `<div style="${style}" ${styleAttr}>${columns}</div>`;
-};
-
-// Utility functions
-const escapeHtml = (str: string): string => {
-  const htmlEntities: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
-  };
-  return str.replace(/[&<>"']/g, (char) => htmlEntities[char]);
-};
-
-const styleObjectToString = (styles: Record<string, any>): string => {
-  return Object.entries(styles)
-    .filter(([_, value]) => value !== undefined && value !== '')
-    .map(([key, value]) => {
-      const cssKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
-      return `${cssKey}: ${value}`;
-    })
-    .join('; ');
-};
-
-const getBaseStyles = (): string => `
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-    line-height: 1.5;
-    color: #333;
-  }
-
-  img {
-    max-width: 100%;
-    height: auto;
-  }
-
-  .form-field {
-    margin-bottom: 16px;
-  }
-
-  .form-field label {
-    display: block;
-    margin-bottom: 4px;
-    font-weight: 500;
-  }
-
-  .form-field input,
-  .form-field textarea,
-  .form-field select {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 16px;
-  }
-
-  .form-field .required {
-    color: #e53e3e;
-    margin-left: 4px;
-  }
-
-  form button[type="submit"] {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 4px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-`;
-```
-
-### React Renderer for Preview
-
-```typescript
-// src/builder/renderer/ReactRenderer.tsx
-import React from 'react';
-import { BuilderElement } from '../types';
-import { ElementRenderer } from '../components/elements';
-
-interface ReactRendererProps {
-  elements: BuilderElement[];
-}
-
-export const ReactRenderer: React.FC<ReactRendererProps> = ({ elements }) => {
-  return (
-    <div className="rendered-page">
-      {elements.map((element) => (
-        <ElementRenderer
-          key={element.id}
-          element={element}
-          isEditing={false}
-        />
-      ))}
-    </div>
-  );
-};
+</html>
 ```
 
 ---
 
-## Main Builder Component
+## API Controller
 
-```typescript
-// src/builder/Builder.tsx
-import React, { useEffect } from 'react';
-import { useBuilderStore } from './store/builderStore';
-import { ElementPalette } from './components/ElementPalette';
-import { CanvasWrapper } from './components/CanvasWrapper';
-import { PropertiesPanel } from './components/PropertiesPanel';
-import { PreviewToolbar } from './components/PreviewToolbar';
-import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import { useAutoSave } from './hooks/useAutoSave';
-import './styles/builder.css';
+```php
+<?php
+// app/Http/Controllers/Api/PageController.php
 
-interface BuilderProps {
-  pageId: string;
-}
+namespace App\Http\Controllers\Api;
 
-export const Builder: React.FC<BuilderProps> = ({ pageId }) => {
-  const { loadPage, setSelectedElement } = useBuilderStore();
+use App\Http\Controllers\Controller;
+use App\Models\Page;
+use Illuminate\Http\Request;
 
-  useKeyboardShortcuts();
-  useAutoSave({ interval: 30000 });
+class PageController extends Controller
+{
+    public function show(Page $page)
+    {
+        $this->authorize('view', $page);
 
-  useEffect(() => {
-    loadPage(pageId);
-  }, [pageId, loadPage]);
+        return response()->json([
+            'id' => $page->id,
+            'name' => $page->name,
+            'elements' => $page->elements ?? [],
+            'settings' => $page->settings ?? [],
+            'metadata' => $page->metadata ?? [],
+        ]);
+    }
 
-  const handleCanvasClick = () => {
-    setSelectedElement(null);
-  };
+    public function update(Request $request, Page $page)
+    {
+        $this->authorize('update', $page);
 
-  return (
-    <div className="builder-container">
-      <PreviewToolbar />
-      <div className="builder-main">
-        <ElementPalette />
-        <div className="builder-canvas" onClick={handleCanvasClick}>
-          <CanvasWrapper />
-        </div>
-        <PropertiesPanel />
-      </div>
-    </div>
-  );
-};
+        $validated = $request->validate([
+            'elements' => 'required|array',
+        ]);
 
-export default Builder;
-```
+        $page->update([
+            'elements' => $validated['elements'],
+        ]);
 
----
-
-## CSS Styles
-
-```css
-/* src/builder/styles/builder.css */
-.builder-container {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background: #f5f5f5;
-}
-
-.preview-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 24px;
-  background: #fff;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.preview-modes {
-  display: flex;
-  gap: 4px;
-}
-
-.preview-btn {
-  padding: 8px 12px;
-  border: 1px solid #e0e0e0;
-  background: #fff;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.preview-btn.active {
-  background: #3b82f6;
-  color: #fff;
-  border-color: #3b82f6;
-}
-
-.toolbar-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.builder-main {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
-.element-palette {
-  width: 280px;
-  background: #fff;
-  border-right: 1px solid #e0e0e0;
-  padding: 16px;
-  overflow-y: auto;
-}
-
-.palette-list {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.palette-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 12px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  cursor: grab;
-  transition: all 0.2s;
-}
-
-.palette-item:hover {
-  border-color: #3b82f6;
-  background: #f0f7ff;
-}
-
-.builder-canvas {
-  flex: 1;
-  overflow: auto;
-  padding: 24px;
-}
-
-.canvas-wrapper {
-  min-height: 100%;
-}
-
-.canvas-viewport {
-  background: #fff;
-  min-height: 600px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-}
-
-.canvas-container {
-  min-height: 400px;
-  padding: 20px;
-}
-
-.properties-panel {
-  width: 320px;
-  background: #fff;
-  border-left: 1px solid #e0e0e0;
-  overflow-y: auto;
-}
-
-.properties-panel.empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #666;
-}
-
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.panel-content {
-  padding: 16px;
-}
-
-.element-wrapper {
-  position: relative;
-  margin: 4px 0;
-}
-
-.element-wrapper.selected {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-}
-
-.element-toolbar {
-  position: absolute;
-  top: -32px;
-  left: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 8px;
-  background: #3b82f6;
-  color: #fff;
-  border-radius: 4px 4px 0 0;
-  font-size: 12px;
-}
-
-.drag-handle {
-  cursor: grab;
-  padding: 2px;
-}
-
-.empty-section-placeholder,
-.empty-column-placeholder {
-  padding: 40px;
-  border: 2px dashed #e0e0e0;
-  border-radius: 8px;
-  text-align: center;
-  color: #999;
-}
-
-.element-ghost {
-  opacity: 0.4;
-}
-
-.element-chosen {
-  opacity: 0.8;
-}
-
-.element-drag {
-  opacity: 1;
-}
-
-.editor-section {
-  margin-bottom: 24px;
-}
-
-.editor-section h4,
-.editor-section h5 {
-  margin-bottom: 12px;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.unsaved-indicator {
-  width: 8px;
-  height: 8px;
-  background: #ef4444;
-  border-radius: 50%;
-  position: absolute;
-  top: 2px;
-  right: 2px;
-}
-
-/* Responsive */
-@media (max-width: 1024px) {
-  .element-palette {
-    width: 200px;
-  }
-
-  .properties-panel {
-    width: 280px;
-  }
+        return response()->json(['success' => true]);
+    }
 }
 ```
 
@@ -2746,11 +1698,12 @@ export default Builder;
 
 This drag-and-drop builder implementation provides:
 
-1. **SortableJS Integration**: Full drag-and-drop support with cloning from palette, nested sorting in sections and columns
-2. **8 Builder Elements**: Section, Heading, Paragraph, Image, Button, Video, Form, Columns - all with customizable properties
-3. **Element Editing**: Complete properties panel with dedicated editors for each element type and global styles editor
-4. **Canvas Features**: Selection, copy/paste, undo/redo (50 states), responsive preview (desktop/tablet/mobile)
-5. **Data Persistence**: JSON save/load, auto-save with debouncing, localStorage backup, API service layer
-6. **Render Engine**: Full HTML renderer for publishing, React renderer for preview
+1. **SortableJS + AlpineJS Integration**: Full drag-and-drop with cloning from palette, using `x-data`, `x-init`, and `x-ref` directives
+2. **8 Builder Elements**: Section, Heading, Paragraph, Image, Button, Video, Form, Columns - all as Blade templates
+3. **Element Editing**: Properties panel with Alpine reactive bindings using `x-model` and `@input`
+4. **Canvas with Alpine State**: Real-time preview with reactive element rendering
+5. **Copy/Paste/Undo/Redo**: Full clipboard and history support using Alpine state
+6. **Auto-Save with fetch()**: Vanilla JavaScript fetch() calls with CSRF token
+7. **JSON to HTML Renderer**: PHP service class for server-side rendering
 
-The implementation uses TypeScript throughout, Zustand for state management, and follows React best practices for a production-ready drag-and-drop page builder.
+All code uses **Blade + AlpineJS + TailwindCSS v4 + SortableJS** only. No React, Vue, TypeScript, or JS frameworks.
