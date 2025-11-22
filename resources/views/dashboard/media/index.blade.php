@@ -4,18 +4,19 @@
 
 @section('content')
 <div x-data="mediaLibrary()">
-    <div class="sm:flex sm:items-center sm:justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Media Library</h1>
+    <!-- Header -->
+    <div class="md:flex md:items-center md:justify-between">
+        <div class="min-w-0 flex-1">
+            <h2 class="text-2xl font-bold text-gray-900 sm:text-3xl">Media Library</h2>
             <p class="mt-1 text-sm text-gray-500">
                 <span x-text="formatFileSize(storageUsed)"></span> of
                 <span x-text="formatFileSize(storageLimit)"></span> used
             </p>
         </div>
-        <div class="mt-4 sm:mt-0">
+        <div class="mt-4 flex md:ml-4 md:mt-0">
             <button @click="$refs.fileInput.click()"
-                    class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
-                <svg class="-ml-0.5 mr-1.5 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    class="inline-flex items-center rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 hover:from-indigo-700 hover:to-purple-700 transition-all">
+                <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                 </svg>
                 Upload Files
@@ -24,37 +25,49 @@
         </div>
     </div>
 
-    <div class="mt-4 h-2 w-full rounded-full bg-gray-200">
-        <div class="h-2 rounded-full bg-indigo-600 transition-all" :style="`width: ${Math.min((storageUsed / storageLimit) * 100, 100)}%`"></div>
+    <!-- Storage Progress -->
+    <div class="mt-6 bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-medium text-gray-700">Storage Usage</span>
+            <span class="text-sm text-gray-500" x-text="`${Math.round((storageUsed / storageLimit) * 100)}%`"></span>
+        </div>
+        <div class="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+            <div class="h-2 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300" :style="`width: ${Math.min((storageUsed / storageLimit) * 100, 100)}%`"></div>
+        </div>
     </div>
 
+    <!-- Filters -->
     <div class="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div class="relative flex-1 max-w-md">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+            </div>
             <input type="text" placeholder="Search files..." x-model="search" @input.debounce.300ms="loadMedia()"
-                   class="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm">
-            <svg class="absolute left-3 top-2.5 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-            </svg>
+                   class="block w-full rounded-xl border-0 bg-white py-3 pl-11 pr-4 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm">
         </div>
 
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
             <select x-model="filterType" @change="loadMedia()"
-                    class="rounded-md border-0 py-2 pl-3 pr-8 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-indigo-600 sm:text-sm">
+                    class="rounded-xl border-0 bg-white py-3 pl-4 pr-10 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-200 focus:ring-2 focus:ring-indigo-500">
                 <option value="">All Types</option>
                 <option value="image">Images</option>
                 <option value="video">Videos</option>
                 <option value="document">Documents</option>
             </select>
 
-            <div class="flex rounded-md shadow-sm">
-                <button @click="viewMode = 'grid'" :class="viewMode === 'grid' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-900 hover:bg-gray-50'"
-                        class="relative inline-flex items-center rounded-l-md px-3 py-2 text-sm font-semibold ring-1 ring-inset ring-gray-300">
+            <div class="flex rounded-xl shadow-sm">
+                <button @click="viewMode = 'grid'"
+                        :class="viewMode === 'grid' ? 'bg-indigo-600 text-white ring-indigo-600' : 'bg-white text-gray-600 hover:bg-gray-50 ring-gray-200'"
+                        class="relative inline-flex items-center rounded-l-xl px-3 py-3 text-sm font-medium ring-1 ring-inset transition-colors">
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6z" />
                     </svg>
                 </button>
-                <button @click="viewMode = 'list'" :class="viewMode === 'list' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-900 hover:bg-gray-50'"
-                        class="relative -ml-px inline-flex items-center rounded-r-md px-3 py-2 text-sm font-semibold ring-1 ring-inset ring-gray-300">
+                <button @click="viewMode = 'list'"
+                        :class="viewMode === 'list' ? 'bg-indigo-600 text-white ring-indigo-600' : 'bg-white text-gray-600 hover:bg-gray-50 ring-gray-200'"
+                        class="relative -ml-px inline-flex items-center rounded-r-xl px-3 py-3 text-sm font-medium ring-1 ring-inset transition-colors">
                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12" />
                     </svg>
@@ -63,35 +76,37 @@
         </div>
     </div>
 
-    <div x-show="loading" class="mt-8 flex justify-center">
+    <!-- Loading State -->
+    <div x-show="loading" class="mt-8 flex justify-center py-12">
         <svg class="animate-spin h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
     </div>
 
+    <!-- Grid View -->
     <div x-show="!loading && viewMode === 'grid'" class="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
         <template x-for="file in files" :key="file.id">
-            <div class="group relative overflow-hidden rounded-lg bg-gray-100 cursor-pointer hover:shadow-lg transition-shadow"
+            <div class="group relative overflow-hidden rounded-2xl bg-gray-100 cursor-pointer hover:shadow-lg transition-all duration-300"
                  @click="selectFile(file)">
                 <div class="aspect-square">
                     <template x-if="file.type === 'image'">
                         <img :src="file.thumbnail_url || file.url" :alt="file.alt_text || file.name" class="h-full w-full object-cover">
                     </template>
                     <template x-if="file.type !== 'image'">
-                        <div class="flex h-full w-full items-center justify-center">
+                        <div class="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
                             <svg class="h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                             </svg>
                         </div>
                     </template>
                 </div>
-                <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                    <p class="truncate text-xs text-white" x-text="file.name"></p>
+                <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                    <p class="truncate text-xs font-medium text-white" x-text="file.name"></p>
                     <p class="text-xs text-white/70" x-text="formatFileSize(file.size)"></p>
                 </div>
                 <div class="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button @click.stop="deleteFile(file)" class="rounded-full bg-red-500 p-1 text-white hover:bg-red-600">
+                    <button @click.stop="deleteFile(file)" class="rounded-lg bg-red-500 p-1.5 text-white hover:bg-red-600 shadow-lg">
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -101,36 +116,46 @@
         </template>
     </div>
 
-    <div x-show="!loading && viewMode === 'list'" class="mt-6 overflow-hidden bg-white shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
-        <table class="min-w-full divide-y divide-gray-300">
+    <!-- List View -->
+    <div x-show="!loading && viewMode === 'list'" class="mt-6 overflow-hidden bg-white shadow-sm ring-1 ring-gray-200 rounded-2xl">
+        <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">File</th>
-                    <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Type</th>
-                    <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Size</th>
-                    <th class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Uploaded</th>
-                    <th class="relative py-3.5 pl-3 pr-4 sm:pr-6"><span class="sr-only">Actions</span></th>
+                    <th class="py-4 pl-6 pr-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">File</th>
+                    <th class="px-3 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Type</th>
+                    <th class="px-3 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Size</th>
+                    <th class="px-3 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Uploaded</th>
+                    <th class="relative py-4 pl-3 pr-6"><span class="sr-only">Actions</span></th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 bg-white">
                 <template x-for="file in files" :key="file.id">
-                    <tr class="hover:bg-gray-50">
-                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm sm:pl-6">
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="whitespace-nowrap py-4 pl-6 pr-3 text-sm">
                             <div class="flex items-center gap-3">
-                                <div class="h-10 w-10 flex-shrink-0 overflow-hidden rounded bg-gray-100">
+                                <div class="h-10 w-10 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
                                     <template x-if="file.type === 'image'">
                                         <img :src="file.thumbnail_url || file.url" class="h-full w-full object-cover">
+                                    </template>
+                                    <template x-if="file.type !== 'image'">
+                                        <div class="h-full w-full flex items-center justify-center">
+                                            <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                        </div>
                                     </template>
                                 </div>
                                 <span class="font-medium text-gray-900" x-text="file.name"></span>
                             </div>
                         </td>
-                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500" x-text="file.type"></td>
+                        <td class="whitespace-nowrap px-3 py-4 text-sm">
+                            <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 capitalize" x-text="file.type"></span>
+                        </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500" x-text="formatFileSize(file.size)"></td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500" x-text="formatDate(file.created_at)"></td>
-                        <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                            <button @click="copyUrl(file)" class="text-indigo-600 hover:text-indigo-900 mr-3">Copy URL</button>
-                            <button @click="deleteFile(file)" class="text-red-600 hover:text-red-900">Delete</button>
+                        <td class="relative whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium">
+                            <button @click="copyUrl(file)" class="text-indigo-600 hover:text-indigo-900 font-semibold mr-4">Copy URL</button>
+                            <button @click="deleteFile(file)" class="text-red-600 hover:text-red-900 font-semibold">Delete</button>
                         </td>
                     </tr>
                 </template>
@@ -138,26 +163,35 @@
         </table>
     </div>
 
-    <div x-show="!loading && files.length === 0" class="mt-8 text-center py-12 bg-white rounded-lg shadow">
-        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 19.5h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5z" />
-        </svg>
-        <p class="mt-2 text-gray-500">No files uploaded yet</p>
-        <button @click="$refs.fileInput.click()" class="mt-4 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-500">
+    <!-- Empty State -->
+    <div x-show="!loading && files.length === 0" class="mt-8 text-center py-16 bg-white rounded-2xl shadow-sm border border-gray-100">
+        <div class="w-16 h-16 mx-auto bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+            <svg class="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 19.5h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5z" />
+            </svg>
+        </div>
+        <h3 class="text-sm font-semibold text-gray-900">No files uploaded yet</h3>
+        <p class="mt-1 text-sm text-gray-500">Get started by uploading your first file.</p>
+        <button @click="$refs.fileInput.click()"
+                class="mt-4 inline-flex items-center rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 hover:from-indigo-700 hover:to-purple-700 transition-all">
+            <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
             Upload your first file
         </button>
     </div>
 
+    <!-- Pagination -->
     <div x-show="totalPages > 1" class="mt-6 flex items-center justify-center gap-2">
         <button @click="currentPage--; loadMedia()" :disabled="currentPage === 1"
-                class="rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50 hover:bg-gray-50">
+                class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 disabled:opacity-50 hover:bg-gray-50 transition-colors">
             Previous
         </button>
         <span class="px-4 py-2 text-sm text-gray-600">
-            Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span>
+            Page <span class="font-medium" x-text="currentPage"></span> of <span class="font-medium" x-text="totalPages"></span>
         </span>
         <button @click="currentPage++; loadMedia()" :disabled="currentPage === totalPages"
-                class="rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50 hover:bg-gray-50">
+                class="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 disabled:opacity-50 hover:bg-gray-50 transition-colors">
             Next
         </button>
     </div>
