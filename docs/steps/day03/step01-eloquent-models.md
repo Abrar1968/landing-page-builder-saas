@@ -47,9 +47,9 @@ class Page extends Model
 - `docs/backend/02-DATABASE-SCHEMA.md` - Relationships diagram
 
 ## Expected Deliverables
-- [ ] All 9 models created
-- [ ] Relationships defined
-- [ ] JSON casts configured
+- [x] All 9 models created
+- [x] Relationships defined
+- [x] JSON casts configured
 
 ## Next Step
 → `step02-repositories.md`

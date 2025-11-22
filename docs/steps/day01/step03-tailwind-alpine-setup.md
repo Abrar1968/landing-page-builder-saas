@@ -54,10 +54,10 @@ Create `tailwind.config.js` with custom colors from design system.
 ```
 
 ## Expected Deliverables
-- [ ] Vite configured with TailwindCSS v4 plugin
-- [ ] AlpineJS initialized and working
-- [ ] Custom color palette configured
-- [ ] Hot reload working with `npm run dev`
+- [x] Vite configured with TailwindCSS v4 plugin
+- [x] AlpineJS initialized and working
+- [x] Custom color palette configured
+- [x] Hot reload working with `npm run dev`
 
 ## Next Step
 → `step04-base-architecture.md`

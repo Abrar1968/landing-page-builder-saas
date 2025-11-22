@@ -36,10 +36,10 @@ Create `resources/views/layouts/guest.blade.php` for auth pages.
 - Error states: `text-red-600 border-red-500`
 
 ## Expected Deliverables
-- [ ] Login page styled
-- [ ] Register page styled
-- [ ] Password reset flow complete
-- [ ] Responsive on mobile
+- [x] Login page styled
+- [x] Register page styled
+- [x] Password reset flow complete
+- [x] Responsive on mobile
 
 ## Next Step
 → `step03-email-verification.md`

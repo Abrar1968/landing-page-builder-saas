@@ -32,10 +32,10 @@ npm install -D tailwindcss@latest @tailwindcss/forms alpinejs sortablejs chart.j
 - `docs/04-IMPLEMENTATION-FLOW.md` - Day 1 section
 
 ## Expected Deliverables
-- [ ] Laravel 12 project created
-- [ ] Laravel Breeze installed with Blade
-- [ ] npm dependencies installed
-- [ ] Environment configured
+- [x] Laravel 12 project created
+- [x] Laravel Breeze installed with Blade
+- [x] npm dependencies installed
+- [x] Environment configured
 
 ## Next Step
 → `step02-database-config.md`

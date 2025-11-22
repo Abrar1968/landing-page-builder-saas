@@ -50,10 +50,10 @@ User::observe(UserObserver::class);
 - `docs/06-SECURITY.md` - Security considerations
 
 ## Expected Deliverables
-- [ ] Email verification working
-- [ ] UserObserver implemented
-- [ ] Activity logging ready
-- [ ] Last login tracking
+- [x] Email verification working
+- [x] UserObserver implemented
+- [x] Activity logging ready
+- [x] Last login tracking
 
 ## Day 2 Complete
 → Proceed to Day 3: Core Models & Database
