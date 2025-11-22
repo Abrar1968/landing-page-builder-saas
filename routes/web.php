@@ -7,6 +7,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\MediaController;
 use App\Http\Controllers\Api\MediaController as ApiMediaController;
+use App\Http\Controllers\PublishController;
+use App\Http\Controllers\DomainController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -59,14 +61,20 @@ Route::middleware('auth')->group(function () {
     Route::patch('/api/media/{media}', [ApiMediaController::class, 'update']);
     Route::delete('/api/media/{media}', [ApiMediaController::class, 'destroy']);
     Route::post('/api/media/bulk-delete', [ApiMediaController::class, 'bulkDestroy']);
+
+    // Domain routes
+    Route::get('/domains', [DomainController::class, 'index'])->name('domains.index');
+    Route::post('/domains', [DomainController::class, 'store'])->name('domains.store');
+    Route::post('/domains/{domain}/verify', [DomainController::class, 'verify'])->name('domains.verify');
+    Route::delete('/domains/{domain}', [DomainController::class, 'destroy'])->name('domains.destroy');
+    Route::get('/domains/{domain}/ssl', [DomainController::class, 'checkSsl'])->name('domains.ssl');
+
+    // Publish routes
+    Route::post('/api/pages/{page}/publish', [PublishController::class, 'publish'])->name('pages.publish');
+    Route::post('/api/pages/{page}/unpublish', [PublishController::class, 'unpublish'])->name('pages.unpublish');
 });
 
 // Public page route
-Route::get('/p/{slug}', function ($slug) {
-    $page = \App\Models\Page::where('slug', $slug)
-        ->where('status', 'published')
-        ->firstOrFail();
-    return view('pages.show', compact('page'));
-})->name('page.show');
+Route::get('/p/{slug}', [PublishController::class, 'show'])->name('page.show');
 
 require __DIR__.'/auth.php';
