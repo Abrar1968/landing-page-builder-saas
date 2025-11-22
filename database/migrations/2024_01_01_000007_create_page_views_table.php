@@ -10,18 +10,20 @@ return new class extends Migration
     {
         Schema::create('page_views', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('page_id')->constrained()->onDelete('cascade');
-            $table->string('visitor_id')->nullable();
+            $table->foreignId('page_id')->constrained()->cascadeOnDelete();
+            $table->string('visitor_id', 64)->nullable();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
-            $table->string('referrer')->nullable();
+            $table->string('referrer', 500)->nullable();
             $table->string('country', 2)->nullable();
-            $table->string('device_type')->nullable();
-            $table->timestamp('created_at')->useCurrent();
+            $table->string('device_type', 20)->nullable();
+            $table->string('browser', 50)->nullable();
+            $table->timestamps();
 
-            $table->index('page_id');
-            $table->index('created_at');
             $table->index('visitor_id');
+            $table->index('created_at');
+            $table->index(['page_id', 'created_at']);
+            $table->index(['page_id', 'visitor_id']);
         });
     }
 

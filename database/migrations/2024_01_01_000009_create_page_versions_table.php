@@ -10,13 +10,13 @@ return new class extends Migration
     {
         Schema::create('page_versions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('page_id')->constrained()->onDelete('cascade');
+            $table->foreignId('page_id')->constrained()->cascadeOnDelete();
             $table->json('content');
             $table->unsignedInteger('version_number');
-            $table->timestamp('created_at')->useCurrent();
+            $table->timestamps();
 
             $table->index('page_id');
-            $table->index(['page_id', 'version_number']);
+            $table->unique(['page_id', 'version_number']);
         });
     }
 

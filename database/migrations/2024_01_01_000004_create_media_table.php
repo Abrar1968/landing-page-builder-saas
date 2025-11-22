@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('media', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('filename');
             $table->string('path');
             $table->string('mime_type');
@@ -22,6 +22,9 @@ return new class extends Migration
 
             $table->index('user_id');
             $table->index('folder');
+            $table->index('mime_type');
+            $table->index(['user_id', 'created_at']);
+            $table->index(['user_id', 'folder']);
         });
     }
 

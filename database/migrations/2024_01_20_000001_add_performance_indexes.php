@@ -11,21 +11,21 @@ return new class extends Migration
         // Pages indexes
         Schema::table('pages', function (Blueprint $table) {
             $table->index(['user_id', 'updated_at']);
-            $table->index(['is_published', 'slug']);
+            $table->index(['status', 'slug']);
             $table->index('created_at');
         });
 
         // Templates indexes
         Schema::table('templates', function (Blueprint $table) {
             $table->index(['is_public', 'is_featured']);
-            $table->index(['category', 'is_public']);
+            $table->index(['category_id', 'is_public']);
             $table->index('created_at');
         });
 
         // Media indexes
         Schema::table('media', function (Blueprint $table) {
             $table->index(['user_id', 'created_at']);
-            $table->index('type');
+            $table->index('mime_type');
         });
 
         // Domains indexes
@@ -51,19 +51,19 @@ return new class extends Migration
     {
         Schema::table('pages', function (Blueprint $table) {
             $table->dropIndex(['user_id', 'updated_at']);
-            $table->dropIndex(['is_published', 'slug']);
+            $table->dropIndex(['status', 'slug']);
             $table->dropIndex(['created_at']);
         });
 
         Schema::table('templates', function (Blueprint $table) {
             $table->dropIndex(['is_public', 'is_featured']);
-            $table->dropIndex(['category', 'is_public']);
+            $table->dropIndex(['category_id', 'is_public']);
             $table->dropIndex(['created_at']);
         });
 
         Schema::table('media', function (Blueprint $table) {
             $table->dropIndex(['user_id', 'created_at']);
-            $table->dropIndex(['type']);
+            $table->dropIndex(['mime_type']);
         });
 
         Schema::table('domains', function (Blueprint $table) {

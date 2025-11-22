@@ -10,15 +10,18 @@ return new class extends Migration
     {
         Schema::create('form_submissions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('page_id')->constrained()->onDelete('cascade');
-            $table->string('form_id');
+            $table->foreignId('page_id')->constrained()->cascadeOnDelete();
+            $table->string('form_id')->nullable();
             $table->json('data');
             $table->string('ip_address', 45)->nullable();
-            $table->timestamp('created_at')->useCurrent();
+            $table->text('user_agent')->nullable();
+            $table->boolean('is_read')->default(false);
+            $table->timestamps();
 
-            $table->index('page_id');
             $table->index('form_id');
-            $table->index('created_at');
+            $table->index('is_read');
+            $table->index(['page_id', 'created_at']);
+            $table->index(['page_id', 'is_read']);
         });
     }
 

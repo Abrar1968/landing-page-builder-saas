@@ -10,16 +10,16 @@ return new class extends Migration
     {
         Schema::create('domains', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('page_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('page_id')->constrained()->cascadeOnDelete();
             $table->string('domain')->unique();
             $table->enum('status', ['pending', 'verified', 'failed'])->default('pending');
             $table->enum('ssl_status', ['pending', 'active', 'expired'])->default('pending');
             $table->timestamp('verified_at')->nullable();
             $table->timestamps();
 
-            $table->index('domain');
             $table->index('status');
+            $table->index(['user_id', 'status']);
         });
     }
 

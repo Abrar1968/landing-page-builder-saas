@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('pages', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('template_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('template_id')->nullable()->constrained()->nullOnDelete();
             $table->string('title');
             $table->string('slug')->unique();
             $table->json('content')->nullable();
@@ -22,7 +22,10 @@ return new class extends Migration
 
             $table->index('user_id');
             $table->index('status');
-            $table->index('slug');
+            $table->index(['user_id', 'status']);
+            $table->index(['user_id', 'updated_at']);
+            $table->index(['status', 'slug']);
+            $table->index('created_at');
         });
     }
 

@@ -20,6 +20,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['user_id', 'created_at']);
+            $table->index('status');
         });
     }
 
