@@ -11,6 +11,8 @@ use App\Http\Controllers\PublishController;
 use App\Http\Controllers\DomainController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\FormSubmissionController;
+use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\WebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -85,7 +87,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/submissions/{submission}', [FormSubmissionController::class, 'show'])->name('submissions.show');
     Route::delete('/submissions/{submission}', [FormSubmissionController::class, 'destroy'])->name('submissions.destroy');
     Route::get('/pages/{page}/submissions/export', [FormSubmissionController::class, 'export'])->name('submissions.export');
+
+    // Subscription routes
+    Route::get('/pricing', [SubscriptionController::class, 'pricing'])->name('subscription.pricing');
+    Route::post('/subscription/checkout', [SubscriptionController::class, 'checkout'])->name('subscription.checkout');
+    Route::get('/subscription/success', [SubscriptionController::class, 'success'])->name('subscription.success');
+    Route::get('/subscription/cancel', [SubscriptionController::class, 'cancel'])->name('subscription.cancel');
+    Route::get('/subscription/manage', [SubscriptionController::class, 'manage'])->name('subscription.manage');
+    Route::get('/subscription/billing', [SubscriptionController::class, 'billingPortal'])->name('subscription.billing');
+    Route::post('/subscription/cancel-action', [SubscriptionController::class, 'cancelSubscription'])->name('subscription.cancel.action');
+    Route::post('/subscription/resume', [SubscriptionController::class, 'resumeSubscription'])->name('subscription.resume');
 });
+
+// Stripe webhook (no CSRF)
+Route::post('/webhook/stripe', [WebhookController::class, 'handleStripe'])->name('webhook.stripe');
 
 // Public form submission route
 Route::post('/p/{page}/submit', [FormSubmissionController::class, 'store'])->name('form.submit');
