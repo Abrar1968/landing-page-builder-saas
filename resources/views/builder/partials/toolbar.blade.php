@@ -38,6 +38,25 @@
             </button>
         </div>
 
+        {{-- Responsive Preview --}}
+        <div class="flex items-center border-r border-gray-200 pr-3 mr-1">
+            <button @click="previewMode = 'desktop'" :class="previewMode === 'desktop' ? 'bg-gray-200' : ''" class="p-1.5 text-gray-600 hover:bg-gray-100 rounded" title="Desktop">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+            </button>
+            <button @click="previewMode = 'tablet'" :class="previewMode === 'tablet' ? 'bg-gray-200' : ''" class="p-1.5 text-gray-600 hover:bg-gray-100 rounded" title="Tablet">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+            </button>
+            <button @click="previewMode = 'mobile'" :class="previewMode === 'mobile' ? 'bg-gray-200' : ''" class="p-1.5 text-gray-600 hover:bg-gray-100 rounded" title="Mobile">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+            </button>
+        </div>
+
         {{-- Actions --}}
         <button @click="showPageSettings = true" class="px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded">
             Settings

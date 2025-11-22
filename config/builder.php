@@ -28,11 +28,6 @@ return [
         ],
         'layout' => [
             [
-                'type' => 'section',
-                'name' => 'Section',
-                'icon' => '□',
-            ],
-            [
                 'type' => 'columns',
                 'name' => 'Columns',
                 'icon' => '⊞',
@@ -46,6 +41,43 @@ return [
                 'type' => 'spacer',
                 'name' => 'Spacer',
                 'icon' => '↕',
+            ],
+        ],
+        'sections' => [
+            [
+                'type' => 'hero',
+                'name' => 'Hero',
+                'icon' => '⭐',
+            ],
+            [
+                'type' => 'features',
+                'name' => 'Features',
+                'icon' => '✦',
+            ],
+            [
+                'type' => 'testimonial',
+                'name' => 'Testimonial',
+                'icon' => '💬',
+            ],
+            [
+                'type' => 'pricing',
+                'name' => 'Pricing',
+                'icon' => '💰',
+            ],
+            [
+                'type' => 'cta',
+                'name' => 'CTA',
+                'icon' => '📢',
+            ],
+            [
+                'type' => 'footer',
+                'name' => 'Footer',
+                'icon' => '▭',
+            ],
+            [
+                'type' => 'newsletter',
+                'name' => 'Newsletter',
+                'icon' => '✉',
             ],
         ],
         'interactive' => [

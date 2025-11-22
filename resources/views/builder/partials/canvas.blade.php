@@ -1,4 +1,5 @@
-<div class="max-w-4xl mx-auto bg-white shadow-lg min-h-full"
+<div :class="canvasWidth"
+     class="mx-auto bg-white shadow-lg min-h-full transition-all duration-300"
      x-ref="canvas"
      @click.self="deselectElement()">
 

@@ -25,9 +25,21 @@ function builderApp() {
         // Modals
         showPageSettings: false,
 
+        // Responsive preview mode
+        previewMode: 'desktop',
+
         // Sortable instances
         canvasSortable: null,
         paletteSortable: null,
+
+        // Get canvas width based on preview mode
+        get canvasWidth() {
+            return {
+                'desktop': 'max-w-4xl',
+                'tablet': 'max-w-md',
+                'mobile': 'max-w-xs'
+            }[this.previewMode];
+        },
 
         // Initialize
         init() {
