@@ -32,6 +32,9 @@ function builderApp() {
         canvasSortable: null,
         paletteSortable: null,
 
+        // Auto-save timeout
+        saveTimeout: null,
+
         // Get canvas width based on preview mode
         get canvasWidth() {
             return {
@@ -450,11 +453,29 @@ function builderApp() {
 
         // Auto-save
         initAutoSave() {
+            // Periodic auto-save every 30 seconds
             setInterval(() => {
                 if (this.isDirty && !this.isSaving) {
                     this.save();
                 }
-            }, 30000); // 30 seconds
+            }, 30000);
+
+            // Watch for element changes with 3s debounce
+            this.$watch('elements', () => {
+                this.markDirty();
+                this.debouncedSave();
+            }, { deep: true });
+        },
+
+        debouncedSave() {
+            if (this.saveTimeout) {
+                clearTimeout(this.saveTimeout);
+            }
+            this.saveTimeout = setTimeout(() => {
+                if (this.isDirty && !this.isSaving) {
+                    this.save();
+                }
+            }, 3000); // 3 second debounce
         },
 
         markDirty() {

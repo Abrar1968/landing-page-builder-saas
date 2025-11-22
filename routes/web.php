@@ -3,15 +3,17 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TemplateController;
 use App\Http\Controllers\BuilderController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PageController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -28,6 +30,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/templates', [TemplateController::class, 'store'])->name('templates.store');
     Route::delete('/templates/{template}', [TemplateController::class, 'destroy'])->name('templates.destroy');
 
+    // Page routes
+    Route::get('/pages', [PageController::class, 'index'])->name('pages.index');
+    Route::post('/pages', [PageController::class, 'store'])->name('pages.store');
+    Route::get('/pages/{page}', [PageController::class, 'show'])->name('pages.show');
+    Route::put('/pages/{page}', [PageController::class, 'update'])->name('pages.update');
+    Route::delete('/pages/{page}', [PageController::class, 'destroy'])->name('pages.destroy');
+    Route::post('/pages/{page}/duplicate', [PageController::class, 'duplicate'])->name('pages.duplicate');
+    Route::get('/pages/{page}/versions', [PageController::class, 'versions'])->name('pages.versions');
+    Route::post('/pages/{page}/versions/{version}/restore', [PageController::class, 'restoreVersion'])->name('pages.versions.restore');
+
     // Builder routes
     Route::get('/builder/{page}/edit', [BuilderController::class, 'edit'])->name('builder.edit');
     Route::post('/builder/{page}/save', [BuilderController::class, 'save'])->name('builder.save');
@@ -35,5 +47,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/builder/{page}/publish', [BuilderController::class, 'publish'])->name('builder.publish');
     Route::get('/builder/{page}/preview', [BuilderController::class, 'preview'])->name('builder.preview');
 });
+
+// Public page route
+Route::get('/p/{slug}', function ($slug) {
+    $page = \App\Models\Page::where('slug', $slug)
+        ->where('status', 'published')
+        ->firstOrFail();
+    return view('pages.show', compact('page'));
+})->name('page.show');
 
 require __DIR__.'/auth.php';
