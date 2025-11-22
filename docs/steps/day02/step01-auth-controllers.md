@@ -57,10 +57,10 @@ Extend Breeze's RegisteredUserController to use UserService.
 - `docs/backend/05-SERVICES.md` - Service layer patterns
 
 ## Expected Deliverables
-- [ ] UserRepository created
-- [ ] UserService implemented
-- [ ] Registration uses service layer
-- [ ] Login/logout working
+- [x] UserRepository created
+- [x] UserService implemented
+- [x] Registration uses service layer
+- [x] Login/logout working
 
 ## Next Step
 → `step02-auth-views.md`

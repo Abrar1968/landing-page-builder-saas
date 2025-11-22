@@ -90,11 +90,11 @@ nvm alias default 20
 
 ## Laravel Installation
 
-### Create New Laravel 11 Project
+### Create New Laravel 12 Project
 
 ```bash
 # Using Composer
-composer create-project laravel/laravel landing-page-builder-saas "11.*"
+composer create-project laravel/laravel landing-page-builder-saas "12.*"
 
 # Navigate to project
 cd landing-page-builder-saas

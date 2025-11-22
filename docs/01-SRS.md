@@ -76,7 +76,7 @@ The Landing Page Builder SaaS is a web-based application that enables users to c
 ### 1.4 References
 
 - IEEE 830-1998 Standard for Software Requirements Specifications
-- Laravel 11.x Documentation
+- Laravel 12.x Documentation
 - TailwindCSS v4 Documentation
 - AlpineJS v3 Documentation
 - MySQL 8.0 Reference Manual

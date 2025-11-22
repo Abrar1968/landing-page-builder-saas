@@ -58,10 +58,10 @@ Modal or separate page showing template preview.
 - `docs/04-IMPLEMENTATION-FLOW.md` - Day 7 templates section
 
 ## Expected Deliverables
-- [ ] TemplateService implemented
-- [ ] Template gallery view
-- [ ] Template cloning working
-- [ ] Category filtering
+- [x] TemplateService implemented
+- [x] Template gallery view
+- [x] Template cloning working
+- [x] Category filtering
 
 ## Day 4 Complete
 → Proceed to Day 5: Drag-and-Drop Builder Core

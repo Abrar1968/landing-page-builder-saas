@@ -2,7 +2,7 @@
 
 ## Tech Stack (STRICT - NO EXCEPTIONS)
 
-- **Backend:** Laravel 11 (PHP 8.2+)
+- **Backend:** Laravel 12 (PHP 8.2+)
 - **Frontend:** TailwindCSS v4, AlpineJS, HTML in Blade files
 - **Database:** MySQL 8.0+
 - **Authentication:** Laravel Breeze/Fortify
@@ -1722,7 +1722,7 @@ PAYPAL_SANDBOX=false
 
 This 14-day implementation plan provides a complete Landing Page Builder SaaS using:
 
-- **Laravel 11** for backend logic and API
+- **Laravel 12** for backend logic and API
 - **Blade templates** for server-side rendering
 - **AlpineJS** for reactive UI interactions
 - **TailwindCSS v4** for styling

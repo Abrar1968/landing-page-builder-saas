@@ -49,10 +49,10 @@ Schema::create('pages', function (Blueprint $table) {
 ```
 
 ## Expected Deliverables
-- [ ] All 9 core tables migrated
-- [ ] Foreign keys properly set
-- [ ] Indexes on frequently queried columns
-- [ ] UTF-8MB4 encoding enabled
+- [x] All 9 core tables migrated
+- [x] Foreign keys properly set
+- [x] Indexes on frequently queried columns
+- [x] UTF-8MB4 encoding enabled
 
 ## Next Step
 → `step03-tailwind-alpine-setup.md`
