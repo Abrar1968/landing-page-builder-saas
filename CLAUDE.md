@@ -10,7 +10,7 @@ A SaaS landing page builder application (similar to Webflow/Squarespace) current
 ## Technology Stack
 
 ### Backend
-- **Framework**: Laravel 11 (PHP 8.2+, recommended 8.3+)
+- **Framework**: Laravel 12 (PHP 8.2+, recommended 8.3+)
 - **Database**: MySQL 8.0+ (UTF-8MB4)
 - **Cache**: Redis 7.0+ (optional)
 - **Auth**: Laravel Sanctum
@@ -170,6 +170,34 @@ Custom actions use POST:
 | `docs/backend/03-API-ENDPOINTS.md` | API documentation |
 | `docs/features/` | Detailed feature specifications |
 
+## Step-by-Step Implementation Guide
+
+The `docs/steps/` folder contains day-by-day implementation steps with clear instructions:
+
+```
+docs/steps/
+├── day01/          # Project Setup & Architecture
+├── day02/          # Authentication & User Management
+├── day03/          # Core Models & Database
+├── day04/          # Template System
+├── day05/          # Drag-and-Drop Builder Core
+├── day06/          # Component Library
+├── day07/          # Page Management
+├── day08/          # Asset Management & Media
+├── day09/          # Publishing & Domains
+├── day10/          # Analytics & Forms
+├── day11/          # Subscription System (Stripe)
+├── day12/          # Plan Limitations & Billing UI
+├── day13/          # Performance & Security
+└── day14/          # Testing & Deployment
+```
+
+**For AI Agents**: Start with `docs/steps/day01/step01-project-init.md` and follow sequentially. Each step file contains:
+- Clear objective
+- Implementation tasks with code examples
+- Reference documentation links
+- Expected deliverables checklist
+
 ## User Tiers
 
 - **Free**: 1 page, 100MB storage
@@ -205,11 +233,16 @@ Custom actions use POST:
 ```
 /home/user/landing-page-builder-saas/
 ├── docs/                    # All documentation
+│   ├── steps/              # Day-by-day implementation steps
+│   ├── backend/            # Architecture & API docs
+│   ├── frontend/           # Design system & components
+│   └── features/           # Feature specifications
 ├── CLAUDE.md               # This file
-└── (code to be created)    # Laravel app structure
+└── (code to be created)    # Laravel 12 app structure
 ```
 
-When implementing features, always reference:
-1. The relevant feature doc in `docs/features/`
-2. Database schema in `docs/backend/02-DATABASE-SCHEMA.md`
-3. API specs in `docs/backend/03-API-ENDPOINTS.md`
+When implementing features:
+1. **Start with steps**: Follow `docs/steps/dayXX/` for current day
+2. **Reference feature docs**: `docs/features/` for detailed specs
+3. **Check database schema**: `docs/backend/02-DATABASE-SCHEMA.md`
+4. **Review API specs**: `docs/backend/03-API-ENDPOINTS.md`
