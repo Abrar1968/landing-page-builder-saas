@@ -84,13 +84,13 @@
                                     </svg>
                                     Active
                                 </span>
-                            @elseif($domain->ssl_status === 'provisioning')
+                            @elseif($domain->ssl_status === 'pending')
                                 <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
                                     <svg class="mr-1 h-3 w-3 animate-spin" fill="none" viewBox="0 0 24 24">
                                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                                     </svg>
-                                    Provisioning
+                                    Pending
                                 </span>
                             @else
                                 <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700">
@@ -210,7 +210,7 @@
                             </div>
                             <div class="col-span-2">
                                 <span class="text-gray-500 text-xs uppercase tracking-wide">Value</span>
-                                <code class="block mt-1 bg-white px-3 py-2 rounded-lg text-gray-900 font-mono text-xs break-all" x-text="selectedDomain?.verification_token"></code>
+                                <code class="block mt-1 bg-white px-3 py-2 rounded-lg text-gray-900 font-mono text-xs break-all" x-text="selectedDomain?.id ? 'verify-' + selectedDomain.id : ''"></code>
                             </div>
                         </div>
                     </div>

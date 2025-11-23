@@ -127,7 +127,7 @@
 
                     <div class="p-4">
                         <div class="flex items-center justify-between">
-                            <h4 class="text-sm font-semibold text-gray-900 truncate">{{ $page->title ?? $page->name }}</h4>
+                            <h4 class="text-sm font-semibold text-gray-900 truncate">{{ $page->title }}</h4>
                             @if($page->status === 'published')
                                 <span class="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
                                     Published

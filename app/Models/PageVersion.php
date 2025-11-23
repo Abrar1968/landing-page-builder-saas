@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PageVersion extends Model
 {
-    public $timestamps = false;
+    const UPDATED_AT = null;
 
     protected $fillable = [
         'page_id',

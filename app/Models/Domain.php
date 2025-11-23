@@ -16,14 +16,11 @@ class Domain extends Model
         'domain',
         'status',
         'ssl_status',
-        'verification_token',
         'verified_at',
-        'ssl_provisioned_at',
     ];
 
     protected $casts = [
         'verified_at' => 'datetime',
-        'ssl_provisioned_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

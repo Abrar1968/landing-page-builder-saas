@@ -25,9 +25,7 @@ class PageController extends Controller
                 'name' => $page->title,
                 'url' => $page->slug,
                 'status' => $page->status,
-                'views' => $page->views ?? 0,
-                'conversions' => $page->conversions ?? 0,
-                'thumbnail' => $page->thumbnail ?? '/images/placeholder.png',
+                'views' => $page->pageViews()->count(),
                 'lastModified' => $page->updated_at->format('M d, Y'),
             ]);
 
