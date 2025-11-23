@@ -186,10 +186,11 @@ const ControlsRegistry = {
                             <img :src="getSetting('${control.name}')" alt="">
                             <button type="button" @click="updateSetting('${control.name}', '')" class="media-remove">×</button>
                         </div>
+                        <button type="button" @click="openMediaLibrary('${control.name}')" class="media-select-btn">Select from Media</button>
                         <input type="url"
                                :value="getSetting('${control.name}')"
                                @input="updateSetting('${control.name}', $event.target.value)"
-                               placeholder="Image URL"
+                               placeholder="Or enter URL"
                                class="control-input">
                     </div>
                 </div>
@@ -557,7 +558,504 @@ WidgetRegistry.register('spacer', {
     }
 });
 
-// More widgets would be registered here...
+// Icon widget
+WidgetRegistry.register('icon', {
+    title: 'Icon',
+    icon: '★',
+    category: 'basic',
+    controls: {
+        content: [
+            { name: 'icon', type: 'text', label: 'Icon (emoji or text)', default: '★' },
+            { name: 'link', type: 'text', label: 'Link' },
+            { name: 'view', type: 'select', label: 'View', default: 'default', options: { default: 'Default', stacked: 'Stacked', framed: 'Framed' } }
+        ],
+        style: [
+            { name: 'alignment', type: 'choose', label: 'Alignment', default: 'center', options: {
+                left: { title: 'Left', icon: '⬅' },
+                center: { title: 'Center', icon: '⬌' },
+                right: { title: 'Right', icon: '➡' }
+            }},
+            { name: 'primary_color', type: 'color', label: 'Primary Color', default: '#4f46e5' },
+            { name: 'size', type: 'slider', label: 'Size', min: 10, max: 200, default: 50, unit: 'px' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' }
+        ]
+    },
+    render: (settings) => {
+        return `<div style="text-align: ${settings.alignment || 'center'}; font-size: ${settings.size || 50}px; color: ${settings.primary_color || '#4f46e5'};">${settings.icon || '★'}</div>`;
+    }
+});
+
+// Icon Box widget
+WidgetRegistry.register('icon-box', {
+    title: 'Icon Box',
+    icon: '◈',
+    category: 'basic',
+    controls: {
+        content: [
+            { name: 'icon', type: 'text', label: 'Icon', default: '⚡' },
+            { name: 'title', type: 'text', label: 'Title', default: 'Icon Box' },
+            { name: 'description', type: 'textarea', label: 'Description', default: 'Click here to add your own text and edit me.' },
+            { name: 'link', type: 'text', label: 'Link' },
+            { name: 'position', type: 'select', label: 'Icon Position', default: 'top', options: { left: 'Left', top: 'Top', right: 'Right' } }
+        ],
+        style: [
+            { name: 'icon_color', type: 'color', label: 'Icon Color', default: '#4f46e5' },
+            { name: 'icon_size', type: 'slider', label: 'Icon Size', min: 20, max: 100, default: 50, unit: 'px' },
+            { name: 'title_color', type: 'color', label: 'Title Color', default: '#1f2937' },
+            { name: 'desc_color', type: 'color', label: 'Description Color', default: '#6b7280' },
+            { name: 'alignment', type: 'choose', label: 'Alignment', default: 'center', options: {
+                left: { title: 'Left', icon: '⬅' },
+                center: { title: 'Center', icon: '⬌' },
+                right: { title: 'Right', icon: '➡' }
+            }}
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' }
+        ]
+    },
+    render: (settings) => {
+        return `<div style="text-align: ${settings.alignment || 'center'}; padding: 20px;">
+            <div style="font-size: ${settings.icon_size || 50}px; color: ${settings.icon_color || '#4f46e5'}; margin-bottom: 15px;">${settings.icon || '⚡'}</div>
+            <h3 style="color: ${settings.title_color || '#1f2937'}; margin-bottom: 10px; font-size: 1.25rem; font-weight: 600;">${settings.title || 'Icon Box'}</h3>
+            <p style="color: ${settings.desc_color || '#6b7280'}; font-size: 0.875rem;">${settings.description || ''}</p>
+        </div>`;
+    }
+});
+
+// Image Box widget
+WidgetRegistry.register('image-box', {
+    title: 'Image Box',
+    icon: '🖼️',
+    category: 'basic',
+    controls: {
+        content: [
+            { name: 'image_url', type: 'media', label: 'Image' },
+            { name: 'title', type: 'text', label: 'Title', default: 'Image Box' },
+            { name: 'description', type: 'textarea', label: 'Description', default: 'Write a short description.' },
+            { name: 'link', type: 'text', label: 'Link' }
+        ],
+        style: [
+            { name: 'alignment', type: 'choose', label: 'Alignment', default: 'center', options: {
+                left: { title: 'Left', icon: '⬅' },
+                center: { title: 'Center', icon: '⬌' },
+                right: { title: 'Right', icon: '➡' }
+            }},
+            { name: 'title_color', type: 'color', label: 'Title Color', default: '#1f2937' },
+            { name: 'desc_color', type: 'color', label: 'Description Color', default: '#6b7280' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' }
+        ]
+    },
+    render: (settings) => {
+        return `<div style="text-align: ${settings.alignment || 'center'};">
+            ${settings.image_url ? `<img src="${settings.image_url}" style="max-width: 100%; height: auto; margin-bottom: 15px; border-radius: 8px;">` : '<div style="height: 150px; background: #f3f4f6; margin-bottom: 15px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #9ca3af;">Add Image</div>'}
+            <h3 style="color: ${settings.title_color || '#1f2937'}; margin-bottom: 8px; font-size: 1.125rem; font-weight: 600;">${settings.title || 'Image Box'}</h3>
+            <p style="color: ${settings.desc_color || '#6b7280'}; font-size: 0.875rem;">${settings.description || ''}</p>
+        </div>`;
+    }
+});
+
+// Counter widget
+WidgetRegistry.register('counter', {
+    title: 'Counter',
+    icon: '123',
+    category: 'basic',
+    controls: {
+        content: [
+            { name: 'starting_number', type: 'number', label: 'Starting Number', default: 0 },
+            { name: 'ending_number', type: 'number', label: 'Ending Number', default: 100 },
+            { name: 'prefix', type: 'text', label: 'Prefix' },
+            { name: 'suffix', type: 'text', label: 'Suffix' },
+            { name: 'title', type: 'text', label: 'Title', default: 'Cool Number' }
+        ],
+        style: [
+            { name: 'number_color', type: 'color', label: 'Number Color', default: '#4f46e5' },
+            { name: 'title_color', type: 'color', label: 'Title Color', default: '#6b7280' },
+            { name: 'number_size', type: 'slider', label: 'Number Size', min: 20, max: 100, default: 48, unit: 'px' },
+            { name: 'alignment', type: 'choose', label: 'Alignment', default: 'center', options: {
+                left: { title: 'Left', icon: '⬅' },
+                center: { title: 'Center', icon: '⬌' },
+                right: { title: 'Right', icon: '➡' }
+            }}
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' }
+        ]
+    },
+    render: (settings) => {
+        return `<div style="text-align: ${settings.alignment || 'center'}; padding: 20px;">
+            <div style="font-size: ${settings.number_size || 48}px; font-weight: 700; color: ${settings.number_color || '#4f46e5'};">
+                ${settings.prefix || ''}${settings.ending_number || 100}${settings.suffix || ''}
+            </div>
+            <div style="color: ${settings.title_color || '#6b7280'}; margin-top: 8px;">${settings.title || ''}</div>
+        </div>`;
+    }
+});
+
+// Progress Bar widget
+WidgetRegistry.register('progress-bar', {
+    title: 'Progress Bar',
+    icon: '█▒',
+    category: 'basic',
+    controls: {
+        content: [
+            { name: 'title', type: 'text', label: 'Title', default: 'Progress' },
+            { name: 'percent', type: 'slider', label: 'Percentage', min: 0, max: 100, default: 75, unit: '%' },
+            { name: 'display_percent', type: 'switcher', label: 'Display Percentage', default: true }
+        ],
+        style: [
+            { name: 'bar_color', type: 'color', label: 'Bar Color', default: '#4f46e5' },
+            { name: 'bg_color', type: 'color', label: 'Background Color', default: '#e5e7eb' },
+            { name: 'title_color', type: 'color', label: 'Title Color', default: '#1f2937' },
+            { name: 'height', type: 'slider', label: 'Height', min: 4, max: 50, default: 12, unit: 'px' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' }
+        ]
+    },
+    render: (settings) => {
+        return `<div style="padding: 10px 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: ${settings.title_color || '#1f2937'}; font-weight: 500;">${settings.title || 'Progress'}</span>
+                ${settings.display_percent !== false ? `<span style="color: ${settings.title_color || '#1f2937'};">${settings.percent || 75}%</span>` : ''}
+            </div>
+            <div style="width: 100%; background: ${settings.bg_color || '#e5e7eb'}; border-radius: 999px; height: ${settings.height || 12}px; overflow: hidden;">
+                <div style="width: ${settings.percent || 75}%; height: 100%; background: ${settings.bar_color || '#4f46e5'}; border-radius: 999px;"></div>
+            </div>
+        </div>`;
+    }
+});
+
+// Testimonial widget
+WidgetRegistry.register('testimonial', {
+    title: 'Testimonial',
+    icon: '💬',
+    category: 'basic',
+    controls: {
+        content: [
+            { name: 'content', type: 'textarea', label: 'Content', default: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis.' },
+            { name: 'image_url', type: 'media', label: 'Image' },
+            { name: 'name', type: 'text', label: 'Name', default: 'John Doe' },
+            { name: 'title', type: 'text', label: 'Title', default: 'Designer' }
+        ],
+        style: [
+            { name: 'alignment', type: 'choose', label: 'Alignment', default: 'center', options: {
+                left: { title: 'Left', icon: '⬅' },
+                center: { title: 'Center', icon: '⬌' },
+                right: { title: 'Right', icon: '➡' }
+            }},
+            { name: 'content_color', type: 'color', label: 'Content Color', default: '#4b5563' },
+            { name: 'name_color', type: 'color', label: 'Name Color', default: '#1f2937' },
+            { name: 'title_color', type: 'color', label: 'Title Color', default: '#6b7280' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' }
+        ]
+    },
+    render: (settings) => {
+        return `<div style="text-align: ${settings.alignment || 'center'}; padding: 20px;">
+            <div style="color: ${settings.content_color || '#4b5563'}; font-style: italic; margin-bottom: 20px; line-height: 1.6;">"${settings.content || ''}"</div>
+            <div style="display: flex; align-items: center; justify-content: ${settings.alignment || 'center'}; gap: 12px;">
+                ${settings.image_url ? `<img src="${settings.image_url}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">` : ''}
+                <div>
+                    <div style="font-weight: 600; color: ${settings.name_color || '#1f2937'};">${settings.name || 'John Doe'}</div>
+                    <div style="font-size: 0.875rem; color: ${settings.title_color || '#6b7280'};">${settings.title || 'Designer'}</div>
+                </div>
+            </div>
+        </div>`;
+    }
+});
+
+// Social Icons widget
+WidgetRegistry.register('social-icons', {
+    title: 'Social Icons',
+    icon: '📱',
+    category: 'basic',
+    controls: {
+        content: [
+            { name: 'facebook', type: 'text', label: 'Facebook URL' },
+            { name: 'twitter', type: 'text', label: 'Twitter URL' },
+            { name: 'instagram', type: 'text', label: 'Instagram URL' },
+            { name: 'linkedin', type: 'text', label: 'LinkedIn URL' },
+            { name: 'youtube', type: 'text', label: 'YouTube URL' }
+        ],
+        style: [
+            { name: 'alignment', type: 'choose', label: 'Alignment', default: 'center', options: {
+                left: { title: 'Left', icon: '⬅' },
+                center: { title: 'Center', icon: '⬌' },
+                right: { title: 'Right', icon: '➡' }
+            }},
+            { name: 'icon_color', type: 'color', label: 'Icon Color', default: '#4b5563' },
+            { name: 'icon_size', type: 'slider', label: 'Size', min: 16, max: 50, default: 24, unit: 'px' },
+            { name: 'spacing', type: 'slider', label: 'Spacing', min: 0, max: 50, default: 10, unit: 'px' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' }
+        ]
+    },
+    render: (settings) => {
+        const icons = [];
+        if (settings.facebook) icons.push(`<a href="${settings.facebook}" target="_blank" style="color: ${settings.icon_color || '#4b5563'};">f</a>`);
+        if (settings.twitter) icons.push(`<a href="${settings.twitter}" target="_blank" style="color: ${settings.icon_color || '#4b5563'};">𝕏</a>`);
+        if (settings.instagram) icons.push(`<a href="${settings.instagram}" target="_blank" style="color: ${settings.icon_color || '#4b5563'};">📷</a>`);
+        if (settings.linkedin) icons.push(`<a href="${settings.linkedin}" target="_blank" style="color: ${settings.icon_color || '#4b5563'};">in</a>`);
+        if (settings.youtube) icons.push(`<a href="${settings.youtube}" target="_blank" style="color: ${settings.icon_color || '#4b5563'};">▶</a>`);
+        return `<div style="text-align: ${settings.alignment || 'center'}; font-size: ${settings.icon_size || 24}px; display: flex; justify-content: ${settings.alignment || 'center'}; gap: ${settings.spacing || 10}px;">
+            ${icons.length ? icons.join('') : '<span style="color: #9ca3af;">Add social links</span>'}
+        </div>`;
+    }
+});
+
+// Alert widget
+WidgetRegistry.register('alert', {
+    title: 'Alert',
+    icon: '⚠',
+    category: 'basic',
+    controls: {
+        content: [
+            { name: 'title', type: 'text', label: 'Title', default: 'This is an Alert' },
+            { name: 'content', type: 'textarea', label: 'Content', default: 'I am a description. Click the edit button to change this text.' },
+            { name: 'alert_type', type: 'select', label: 'Type', default: 'info', options: { info: 'Info', success: 'Success', warning: 'Warning', danger: 'Danger' } },
+            { name: 'show_icon', type: 'switcher', label: 'Show Icon', default: true },
+            { name: 'dismissible', type: 'switcher', label: 'Dismissible' }
+        ],
+        style: [
+            { name: 'typography', type: 'typography', label: 'Typography' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' }
+        ]
+    },
+    render: (settings) => {
+        const colors = {
+            info: { bg: '#eff6ff', border: '#3b82f6', text: '#1e40af', icon: 'ℹ' },
+            success: { bg: '#f0fdf4', border: '#22c55e', text: '#166534', icon: '✓' },
+            warning: { bg: '#fffbeb', border: '#f59e0b', text: '#92400e', icon: '⚠' },
+            danger: { bg: '#fef2f2', border: '#ef4444', text: '#991b1b', icon: '✕' }
+        };
+        const c = colors[settings.alert_type] || colors.info;
+        return `<div style="padding: 16px; background: ${c.bg}; border-left: 4px solid ${c.border}; border-radius: 4px;">
+            <div style="display: flex; align-items: start; gap: 12px;">
+                ${settings.show_icon !== false ? `<span style="color: ${c.border}; font-size: 1.25rem;">${c.icon}</span>` : ''}
+                <div>
+                    <div style="font-weight: 600; color: ${c.text}; margin-bottom: 4px;">${settings.title || ''}</div>
+                    <div style="color: ${c.text}; opacity: 0.9;">${settings.content || ''}</div>
+                </div>
+            </div>
+        </div>`;
+    }
+});
+
+// HTML widget
+WidgetRegistry.register('html', {
+    title: 'HTML',
+    icon: '</>',
+    category: 'basic',
+    controls: {
+        content: [
+            { name: 'html', type: 'textarea', label: 'HTML Code', rows: 10, default: '<p>Your custom HTML here</p>' }
+        ],
+        style: [],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' }
+        ]
+    },
+    render: (settings) => {
+        return settings.html || '<p>Add your HTML</p>';
+    }
+});
+
+// Google Maps widget
+WidgetRegistry.register('google-maps', {
+    title: 'Google Maps',
+    icon: '📍',
+    category: 'basic',
+    controls: {
+        content: [
+            { name: 'address', type: 'text', label: 'Address', default: 'London Eye, London' },
+            { name: 'zoom', type: 'slider', label: 'Zoom', min: 1, max: 20, default: 10 }
+        ],
+        style: [
+            { name: 'height', type: 'slider', label: 'Height', min: 100, max: 800, default: 300, unit: 'px' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' }
+        ]
+    },
+    render: (settings) => {
+        const address = encodeURIComponent(settings.address || 'London');
+        return `<div style="height: ${settings.height || 300}px; background: #f3f4f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #6b7280;">
+            <div style="text-align: center;">
+                <div style="font-size: 2rem; margin-bottom: 8px;">📍</div>
+                <div>${settings.address || 'London'}</div>
+                <div style="font-size: 0.75rem; margin-top: 4px;">Map placeholder</div>
+            </div>
+        </div>`;
+    }
+});
+
+// Star Rating widget
+WidgetRegistry.register('star-rating', {
+    title: 'Star Rating',
+    icon: '⭐',
+    category: 'basic',
+    controls: {
+        content: [
+            { name: 'rating', type: 'slider', label: 'Rating', min: 0, max: 5, step: 0.5, default: 4 },
+            { name: 'scale', type: 'number', label: 'Scale', min: 1, max: 10, default: 5 }
+        ],
+        style: [
+            { name: 'star_color', type: 'color', label: 'Star Color', default: '#fbbf24' },
+            { name: 'empty_color', type: 'color', label: 'Empty Color', default: '#e5e7eb' },
+            { name: 'size', type: 'slider', label: 'Size', min: 10, max: 60, default: 24, unit: 'px' },
+            { name: 'alignment', type: 'choose', label: 'Alignment', default: 'center', options: {
+                left: { title: 'Left', icon: '⬅' },
+                center: { title: 'Center', icon: '⬌' },
+                right: { title: 'Right', icon: '➡' }
+            }}
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' }
+        ]
+    },
+    render: (settings) => {
+        const rating = settings.rating || 4;
+        const scale = settings.scale || 5;
+        let stars = '';
+        for (let i = 1; i <= scale; i++) {
+            stars += `<span style="color: ${i <= rating ? settings.star_color || '#fbbf24' : settings.empty_color || '#e5e7eb'};">★</span>`;
+        }
+        return `<div style="text-align: ${settings.alignment || 'center'}; font-size: ${settings.size || 24}px;">${stars}</div>`;
+    }
+});
+
+// Accordion widget
+WidgetRegistry.register('accordion', {
+    title: 'Accordion',
+    icon: '☰',
+    category: 'basic',
+    controls: {
+        content: [
+            { name: 'item_1_title', type: 'text', label: 'Item 1 Title', default: 'Accordion #1' },
+            { name: 'item_1_content', type: 'textarea', label: 'Item 1 Content', default: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.' },
+            { name: 'item_2_title', type: 'text', label: 'Item 2 Title', default: 'Accordion #2' },
+            { name: 'item_2_content', type: 'textarea', label: 'Item 2 Content', default: 'Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.' },
+            { name: 'item_3_title', type: 'text', label: 'Item 3 Title', default: 'Accordion #3' },
+            { name: 'item_3_content', type: 'textarea', label: 'Item 3 Content', default: 'Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.' }
+        ],
+        style: [
+            { name: 'border_color', type: 'color', label: 'Border Color', default: '#e5e7eb' },
+            { name: 'title_color', type: 'color', label: 'Title Color', default: '#1f2937' },
+            { name: 'content_color', type: 'color', label: 'Content Color', default: '#4b5563' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' }
+        ]
+    },
+    render: (settings) => {
+        let items = '';
+        for (let i = 1; i <= 3; i++) {
+            const title = settings[`item_${i}_title`];
+            const content = settings[`item_${i}_content`];
+            if (title) {
+                items += `<div style="border: 1px solid ${settings.border_color || '#e5e7eb'}; margin-bottom: -1px;">
+                    <div style="padding: 15px; font-weight: 600; color: ${settings.title_color || '#1f2937'}; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                        <span>${title}</span>
+                        <span>+</span>
+                    </div>
+                    <div style="padding: 15px; border-top: 1px solid ${settings.border_color || '#e5e7eb'}; color: ${settings.content_color || '#4b5563'}; display: ${i === 1 ? 'block' : 'none'};">${content || ''}</div>
+                </div>`;
+            }
+        }
+        return `<div>${items}</div>`;
+    }
+});
+
+// Blockquote widget
+WidgetRegistry.register('blockquote', {
+    title: 'Blockquote',
+    icon: '"',
+    category: 'basic',
+    controls: {
+        content: [
+            { name: 'content', type: 'textarea', label: 'Content', default: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.' },
+            { name: 'author', type: 'text', label: 'Author', default: 'John Doe' }
+        ],
+        style: [
+            { name: 'border_color', type: 'color', label: 'Border Color', default: '#4f46e5' },
+            { name: 'content_color', type: 'color', label: 'Content Color', default: '#4b5563' },
+            { name: 'author_color', type: 'color', label: 'Author Color', default: '#6b7280' },
+            { name: 'alignment', type: 'choose', label: 'Alignment', default: 'left', options: {
+                left: { title: 'Left', icon: '⬅' },
+                center: { title: 'Center', icon: '⬌' },
+                right: { title: 'Right', icon: '➡' }
+            }}
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' }
+        ]
+    },
+    render: (settings) => {
+        return `<blockquote style="border-left: 4px solid ${settings.border_color || '#4f46e5'}; padding-left: 20px; margin: 20px 0; text-align: ${settings.alignment || 'left'};">
+            <p style="color: ${settings.content_color || '#4b5563'}; font-style: italic; margin-bottom: 10px; font-size: 1.125rem; line-height: 1.75;">${settings.content || ''}</p>
+            ${settings.author ? `<cite style="color: ${settings.author_color || '#6b7280'}; font-size: 0.875rem;">— ${settings.author}</cite>` : ''}
+        </blockquote>`;
+    }
+});
+
+// Icon List widget
+WidgetRegistry.register('icon-list', {
+    title: 'Icon List',
+    icon: '•',
+    category: 'basic',
+    controls: {
+        content: [
+            { name: 'item_1', type: 'text', label: 'Item 1', default: 'List Item #1' },
+            { name: 'item_2', type: 'text', label: 'Item 2', default: 'List Item #2' },
+            { name: 'item_3', type: 'text', label: 'Item 3', default: 'List Item #3' },
+            { name: 'item_4', type: 'text', label: 'Item 4' },
+            { name: 'item_5', type: 'text', label: 'Item 5' },
+            { name: 'icon', type: 'text', label: 'Icon', default: '✓' }
+        ],
+        style: [
+            { name: 'icon_color', type: 'color', label: 'Icon Color', default: '#22c55e' },
+            { name: 'text_color', type: 'color', label: 'Text Color', default: '#4b5563' },
+            { name: 'spacing', type: 'slider', label: 'Spacing', min: 0, max: 30, default: 10, unit: 'px' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' }
+        ]
+    },
+    render: (settings) => {
+        let items = '';
+        for (let i = 1; i <= 5; i++) {
+            const item = settings[`item_${i}`];
+            if (item) {
+                items += `<li style="display: flex; align-items: center; gap: 10px; margin-bottom: ${settings.spacing || 10}px;">
+                    <span style="color: ${settings.icon_color || '#22c55e'};">${settings.icon || '✓'}</span>
+                    <span style="color: ${settings.text_color || '#4b5563'};">${item}</span>
+                </li>`;
+            }
+        }
+        return `<ul style="list-style: none; padding: 0; margin: 0;">${items}</ul>`;
+    }
+});
 
 // Main Builder Application
 function builderApp() {
@@ -598,6 +1096,18 @@ function builderApp() {
 
         // Search
         widgetSearch: '',
+
+        // Media Library
+        showMediaLibrary: false,
+        mediaItems: [],
+        mediaLoading: false,
+        mediaControlName: null,
+
+        // Sortable instances for cleanup
+        sortableInstances: [],
+
+        // Debounce timer
+        saveDebounce: null,
 
         // Widgets list
         get filteredWidgets() {
@@ -985,10 +1495,18 @@ function builderApp() {
 
         // Initialize SortableJS
         initSortable() {
+            // Destroy existing instances first
+            this.sortableInstances.forEach(instance => {
+                if (instance && instance.destroy) {
+                    instance.destroy();
+                }
+            });
+            this.sortableInstances = [];
+
             // Sections sortable
             const sectionsContainer = document.querySelector('[data-sections]');
             if (sectionsContainer) {
-                new Sortable(sectionsContainer, {
+                const sectionsSortable = new Sortable(sectionsContainer, {
                     group: 'sections',
                     animation: 200,
                     handle: '.section-handle',
@@ -1000,21 +1518,23 @@ function builderApp() {
                         this.isDirty = true;
                     }
                 });
+                this.sortableInstances.push(sectionsSortable);
             }
 
             // Columns in each section
             document.querySelectorAll('[data-columns]').forEach(container => {
-                new Sortable(container, {
+                const columnsSortable = new Sortable(container, {
                     group: 'columns',
                     animation: 200,
                     handle: '.column-handle',
                     ghostClass: 'sortable-ghost'
                 });
+                this.sortableInstances.push(columnsSortable);
             });
 
             // Widgets in each column
             document.querySelectorAll('[data-widgets]').forEach(container => {
-                new Sortable(container, {
+                const widgetsSortable = new Sortable(container, {
                     group: 'widgets',
                     animation: 200,
                     handle: '.widget-handle',
@@ -1026,19 +1546,32 @@ function builderApp() {
                             evt.item.remove();
                             this.addWidget(widgetType, columnId);
                         }
+                    },
+                    onSort: (evt) => {
+                        // Reorder widgets within the column
+                        const columnId = evt.to.dataset.columnId;
+                        const column = this.findElement(columnId);
+                        if (column && column.elements && evt.oldIndex !== evt.newIndex) {
+                            this.addToHistory();
+                            const [moved] = column.elements.splice(evt.oldIndex, 1);
+                            column.elements.splice(evt.newIndex, 0, moved);
+                            this.isDirty = true;
+                        }
                     }
                 });
+                this.sortableInstances.push(widgetsSortable);
             });
 
             // Widgets panel (drag source)
             const widgetsPanel = document.querySelector('[data-widget-palette]');
             if (widgetsPanel) {
-                new Sortable(widgetsPanel, {
+                const paletteSortable = new Sortable(widgetsPanel, {
                     group: { name: 'widgets', pull: 'clone', put: false },
                     sort: false,
                     animation: 200,
                     ghostClass: 'sortable-ghost'
                 });
+                this.sortableInstances.push(paletteSortable);
             }
         },
 
@@ -1387,6 +1920,110 @@ function builderApp() {
             if (!el?.settings?.[name]) return;
             el.settings[name].splice(index, 1);
             this.isDirty = true;
+        },
+
+        // Media Library methods
+        async openMediaLibrary(controlName) {
+            this.mediaControlName = controlName;
+            this.showMediaLibrary = true;
+            this.mediaLoading = true;
+
+            try {
+                const response = await fetch('/api/media', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                const data = await response.json();
+                this.mediaItems = data.data || data || [];
+            } catch (error) {
+                console.error('Failed to load media:', error);
+                this.mediaItems = [];
+            } finally {
+                this.mediaLoading = false;
+            }
+        },
+
+        selectMediaItem(url) {
+            if (this.mediaControlName) {
+                this.updateSetting(this.mediaControlName, url);
+            }
+            this.showMediaLibrary = false;
+            this.mediaControlName = null;
+        },
+
+        async uploadMedia(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/api/media', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.url || data.path) {
+                    this.mediaItems.unshift(data);
+                    this.selectMediaItem(data.url || `/storage/${data.path}`);
+                }
+            } catch (error) {
+                console.error('Upload failed:', error);
+                alert('Upload failed. Please try again.');
+            }
+        },
+
+        // Helper to get target column for widget
+        getTargetColumn() {
+            // If a column is selected, use it
+            if (this.selectedType === 'column') {
+                return this.findElement(this.selectedElement);
+            }
+            // If a widget is selected, get its parent column
+            if (this.selectedType === 'widget') {
+                return this.findParent(this.selectedElement);
+            }
+            // Otherwise, get first column of first section
+            if (this.content.length > 0 && this.content[0].elements?.length > 0) {
+                return this.content[0].elements[0];
+            }
+            return null;
+        },
+
+        // Click to add widget (improved)
+        clickAddWidget(widgetType) {
+            let column = this.getTargetColumn();
+
+            // If no column available, create a section first
+            if (!column) {
+                this.addSection('100');
+                // Get the newly created column
+                if (this.content.length > 0) {
+                    column = this.content[this.content.length - 1].elements[0];
+                }
+            }
+
+            if (column) {
+                this.addWidget(widgetType, column.id);
+            }
+        },
+
+        // Toast notifications
+        showToast(message, type = 'info') {
+            // Simple toast implementation
+            const toast = document.createElement('div');
+            toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded-md shadow-lg text-white z-50 ${
+                type === 'error' ? 'bg-red-500' : type === 'success' ? 'bg-green-500' : 'bg-blue-500'
+            }`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
         }
     };
 }

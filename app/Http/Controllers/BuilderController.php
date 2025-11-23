@@ -35,11 +35,21 @@ class BuilderController extends Controller
         $this->authorize('update', $page);
 
         $validated = $request->validate([
+            'title' => 'sometimes|string|max:255',
             'content' => 'required|array',
             'settings' => 'nullable|array',
         ]);
 
         $page->update($validated);
+
+        // Create version on save
+        if ($page->wasChanged('content')) {
+            $latestVersion = $page->versions()->max('version_number') ?? 0;
+            $page->versions()->create([
+                'content' => $page->content,
+                'version_number' => $latestVersion + 1,
+            ]);
+        }
 
         return response()->json([
             'success' => true,
