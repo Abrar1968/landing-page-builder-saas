@@ -361,9 +361,12 @@ WidgetRegistry.register('heading', {
             { name: 'css_id', type: 'text', label: 'CSS ID' }
         ]
     },
-    render: (settings) => {
-        const tag = settings.size || 'h2';
-        return `<${tag} style="text-align: ${settings.alignment || 'left'}; color: ${settings.text_color || '#1f2937'};">${settings.title || 'Heading'}</${tag}>`;
+    render: (settings = {}) => {
+        const tag = settings.size ?? 'h2';
+        const title = settings.title ?? 'Heading';
+        const alignment = settings.alignment ?? 'left';
+        const color = settings.text_color ?? '#1f2937';
+        return `<${tag} style="text-align: ${alignment}; color: ${color};">${title}</${tag}>`;
     }
 });
 
@@ -390,8 +393,11 @@ WidgetRegistry.register('text-editor', {
             { name: 'padding', type: 'dimensions', label: 'Padding' }
         ]
     },
-    render: (settings) => {
-        return `<div style="text-align: ${settings.alignment || 'left'}; color: ${settings.text_color || '#4b5563'};">${settings.editor || '<p>Text here</p>'}</div>`;
+    render: (settings = {}) => {
+        const content = settings.editor ?? '<p>Click to edit text</p>';
+        const alignment = settings.alignment ?? 'left';
+        const color = settings.text_color ?? '#4b5563';
+        return `<div style="text-align: ${alignment}; color: ${color};">${content}</div>`;
     }
 });
 
@@ -423,11 +429,13 @@ WidgetRegistry.register('image', {
             { name: 'padding', type: 'dimensions', label: 'Padding' }
         ]
     },
-    render: (settings) => {
+    render: (settings = {}) => {
         if (!settings.image_url) {
-            return `<div class="image-placeholder">Click to add image</div>`;
+            return `<div style="height: 150px; background: #f3f4f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #9ca3af;">Click to add image</div>`;
         }
-        return `<img src="${settings.image_url}" alt="${settings.alt_text || ''}" style="width: ${settings.width || 100}%; opacity: ${(settings.opacity || 100) / 100};">`;
+        const width = settings.width ?? 100;
+        const opacity = (settings.opacity ?? 100) / 100;
+        return `<img src="${settings.image_url}" alt="${settings.alt_text ?? ''}" style="width: ${width}%; opacity: ${opacity};">`;
     }
 });
 
@@ -464,11 +472,17 @@ WidgetRegistry.register('button', {
             { name: 'width', type: 'select', label: 'Width', options: { auto: 'Auto', full: 'Full Width' } }
         ]
     },
-    render: (settings) => {
-        return `<div style="text-align: ${settings.alignment || 'left'};">
-            <a href="${settings.link || '#'}" target="${settings.target ? '_blank' : '_self'}"
-               style="display: inline-block; background: ${settings.background_color || '#4f46e5'}; color: ${settings.text_color || '#fff'}; padding: 12px 24px; border-radius: ${settings.border_radius || 6}px; text-decoration: none;">
-                ${settings.text || 'Click Me'}
+    render: (settings = {}) => {
+        const text = settings.text ?? 'Click Me';
+        const link = settings.link ?? '#';
+        const alignment = settings.alignment ?? 'left';
+        const bgColor = settings.background_color ?? '#4f46e5';
+        const textColor = settings.text_color ?? '#ffffff';
+        const radius = settings.border_radius ?? 6;
+        return `<div style="text-align: ${alignment};">
+            <a href="${link}" target="${settings.target ? '_blank' : '_self'}"
+               style="display: inline-block; background: ${bgColor}; color: ${textColor}; padding: 12px 24px; border-radius: ${radius}px; text-decoration: none;">
+                ${text}
             </a>
         </div>`;
     }
@@ -496,16 +510,18 @@ WidgetRegistry.register('video', {
             { name: 'padding', type: 'dimensions', label: 'Padding' }
         ]
     },
-    render: (settings) => {
+    render: (settings = {}) => {
         if (!settings.youtube_url && !settings.vimeo_url) {
-            return `<div class="video-placeholder">Add video URL</div>`;
+            return `<div style="height: 200px; background: #1f2937; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #9ca3af;">Add video URL</div>`;
         }
         let embedUrl = '';
-        if (settings.video_type === 'youtube' && settings.youtube_url) {
+        if ((settings.video_type ?? 'youtube') === 'youtube' && settings.youtube_url) {
             const match = settings.youtube_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/);
             embedUrl = match ? `https://www.youtube.com/embed/${match[1]}` : '';
         }
-        return `<div style="aspect-ratio: ${settings.aspect_ratio || '16/9'}; width: ${settings.width || 100}%;">
+        const ratio = (settings.aspect_ratio ?? '16:9').replace(':', '/');
+        const width = settings.width ?? 100;
+        return `<div style="aspect-ratio: ${ratio}; width: ${width}%;">
             <iframe src="${embedUrl}" style="width: 100%; height: 100%; border: none;" allowfullscreen></iframe>
         </div>`;
     }
@@ -1128,11 +1144,14 @@ function builderApp() {
             this.documentTitle = pageData.title || '';
             this.documentSettings = pageData.settings || {};
 
+            // Load content - prefer 'content' field (new), fall back to 'elements' (old)
+            let loadedContent = pageData.content || pageData.elements || [];
+
             // Convert old flat structure to sections if needed
-            if (Array.isArray(pageData.elements) && pageData.elements.length > 0) {
+            if (Array.isArray(loadedContent) && loadedContent.length > 0) {
                 // If already has sections
-                if (pageData.elements[0]?.elType === 'section') {
-                    this.content = pageData.elements;
+                if (loadedContent[0]?.elType === 'section') {
+                    this.content = loadedContent;
                 } else {
                     // Convert old widgets to section>column>widget structure
                     this.content = [{
@@ -1143,24 +1162,54 @@ function builderApp() {
                             id: this.generateId(),
                             elType: 'column',
                             settings: { _column_size: 100 },
-                            elements: pageData.elements.map(el => ({
+                            elements: loadedContent.map(el => ({
                                 id: el.id || this.generateId(),
                                 elType: 'widget',
-                                widgetType: el.type,
-                                settings: { ...el.props, ...el.styles }
+                                widgetType: el.type || el.widgetType,
+                                settings: el.settings || { ...el.props, ...el.styles } || {}
                             }))
                         }]
                     }];
                 }
             } else {
-                this.content = pageData.elements || [];
+                this.content = [];
             }
+
+            // Apply defaults to all loaded widgets
+            this.applyDefaultsToContent(this.content);
 
             this.initSortable();
             this.initKeyboardShortcuts();
             this.initContextMenu();
             this.initAutosave();
             this.addToHistory();
+        },
+
+        // Apply default settings to loaded content
+        applyDefaultsToContent(elements) {
+            if (!elements) return;
+            elements.forEach(el => {
+                if (!el.settings) el.settings = {};
+
+                if (el.elType === 'widget' && el.widgetType) {
+                    const widgetConfig = WidgetRegistry.get(el.widgetType);
+                    if (widgetConfig) {
+                        // Apply defaults for missing settings
+                        ['content', 'style', 'advanced'].forEach(tab => {
+                            (widgetConfig.controls[tab] || []).forEach(control => {
+                                if (control.default !== undefined && el.settings[control.name] === undefined) {
+                                    el.settings[control.name] = control.default;
+                                }
+                            });
+                        });
+                    }
+                }
+
+                // Recursively apply to children
+                if (el.elements) {
+                    this.applyDefaultsToContent(el.elements);
+                }
+            });
         },
 
         // Generate unique ID
