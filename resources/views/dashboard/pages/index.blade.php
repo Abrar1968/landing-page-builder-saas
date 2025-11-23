@@ -172,8 +172,9 @@
                                   x-text="page.status"></span>
                         </td>
                         <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500" x-text="page.lastModified"></td>
-                        <td class="relative whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium">
+                        <td class="relative whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium space-x-4">
                             <a :href="'/builder/' + page.id + '/edit'" class="text-indigo-600 hover:text-indigo-900 font-semibold">Edit</a>
+                            <button @click="deletePage(page.id)" class="text-red-600 hover:text-red-900 font-semibold">Delete</button>
                         </td>
                     </tr>
                 </template>
