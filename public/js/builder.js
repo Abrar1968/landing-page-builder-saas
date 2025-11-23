@@ -1272,13 +1272,15 @@ function builderApp() {
             return el?.settings?.[name];
         },
 
-        // Update setting
+        // Update setting with reactivity trigger
         updateSetting(name, value) {
             const el = this.getSelectedElement();
             if (el) {
                 if (!el.settings) el.settings = {};
                 el.settings[name] = value;
                 this.isDirty = true;
+                // Force Alpine reactivity by triggering content update
+                this.content = [...this.content];
             }
         },
 
@@ -1806,6 +1808,7 @@ function builderApp() {
                 el.settings[name][side] = value;
             }
             this.isDirty = true;
+            this.content = [...this.content];
         },
 
         isLinked(name) {
@@ -1818,6 +1821,7 @@ function builderApp() {
             if (!el?.settings?.[name]) return;
             el.settings[name].isLinked = !el.settings[name].isLinked;
             this.isDirty = true;
+            this.content = [...this.content];
         },
 
         getTypography(name, field) {
@@ -1832,6 +1836,7 @@ function builderApp() {
             if (!el.settings[name]) el.settings[name] = {};
             el.settings[name][field] = value;
             this.isDirty = true;
+            this.content = [...this.content];
         },
 
         getBgType(name) {
@@ -1846,6 +1851,7 @@ function builderApp() {
             if (!el.settings[name]) el.settings[name] = {};
             el.settings[name].type = type;
             this.isDirty = true;
+            this.content = [...this.content];
         },
 
         getBgColor(name) {
@@ -1860,6 +1866,7 @@ function builderApp() {
             if (!el.settings[name]) el.settings[name] = {};
             el.settings[name].color = color;
             this.isDirty = true;
+            this.content = [...this.content];
         },
 
         getBgImage(name) {
@@ -1874,6 +1881,7 @@ function builderApp() {
             if (!el.settings[name]) el.settings[name] = {};
             el.settings[name].image = url;
             this.isDirty = true;
+            this.content = [...this.content];
         },
 
         updateBorder(name, field, value) {
@@ -1883,6 +1891,7 @@ function builderApp() {
             if (!el.settings[name]) el.settings[name] = {};
             el.settings[name][field] = value;
             this.isDirty = true;
+            this.content = [...this.content];
         },
 
         getBorderWidth(name) {
@@ -1900,6 +1909,7 @@ function builderApp() {
             if (!el.settings[name]) el.settings[name] = {};
             el.settings[name][field] = value;
             this.isDirty = true;
+            this.content = [...this.content];
         },
 
         getRepeaterItems(name) {
@@ -1913,6 +1923,7 @@ function builderApp() {
             if (!el.settings[name]) el.settings[name] = [];
             el.settings[name].push({ title: '' });
             this.isDirty = true;
+            this.content = [...this.content];
         },
 
         removeRepeaterItem(name, index) {
@@ -1920,6 +1931,7 @@ function builderApp() {
             if (!el?.settings?.[name]) return;
             el.settings[name].splice(index, 1);
             this.isDirty = true;
+            this.content = [...this.content];
         },
 
         // Media Library methods
@@ -1947,7 +1959,13 @@ function builderApp() {
 
         selectMediaItem(url) {
             if (this.mediaControlName) {
-                this.updateSetting(this.mediaControlName, url);
+                const el = this.getSelectedElement();
+                if (el) {
+                    if (!el.settings) el.settings = {};
+                    el.settings[this.mediaControlName] = url;
+                    this.isDirty = true;
+                    this.content = [...this.content];
+                }
             }
             this.showMediaLibrary = false;
             this.mediaControlName = null;
