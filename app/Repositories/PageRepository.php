@@ -69,11 +69,15 @@ class PageRepository
 
     public function getTotalViews(User $user): int
     {
-        return $user->pages()->sum('views') ?? 0;
+        return \App\Models\PageView::whereHas('page', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })->count();
     }
 
     public function getTotalConversions(User $user): int
     {
-        return $user->pages()->sum('conversions') ?? 0;
+        return \App\Models\FormSubmission::whereHas('page', function ($query) use ($user) {
+            $query->where('user_id', $user->id);
+        })->count();
     }
 }
