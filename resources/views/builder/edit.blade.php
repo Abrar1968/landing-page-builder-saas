@@ -3,15 +3,18 @@
 @section('content')
 <div x-data="builderApp()" x-init="init()" class="h-screen flex flex-col">
     {{-- Page Data --}}
-    <script id="page-data" type="application/json">
-        @json([
+    @php
+        $pageData = [
             'id' => $page->id,
             'title' => $page->title,
             'slug' => $page->slug,
             'elements' => $page->content ?? [],
             'settings' => $page->settings ?? [],
             'status' => $page->status,
-        ])
+        ];
+    @endphp
+    <script id="page-data" type="application/json">
+        {!! json_encode($pageData) !!}
     </script>
 
     {{-- Toolbar --}}
