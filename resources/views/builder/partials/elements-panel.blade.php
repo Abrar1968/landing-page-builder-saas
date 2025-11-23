@@ -1,6 +1,6 @@
-<div x-data="{ activeCategory: 'all' }">
+<div>
     {{-- Category Tabs --}}
-    <div class="flex flex-wrap gap-1 mb-4">
+    <div class="flex flex-wrap gap-1 mb-4" x-data="{ activeCategory: 'all' }">
         <button @click="activeCategory = 'all'"
                 :class="activeCategory === 'all' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'"
                 class="px-2 py-1 text-xs rounded">
@@ -19,8 +19,7 @@
     <div x-ref="palette" class="grid grid-cols-2 gap-2">
         @foreach(config('builder.elements') as $category => $elements)
             @foreach($elements as $element)
-            <div x-show="activeCategory === 'all' || activeCategory === '{{ $category }}'"
-                 data-type="{{ $element['type'] }}"
+            <div data-type="{{ $element['type'] }}"
                  draggable="true"
                  @click="addElement('{{ $element['type'] }}')"
                  class="flex flex-col items-center justify-center p-3 bg-gray-50 border border-gray-200 rounded-lg cursor-move hover:bg-gray-100 hover:border-indigo-300 transition-colors">
