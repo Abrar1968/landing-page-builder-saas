@@ -16,7 +16,6 @@ class Subscription extends Model
         'plan',
         'stripe_subscription_id',
         'stripe_price_id',
-        'stripe_customer_id',
         'status',
         'trial_ends_at',
         'current_period_start',

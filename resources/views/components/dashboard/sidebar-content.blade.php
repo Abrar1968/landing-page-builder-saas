@@ -48,22 +48,33 @@ $navigation = [
 
             <!-- Subscription Card -->
             <li class="mt-auto">
+                @php
+                    $subscription = auth()->user()->subscription;
+                    $plan = $subscription?->plan ?? 'free';
+                    $planLimits = config('subscription.plans.' . $plan, config('subscription.plans.free'));
+                    $pageLimit = $planLimits['limits']['pages'] ?? 1;
+                    $pagesUsed = auth()->user()->pages()->count();
+                    $isUnlimited = $pageLimit === -1;
+                    $usage = $isUnlimited ? 0 : min(($pagesUsed / max($pageLimit, 1)) * 100, 100);
+                    $planName = ucfirst($plan) . ' Plan';
+                @endphp
                 <div class="rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 p-4 border border-indigo-100">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Free Plan</span>
+                        <span class="text-xs font-semibold text-indigo-600 uppercase tracking-wide">{{ $planName }}</span>
+                        @if($plan === 'free')
                         <a href="{{ route('subscription.pricing') }}" class="text-xs font-medium text-indigo-600 hover:text-indigo-700">
                             Upgrade
                         </a>
+                        @endif
                     </div>
                     <p class="text-xs text-gray-600 mb-3">
-                        {{ auth()->user()->pages()->count() }} of 1 pages used
+                        {{ $pagesUsed }} of {{ $isUnlimited ? '∞' : $pageLimit }} pages used
                     </p>
+                    @unless($isUnlimited)
                     <div class="h-1.5 w-full rounded-full bg-white overflow-hidden">
-                        @php
-                            $usage = min((auth()->user()->pages()->count() / 1) * 100, 100);
-                        @endphp
                         <div class="h-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-300" style="width: {{ $usage }}%"></div>
                     </div>
+                    @endunless
                 </div>
             </li>
         </ul>

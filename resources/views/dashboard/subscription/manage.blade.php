@@ -32,7 +32,7 @@
                     </div>
                     <div class="flex gap-3">
                         @if($subscription && !$subscription->cancel_at_period_end)
-                            <form action="{{ route('subscription.cancel') }}" method="POST">
+                            <form action="{{ route('subscription.cancel.action') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50">
                                     Cancel Subscription

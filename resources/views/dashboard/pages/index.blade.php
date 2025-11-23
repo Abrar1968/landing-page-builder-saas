@@ -138,7 +138,7 @@
                             Edit
                         </a>
                         <template x-if="page.status === 'published'">
-                            <a :href="'/' + page.url" target="_blank" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors">
+                            <a :href="'/p/' + page.url" target="_blank" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors">
                                 View
                             </a>
                         </template>
