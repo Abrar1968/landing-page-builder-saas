@@ -23,7 +23,7 @@ widgetRegistry.register('heading', {
     controls: {
         content: [
             { name: 'title', type: 'textarea', label: 'Title', default: 'Heading' },
-            { name: 'link', type: 'text', label: 'Link', placeholder: 'https://' },
+            { name: 'link', type: 'url', label: 'Link' },
             { name: 'size', type: 'select', label: 'HTML Tag', default: 'h2', options: { h1: 'H1', h2: 'H2', h3: 'H3', h4: 'H4', h5: 'H5', h6: 'H6' } },
             { name: 'alignment', type: 'choose', label: 'Alignment', default: 'left', options: {
                 left: { title: 'Left', icon: '⬅' },
@@ -32,11 +32,15 @@ widgetRegistry.register('heading', {
             }}
         ],
         style: [
-            { name: 'text_color', type: 'color', label: 'Text Color', default: '#1f2937' }
+            { name: 'text_color', type: 'color', label: 'Text Color', default: '#1f2937' },
+            { name: 'typography', type: 'typography', label: 'Typography' }
         ],
         advanced: [
             { name: 'margin', type: 'dimensions', label: 'Margin' },
-            { name: 'padding', type: 'dimensions', label: 'Padding' }
+            { name: 'padding', type: 'dimensions', label: 'Padding' },
+            { name: 'css_classes', type: 'text', label: 'CSS Classes' },
+            { name: 'css_id', type: 'text', label: 'CSS ID' },
+            { name: 'custom_css', type: 'code', label: 'Custom CSS' }
         ]
     }
 });
@@ -336,7 +340,262 @@ widgetRegistry.register('alert', {
         ],
         style: [],
         advanced: [
-            { name: 'margin', type: 'dimensions', label: 'Margin' }
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'css_classes', type: 'text', label: 'CSS Classes' },
+            { name: 'css_id', type: 'text', label: 'CSS ID' }
+        ]
+    }
+});
+
+// Additional Pro-style widgets
+
+widgetRegistry.register('image-box', {
+    title: 'Image Box',
+    icon: '🖼️',
+    category: 'general',
+    controls: {
+        content: [
+            { name: 'image_url', type: 'media', label: 'Image' },
+            { name: 'title', type: 'text', label: 'Title', default: 'Image Box' },
+            { name: 'description', type: 'textarea', label: 'Description', default: 'Click here to add your own text.' },
+            { name: 'link', type: 'url', label: 'Link' }
+        ],
+        style: [
+            { name: 'alignment', type: 'choose', label: 'Alignment', default: 'center', options: {
+                left: { title: 'Left', icon: '⬅' },
+                center: { title: 'Center', icon: '⬌' },
+                right: { title: 'Right', icon: '➡' }
+            }},
+            { name: 'title_color', type: 'color', label: 'Title Color', default: '#1f2937' },
+            { name: 'description_color', type: 'color', label: 'Description Color', default: '#6b7280' },
+            { name: 'background', type: 'background', label: 'Background' },
+            { name: 'border', type: 'border', label: 'Border' },
+            { name: 'box_shadow', type: 'box_shadow', label: 'Box Shadow' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' },
+            { name: 'css_classes', type: 'text', label: 'CSS Classes' },
+            { name: 'css_id', type: 'text', label: 'CSS ID' }
+        ]
+    }
+});
+
+widgetRegistry.register('star-rating', {
+    title: 'Star Rating',
+    icon: '⭐',
+    category: 'general',
+    controls: {
+        content: [
+            { name: 'rating', type: 'slider', label: 'Rating', min: 0, max: 5, default: 4, unit: '' },
+            { name: 'scale', type: 'select', label: 'Scale', default: '5', options: { '5': '1-5', '10': '1-10' } },
+            { name: 'title', type: 'text', label: 'Title' }
+        ],
+        style: [
+            { name: 'size', type: 'slider', label: 'Size', min: 10, max: 100, default: 24, unit: 'px' },
+            { name: 'color', type: 'color', label: 'Color', default: '#fbbf24' },
+            { name: 'unmarked_color', type: 'color', label: 'Unmarked Color', default: '#d1d5db' },
+            { name: 'alignment', type: 'choose', label: 'Alignment', default: 'left', options: {
+                left: { title: 'Left', icon: '⬅' },
+                center: { title: 'Center', icon: '⬌' },
+                right: { title: 'Right', icon: '➡' }
+            }}
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'css_classes', type: 'text', label: 'CSS Classes' }
+        ]
+    }
+});
+
+widgetRegistry.register('tabs', {
+    title: 'Tabs',
+    icon: '📑',
+    category: 'general',
+    controls: {
+        content: [
+            { name: 'tab1_title', type: 'text', label: 'Tab 1 Title', default: 'Tab 1' },
+            { name: 'tab1_content', type: 'wysiwyg', label: 'Tab 1 Content', default: '<p>Tab 1 content goes here.</p>' },
+            { name: 'tab2_title', type: 'text', label: 'Tab 2 Title', default: 'Tab 2' },
+            { name: 'tab2_content', type: 'wysiwyg', label: 'Tab 2 Content', default: '<p>Tab 2 content goes here.</p>' },
+            { name: 'tab3_title', type: 'text', label: 'Tab 3 Title', default: 'Tab 3' },
+            { name: 'tab3_content', type: 'wysiwyg', label: 'Tab 3 Content', default: '<p>Tab 3 content goes here.</p>' }
+        ],
+        style: [
+            { name: 'tab_color', type: 'color', label: 'Tab Color', default: '#4f46e5' },
+            { name: 'content_color', type: 'color', label: 'Content Color', default: '#1f2937' },
+            { name: 'border', type: 'border', label: 'Border' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' },
+            { name: 'css_classes', type: 'text', label: 'CSS Classes' }
+        ]
+    }
+});
+
+widgetRegistry.register('accordion', {
+    title: 'Accordion',
+    icon: '📋',
+    category: 'general',
+    controls: {
+        content: [
+            { name: 'item1_title', type: 'text', label: 'Item 1 Title', default: 'Accordion Item 1' },
+            { name: 'item1_content', type: 'wysiwyg', label: 'Item 1 Content', default: '<p>Content for accordion item 1.</p>' },
+            { name: 'item2_title', type: 'text', label: 'Item 2 Title', default: 'Accordion Item 2' },
+            { name: 'item2_content', type: 'wysiwyg', label: 'Item 2 Content', default: '<p>Content for accordion item 2.</p>' },
+            { name: 'item3_title', type: 'text', label: 'Item 3 Title', default: 'Accordion Item 3' },
+            { name: 'item3_content', type: 'wysiwyg', label: 'Item 3 Content', default: '<p>Content for accordion item 3.</p>' },
+            { name: 'first_open', type: 'switcher', label: 'First Item Open', default: true }
+        ],
+        style: [
+            { name: 'title_color', type: 'color', label: 'Title Color', default: '#1f2937' },
+            { name: 'title_background', type: 'color', label: 'Title Background', default: '#f3f4f6' },
+            { name: 'content_color', type: 'color', label: 'Content Color', default: '#4b5563' },
+            { name: 'border', type: 'border', label: 'Border' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'css_classes', type: 'text', label: 'CSS Classes' }
+        ]
+    }
+});
+
+widgetRegistry.register('countdown', {
+    title: 'Countdown',
+    icon: '⏱️',
+    category: 'general',
+    controls: {
+        content: [
+            { name: 'due_date', type: 'text', label: 'Due Date', default: '2025-12-31', placeholder: 'YYYY-MM-DD' },
+            { name: 'due_time', type: 'text', label: 'Due Time', default: '23:59', placeholder: 'HH:MM' },
+            { name: 'show_days', type: 'switcher', label: 'Show Days', default: true },
+            { name: 'show_hours', type: 'switcher', label: 'Show Hours', default: true },
+            { name: 'show_minutes', type: 'switcher', label: 'Show Minutes', default: true },
+            { name: 'show_seconds', type: 'switcher', label: 'Show Seconds', default: true },
+            { name: 'show_labels', type: 'switcher', label: 'Show Labels', default: true }
+        ],
+        style: [
+            { name: 'number_color', type: 'color', label: 'Number Color', default: '#1f2937' },
+            { name: 'label_color', type: 'color', label: 'Label Color', default: '#6b7280' },
+            { name: 'number_size', type: 'slider', label: 'Number Size', min: 20, max: 100, default: 48, unit: 'px' },
+            { name: 'background', type: 'background', label: 'Box Background' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'css_classes', type: 'text', label: 'CSS Classes' }
+        ]
+    }
+});
+
+widgetRegistry.register('google-maps', {
+    title: 'Google Maps',
+    icon: '🗺️',
+    category: 'general',
+    controls: {
+        content: [
+            { name: 'address', type: 'text', label: 'Address', default: 'New York, USA' },
+            { name: 'zoom', type: 'slider', label: 'Zoom', min: 1, max: 20, default: 14, unit: '' }
+        ],
+        style: [
+            { name: 'height', type: 'slider', label: 'Height', min: 100, max: 800, default: 400, unit: 'px' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'css_classes', type: 'text', label: 'CSS Classes' }
+        ]
+    }
+});
+
+widgetRegistry.register('call-to-action', {
+    title: 'Call to Action',
+    icon: '📢',
+    category: 'marketing',
+    controls: {
+        content: [
+            { name: 'title', type: 'text', label: 'Title', default: 'This is the heading' },
+            { name: 'description', type: 'textarea', label: 'Description', default: 'Click here to add your own text and edit me.' },
+            { name: 'button_text', type: 'text', label: 'Button Text', default: 'Click Here' },
+            { name: 'button_link', type: 'url', label: 'Button Link' },
+            { name: 'ribbon_text', type: 'text', label: 'Ribbon Text' }
+        ],
+        style: [
+            { name: 'background', type: 'background', label: 'Background' },
+            { name: 'title_color', type: 'color', label: 'Title Color', default: '#1f2937' },
+            { name: 'description_color', type: 'color', label: 'Description Color', default: '#4b5563' },
+            { name: 'button_background', type: 'color', label: 'Button Background', default: '#4f46e5' },
+            { name: 'button_color', type: 'color', label: 'Button Text Color', default: '#ffffff' },
+            { name: 'ribbon_color', type: 'color', label: 'Ribbon Color', default: '#ef4444' },
+            { name: 'box_shadow', type: 'box_shadow', label: 'Box Shadow' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' },
+            { name: 'css_classes', type: 'text', label: 'CSS Classes' }
+        ]
+    }
+});
+
+widgetRegistry.register('flip-box', {
+    title: 'Flip Box',
+    icon: '🔄',
+    category: 'marketing',
+    controls: {
+        content: [
+            { name: 'front_icon', type: 'text', label: 'Front Icon', default: '⚡' },
+            { name: 'front_title', type: 'text', label: 'Front Title', default: 'Front Title' },
+            { name: 'front_description', type: 'textarea', label: 'Front Description', default: 'This is the front content.' },
+            { name: 'back_icon', type: 'text', label: 'Back Icon', default: '✨' },
+            { name: 'back_title', type: 'text', label: 'Back Title', default: 'Back Title' },
+            { name: 'back_description', type: 'textarea', label: 'Back Description', default: 'This is the back content.' },
+            { name: 'button_text', type: 'text', label: 'Button Text', default: 'Click Here' },
+            { name: 'button_link', type: 'url', label: 'Button Link' },
+            { name: 'flip_direction', type: 'select', label: 'Flip Direction', default: 'horizontal', options: { horizontal: 'Horizontal', vertical: 'Vertical' } }
+        ],
+        style: [
+            { name: 'front_background', type: 'color', label: 'Front Background', default: '#ffffff' },
+            { name: 'front_color', type: 'color', label: 'Front Color', default: '#1f2937' },
+            { name: 'back_background', type: 'color', label: 'Back Background', default: '#4f46e5' },
+            { name: 'back_color', type: 'color', label: 'Back Color', default: '#ffffff' },
+            { name: 'height', type: 'slider', label: 'Height', min: 200, max: 600, default: 300, unit: 'px' },
+            { name: 'border', type: 'border', label: 'Border' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'css_classes', type: 'text', label: 'CSS Classes' }
+        ]
+    }
+});
+
+widgetRegistry.register('price-table', {
+    title: 'Price Table',
+    icon: '💰',
+    category: 'marketing',
+    controls: {
+        content: [
+            { name: 'title', type: 'text', label: 'Plan Name', default: 'Pro' },
+            { name: 'price', type: 'text', label: 'Price', default: '$49' },
+            { name: 'period', type: 'text', label: 'Period', default: '/month' },
+            { name: 'features', type: 'textarea', label: 'Features (one per line)', default: '10 Projects\n50GB Storage\nPriority Support\nCustom Domain' },
+            { name: 'button_text', type: 'text', label: 'Button Text', default: 'Get Started' },
+            { name: 'button_link', type: 'url', label: 'Button Link' },
+            { name: 'featured', type: 'switcher', label: 'Featured', default: false },
+            { name: 'ribbon_text', type: 'text', label: 'Ribbon Text', default: 'Popular' }
+        ],
+        style: [
+            { name: 'header_background', type: 'color', label: 'Header Background', default: '#4f46e5' },
+            { name: 'header_color', type: 'color', label: 'Header Color', default: '#ffffff' },
+            { name: 'price_color', type: 'color', label: 'Price Color', default: '#1f2937' },
+            { name: 'features_color', type: 'color', label: 'Features Color', default: '#4b5563' },
+            { name: 'button_background', type: 'color', label: 'Button Background', default: '#4f46e5' },
+            { name: 'button_color', type: 'color', label: 'Button Color', default: '#ffffff' },
+            { name: 'border', type: 'border', label: 'Border' },
+            { name: 'box_shadow', type: 'box_shadow', label: 'Box Shadow' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' },
+            { name: 'css_classes', type: 'text', label: 'CSS Classes' }
         ]
     }
 });
