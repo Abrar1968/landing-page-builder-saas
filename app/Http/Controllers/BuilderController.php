@@ -35,11 +35,14 @@ class BuilderController extends Controller
         $this->authorize('update', $page);
 
         $validated = $request->validate([
+            'title' => 'sometimes|string|max:255',
             'content' => 'required|array',
             'settings' => 'nullable|array',
         ]);
 
-        $page->update($validated);
+        // Use PageService for proper architecture pattern
+        // PageObserver automatically creates versions when content changes
+        $this->pageService->update($page, $validated);
 
         return response()->json([
             'success' => true,
@@ -57,11 +60,11 @@ class BuilderController extends Controller
 
         $validated = $request->validate([
             'content' => 'required|array',
+            'settings' => 'nullable|array',
         ]);
 
-        $page->update([
-            'content' => $validated['content'],
-        ]);
+        // Use PageService for proper architecture pattern
+        $this->pageService->update($page, $validated);
 
         return response()->json([
             'success' => true,
@@ -76,7 +79,8 @@ class BuilderController extends Controller
     {
         $this->authorize('update', $page);
 
-        $page->publish();
+        // Use PageService for proper architecture pattern
+        $this->pageService->publish($page);
 
         return response()->json([
             'success' => true,

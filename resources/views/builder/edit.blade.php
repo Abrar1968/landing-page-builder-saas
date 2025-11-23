@@ -104,7 +104,7 @@
                 <div class="text-xs font-semibold text-gray-500 uppercase mb-2">Basic</div>
                 <div data-widget-palette class="grid grid-cols-3 gap-2">
                     <template x-for="(widget, key) in filteredWidgets" :key="key">
-                        <div :data-widget-type="key" draggable="true" @click="content.length > 0 && content[0]?.elements?.[0] && addWidget(key, content[0].elements[0].id)" class="p-3 border rounded text-center cursor-move hover:border-indigo-300 hover:bg-indigo-50">
+                        <div :data-widget-type="key" draggable="true" @click="clickAddWidget(key)" class="p-3 border rounded text-center cursor-move hover:border-indigo-300 hover:bg-indigo-50">
                             <div class="text-lg mb-1" x-text="widget.icon"></div>
                             <div class="text-xs text-gray-600" x-text="widget.title"></div>
                         </div>
@@ -200,8 +200,14 @@
                         <template x-if="control.type === 'textarea'">
                             <div><label class="block text-xs font-medium text-gray-600 mb-1.5" x-text="control.label"></label><textarea :rows="control.rows || 4" @input="updateSetting(control.name, $event.target.value)" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md" x-text="getSetting(control.name) ?? control.default ?? ''"></textarea></div>
                         </template>
+                        <template x-if="control.type === 'wysiwyg'">
+                            <div><label class="block text-xs font-medium text-gray-600 mb-1.5" x-text="control.label"></label><div class="border border-gray-300 rounded-md overflow-hidden"><div class="flex gap-1 p-2 bg-gray-50 border-b border-gray-300"><button type="button" @click="document.execCommand('bold')" class="px-2 py-1 text-sm font-bold hover:bg-gray-200 rounded">B</button><button type="button" @click="document.execCommand('italic')" class="px-2 py-1 text-sm italic hover:bg-gray-200 rounded">I</button><button type="button" @click="document.execCommand('underline')" class="px-2 py-1 text-sm underline hover:bg-gray-200 rounded">U</button><button type="button" @click="document.execCommand('insertUnorderedList')" class="px-2 py-1 text-sm hover:bg-gray-200 rounded">•</button><button type="button" @click="document.execCommand('insertOrderedList')" class="px-2 py-1 text-sm hover:bg-gray-200 rounded">1.</button></div><div contenteditable="true" @input="updateSetting(control.name, $event.target.innerHTML)" x-html="getSetting(control.name) ?? control.default ?? ''" class="p-3 min-h-[120px] focus:outline-none prose prose-sm max-w-none"></div></div></div>
+                        </template>
+                        <template x-if="control.type === 'number'">
+                            <div><label class="block text-xs font-medium text-gray-600 mb-1.5" x-text="control.label"></label><div class="flex items-center gap-2"><input type="number" :value="getSetting(control.name) ?? control.default ?? 0" @input="updateSetting(control.name, parseFloat($event.target.value))" :min="control.min" :max="control.max" :step="control.step || 1" class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md"><span x-show="control.unit" class="text-sm text-gray-500" x-text="control.unit"></span></div></div>
+                        </template>
                         <template x-if="control.type === 'slider'">
-                            <div><label class="block text-xs font-medium text-gray-600 mb-1.5" x-text="control.label"></label><div class="flex items-center gap-3"><input type="range" :value="getSetting(control.name) ?? control.default ?? 0" @input="updateSetting(control.name, parseFloat($event.target.value))" :min="control.min || 0" :max="control.max || 100" class="flex-1"><span class="text-sm text-gray-600 w-12 text-right" x-text="(getSetting(control.name) ?? control.default ?? 0) + (control.unit || '')"></span></div></div>
+                            <div><label class="block text-xs font-medium text-gray-600 mb-1.5" x-text="control.label"></label><div class="flex items-center gap-3"><input type="range" :value="getSetting(control.name) ?? control.default ?? 0" @input="updateSetting(control.name, parseFloat($event.target.value))" :min="control.min || 0" :max="control.max || 100" :step="control.step || 1" class="flex-1"><span class="text-sm text-gray-600 w-12 text-right" x-text="(getSetting(control.name) ?? control.default ?? 0) + (control.unit || '')"></span></div></div>
                         </template>
                         <template x-if="control.type === 'select'">
                             <div><label class="block text-xs font-medium text-gray-600 mb-1.5" x-text="control.label"></label><select @change="updateSetting(control.name, $event.target.value)" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md"><template x-for="(label, value) in control.options" :key="value"><option :value="value" :selected="(getSetting(control.name) ?? control.default) === value" x-text="label"></option></template></select></div>
@@ -216,7 +222,7 @@
                             <div><label class="block text-xs font-medium text-gray-600 mb-1.5" x-text="control.label"></label><div class="flex items-center gap-2"><input type="color" :value="getSetting(control.name) ?? control.default ?? '#000000'" @input="updateSetting(control.name, $event.target.value)" class="w-10 h-10 rounded border cursor-pointer"><input type="text" :value="getSetting(control.name) ?? control.default ?? '#000000'" @input="updateSetting(control.name, $event.target.value)" class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md"></div></div>
                         </template>
                         <template x-if="control.type === 'media'">
-                            <div><label class="block text-xs font-medium text-gray-600 mb-1.5" x-text="control.label"></label><div x-show="getSetting(control.name)" class="mb-2 relative"><img :src="getSetting(control.name)" class="w-full h-32 object-cover rounded border"><button @click="updateSetting(control.name, '')" class="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div><input type="url" :value="getSetting(control.name) ?? ''" @input="updateSetting(control.name, $event.target.value)" placeholder="Image URL" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md"></div>
+                            <div><label class="block text-xs font-medium text-gray-600 mb-1.5" x-text="control.label"></label><div x-show="getSetting(control.name)" class="mb-2 relative"><img :src="getSetting(control.name)" class="w-full h-32 object-cover rounded border"><button @click="updateSetting(control.name, '')" class="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button></div><button @click="openMediaLibrary(control.name)" class="w-full mb-2 px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 flex items-center justify-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>Select from Media</button><input type="url" :value="getSetting(control.name) ?? ''" @input="updateSetting(control.name, $event.target.value)" placeholder="Or enter URL" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md"></div>
                         </template>
                         <template x-if="control.type === 'dimensions'">
                             <div><div class="flex items-center justify-between mb-1.5"><label class="text-xs font-medium text-gray-600" x-text="control.label"></label><button @click="toggleLinked(control.name)" :class="isLinked(control.name) ? 'text-indigo-600' : 'text-gray-400'" class="p-1 hover:bg-gray-100 rounded"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"/></svg></button></div><div class="grid grid-cols-4 gap-2"><div><label class="block text-xs text-gray-500 mb-1 text-center">T</label><input type="number" :value="getDimension(control.name, 'top')" @input="updateDimension(control.name, 'top', $event.target.value)" class="w-full px-2 py-1.5 text-sm text-center border border-gray-300 rounded-md"></div><div><label class="block text-xs text-gray-500 mb-1 text-center">R</label><input type="number" :value="getDimension(control.name, 'right')" @input="updateDimension(control.name, 'right', $event.target.value)" class="w-full px-2 py-1.5 text-sm text-center border border-gray-300 rounded-md"></div><div><label class="block text-xs text-gray-500 mb-1 text-center">B</label><input type="number" :value="getDimension(control.name, 'bottom')" @input="updateDimension(control.name, 'bottom', $event.target.value)" class="w-full px-2 py-1.5 text-sm text-center border border-gray-300 rounded-md"></div><div><label class="block text-xs text-gray-500 mb-1 text-center">L</label><input type="number" :value="getDimension(control.name, 'left')" @input="updateDimension(control.name, 'left', $event.target.value)" class="w-full px-2 py-1.5 text-sm text-center border border-gray-300 rounded-md"></div></div></div>
@@ -259,6 +265,51 @@
                 <div class="mt-6 flex justify-end gap-3">
                     <button @click="showDeleteConfirm = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
                     <button @click="deletePage()" class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Media Library Modal --}}
+    <div x-show="showMediaLibrary" x-cloak class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75" @click="showMediaLibrary = false"></div>
+            <div class="relative bg-white rounded-lg max-w-4xl w-full shadow-xl flex flex-col max-h-[90vh]">
+                <div class="px-6 py-4 border-b flex items-center justify-between">
+                    <h3 class="text-lg font-medium text-gray-900">Media Library</h3>
+                    <button @click="showMediaLibrary = false" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <div class="p-4 border-b">
+                    <label class="flex items-center justify-center w-full py-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition-colors">
+                        <div class="text-center">
+                            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                            <p class="mt-2 text-sm text-gray-600">Click to upload or drag and drop</p>
+                            <p class="mt-1 text-xs text-gray-500">PNG, JPG, GIF, SVG up to 10MB</p>
+                        </div>
+                        <input type="file" accept="image/*,video/*" @change="uploadMedia($event)" class="hidden">
+                    </label>
+                </div>
+                <div class="flex-1 overflow-y-auto p-4">
+                    <div x-show="mediaLoading" class="flex items-center justify-center py-12">
+                        <svg class="animate-spin h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    </div>
+                    <div x-show="!mediaLoading && mediaItems.length === 0" class="text-center py-12 text-gray-500">
+                        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <p class="mt-2">No media files yet</p>
+                        <p class="text-sm">Upload images to see them here</p>
+                    </div>
+                    <div x-show="!mediaLoading && mediaItems.length > 0" class="grid grid-cols-4 gap-4">
+                        <template x-for="item in mediaItems" :key="item.id || item.url">
+                            <div @click="selectMediaItem(item.url || '/storage/' + item.path)" class="aspect-square rounded-lg overflow-hidden cursor-pointer hover:ring-2 hover:ring-indigo-500 bg-gray-100">
+                                <img :src="item.url || '/storage/' + item.path" :alt="item.name || item.filename" class="w-full h-full object-cover">
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                <div class="px-6 py-4 border-t flex justify-end">
+                    <button @click="showMediaLibrary = false" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">Cancel</button>
                 </div>
             </div>
         </div>
