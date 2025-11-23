@@ -30,7 +30,7 @@
         window.builderRoutes = {
             save: "{{ route('builder.save', $page) }}",
             publish: "{{ route('builder.publish', $page) }}",
-            preview: "{{ route('pages.preview', $page) }}",
+            preview: "{{ route('builder.preview', $page) }}",
             pages: "{{ route('pages.index') }}",
             media: "{{ route('api.media.index') }}",
             mediaUpload: "{{ route('api.media.store') }}"
