@@ -21,8 +21,9 @@
             @foreach($elements as $element)
             <div x-show="activeCategory === 'all' || activeCategory === '{{ $category }}'"
                  data-type="{{ $element['type'] }}"
+                 data-category="{{ $category }}"
                  draggable="true"
-                 @click="addElement('{{ $element['type'] }}')"
+                 @click="$root.addElement('{{ $element['type'] }}')"
                  class="flex flex-col items-center justify-center p-3 bg-gray-50 border border-gray-200 rounded-lg cursor-move hover:bg-gray-100 hover:border-indigo-300 transition-colors">
                 <span class="text-lg mb-1">{{ $element['icon'] }}</span>
                 <span class="text-xs text-gray-600">{{ $element['name'] }}</span>

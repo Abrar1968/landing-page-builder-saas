@@ -64,9 +64,10 @@ function builderApp() {
 
         // Initialize SortableJS
         initSortables() {
-            // Palette sortable (clone elements)
-            if (this.$refs.palette) {
-                this.paletteSortable = new Sortable(this.$refs.palette, {
+            // Palette sortable (clone elements) - use querySelector since it's in nested x-data
+            const paletteEl = document.querySelector('[x-ref="palette"]');
+            if (paletteEl) {
+                this.paletteSortable = new Sortable(paletteEl, {
                     group: {
                         name: 'builder',
                         pull: 'clone',
