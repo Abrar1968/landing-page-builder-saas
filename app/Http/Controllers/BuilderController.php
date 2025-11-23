@@ -40,16 +40,9 @@ class BuilderController extends Controller
             'settings' => 'nullable|array',
         ]);
 
-        $page->update($validated);
-
-        // Create version on save
-        if ($page->wasChanged('content')) {
-            $latestVersion = $page->versions()->max('version_number') ?? 0;
-            $page->versions()->create([
-                'content' => $page->content,
-                'version_number' => $latestVersion + 1,
-            ]);
-        }
+        // Use PageService for proper architecture pattern
+        // PageObserver automatically creates versions when content changes
+        $this->pageService->update($page, $validated);
 
         return response()->json([
             'success' => true,
@@ -67,11 +60,11 @@ class BuilderController extends Controller
 
         $validated = $request->validate([
             'content' => 'required|array',
+            'settings' => 'nullable|array',
         ]);
 
-        $page->update([
-            'content' => $validated['content'],
-        ]);
+        // Use PageService for proper architecture pattern
+        $this->pageService->update($page, $validated);
 
         return response()->json([
             'success' => true,
@@ -86,7 +79,8 @@ class BuilderController extends Controller
     {
         $this->authorize('update', $page);
 
-        $page->publish();
+        // Use PageService for proper architecture pattern
+        $this->pageService->publish($page);
 
         return response()->json([
             'success' => true,
