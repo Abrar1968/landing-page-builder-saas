@@ -32,8 +32,8 @@
             publish: "{{ route('builder.publish', $page) }}",
             preview: "{{ route('builder.preview', $page) }}",
             pages: "{{ route('pages.index') }}",
-            media: "{{ route('api.media.index') }}",
-            mediaUpload: "{{ route('api.media.store') }}"
+            media: "/api/media",
+            mediaUpload: "/api/media/upload"
         };
     </script>
 </body>
