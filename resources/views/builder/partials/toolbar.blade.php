@@ -58,12 +58,29 @@
         </div>
 
         {{-- Actions --}}
-        <button @click="showPageSettings = true" class="px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded">
-            Settings
-        </button>
-        <button @click="preview()" class="px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded">
-            Preview
-        </button>
+        {{-- More Actions Dropdown --}}
+        <div class="relative" x-data="{ open: false }">
+            <button @click="open = !open" class="px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded flex items-center gap-1">
+                More
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <div x-show="open" @click.away="open = false" x-cloak
+                 class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
+                <button @click="showPageSettings = true; open = false" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Page Settings
+                </button>
+                <button @click="preview(); open = false" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    Preview Page
+                </button>
+                <hr class="my-1">
+                <button @click="showDeleteConfirm = true; open = false" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                    Delete Page
+                </button>
+            </div>
+        </div>
+
         <button @click="save()"
                 :disabled="isSaving"
                 class="px-4 py-1.5 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50">
