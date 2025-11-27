@@ -1,5 +1,9 @@
 # AlpineJS Components Documentation
 
+> **Scope**: This document covers AlpineJS components for **marketing pages and dashboard UI only**.
+>
+> **For Page Builder Components**: The page builder uses **Vue.js 3 + Pinia** (SPA). See [03-DRAG-DROP-BUILDER.md](./03-DRAG-DROP-BUILDER.md) for builder-specific component architecture.
+
 ## Table of Contents
 1. [UI Components](#ui-components)
 2. [Form Components](#form-components)

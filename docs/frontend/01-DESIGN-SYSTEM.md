@@ -1,7 +1,13 @@
 # Design System Documentation
 
-> **Tech Stack**: TailwindCSS v4, AlpineJS, Laravel Blade
+> **Tech Stack**:
+> - **Styling**: TailwindCSS v4 (used across entire application)
+> - **Page Builder**: Vue.js 3 + Pinia (SPA in `resources/js/builder/`)
+> - **Marketing Pages & Dashboard**: Laravel Blade + AlpineJS for interactions
+>
 > **Aesthetic**: Modern big-tech SaaS inspired by Webflow, Linear, and Vercel
+
+**Note**: This document primarily covers the design system for marketing pages and dashboard UI components. For the page builder SPA architecture, see [03-DRAG-DROP-BUILDER.md](./03-DRAG-DROP-BUILDER.md).
 
 ---
 
