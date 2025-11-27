@@ -3,11 +3,17 @@
 ## Tech Stack (STRICT - NO EXCEPTIONS)
 
 - **Backend:** Laravel 12 (PHP 8.2+)
-- **Frontend:** TailwindCSS v4, AlpineJS, HTML in Blade files
+- **Frontend:**
+  - **Page Builder**: Vue.js 3 + Pinia (SPA)
+  - **Marketing Pages & Dashboard**: TailwindCSS v4, AlpineJS, HTML in Blade files
+  - **Styling**: TailwindCSS v4 (across entire application)
+  - **Build Tool**: Vite 5.x
 - **Database:** MySQL 8.0+
 - **Authentication:** Laravel Breeze/Fortify
 - **Payments:** Stripe/PayPal with Strategy Pattern
 - **Testing:** PHPUnit
+
+**Important Note**: The page builder is implemented as a Vue.js 3 SPA (Single Page Application) with Pinia state management, NOT with AlpineJS. Marketing pages and dashboard UI use AlpineJS for simple interactions.
 
 ---
 
@@ -302,7 +308,13 @@ class DashboardController extends Controller
 
 ---
 
-## Day 4-5: Page Builder with AlpineJS x-data
+## Day 4-5: Page Builder with Vue.js 3 SPA
+
+> **⚠️ ARCHITECTURE UPDATE**: The page builder has been implemented as a **Vue.js 3 Single Page Application (SPA)** with **Pinia** state management, NOT with AlpineJS as originally planned in this document.
+>
+> **For Current Implementation**: See [docs/frontend/03-DRAG-DROP-BUILDER.md](frontend/03-DRAG-DROP-BUILDER.md) for the complete Vue.js 3 + Pinia architecture.
+>
+> **Below is the original planned approach** (kept for reference, but NOT the actual implementation):
 
 ### Builder Controller
 
@@ -619,7 +631,16 @@ class BuilderController extends Controller
 
 ---
 
-## Day 6: Builder Elements as Blade Components
+## Day 6: Builder Widget System (Vue.js Components)
+
+> **⚠️ ARCHITECTURE UPDATE**: Widget rendering is handled by **Vue.js 3 components**, NOT Blade components as originally planned.
+>
+> **For Current Implementation**:
+> - Widget Registry: `resources/js/builder/widgets/registry.js` (22+ Elementor-inspired widgets)
+> - Widget Renderer: Vue.js components in `resources/js/builder/components/widgets/`
+> - See [docs/frontend/03-DRAG-DROP-BUILDER.md](frontend/03-DRAG-DROP-BUILDER.md) and [docs/features/07-WIDGET-SYSTEM.md](features/07-WIDGET-SYSTEM.md)
+>
+> **Below is the original planned approach** (kept for reference, but NOT the actual implementation):
 
 ### Element Components
 
@@ -1723,11 +1744,16 @@ PAYPAL_SANDBOX=false
 This 14-day implementation plan provides a complete Landing Page Builder SaaS using:
 
 - **Laravel 12** for backend logic and API
-- **Blade templates** for server-side rendering
-- **AlpineJS** for reactive UI interactions
-- **TailwindCSS v4** for styling
+- **Vue.js 3 + Pinia** for the page builder SPA
+- **Blade templates** for marketing pages and dashboard
+- **AlpineJS** for dashboard/marketing page interactions
+- **TailwindCSS v4** for styling (across entire application)
+- **Vite 5.x** for build tooling and hot module replacement
 - **MySQL** for data persistence
 - **PHPUnit** for testing
 - **Strategy Pattern** for payment gateway flexibility
 
-All code examples are PHP/Blade/AlpineJS compliant with no React, Vue, TypeScript, or other JavaScript frameworks.
+**Important**: The original plan documented here uses AlpineJS for the builder (Days 4-6), but the **actual implementation uses Vue.js 3 + Pinia** for the page builder SPA. See:
+- [docs/frontend/03-DRAG-DROP-BUILDER.md](frontend/03-DRAG-DROP-BUILDER.md) - Complete Vue.js 3 builder architecture
+- [docs/features/07-WIDGET-SYSTEM.md](features/07-WIDGET-SYSTEM.md) - 28 Elementor-inspired widgets
+- [docs/REVISED-WIDGET-IMPLEMENTATION-PLAN.md](REVISED-WIDGET-IMPLEMENTATION-PLAN.md) - Implementation roadmap
