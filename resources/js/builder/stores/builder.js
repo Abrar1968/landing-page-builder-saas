@@ -15,6 +15,8 @@ export const useBuilderStore = defineStore('builder', () => {
     const activeTab = ref('content');
     const leftPanel = ref('widgets');
     const previewMode = ref('desktop');
+    const hoverState = ref('normal'); // 'normal' or 'hover'
+    const responsiveDevice = ref('desktop'); // 'desktop', 'tablet', 'mobile'
 
     // History
     const history = ref([]);
@@ -157,7 +159,8 @@ export const useBuilderStore = defineStore('builder', () => {
             advanced: [
                 { name: 'margin', type: 'dimensions', label: 'Margin' },
                 { name: 'css_classes', type: 'text', label: 'CSS Classes' },
-                { name: 'css_id', type: 'text', label: 'CSS ID' }
+                { name: 'css_id', type: 'text', label: 'CSS ID' },
+                { name: 'motion_effects', type: 'motion_effects', label: 'Motion Effects' }
             ]
         };
     }
@@ -174,7 +177,8 @@ export const useBuilderStore = defineStore('builder', () => {
             ],
             advanced: [
                 { name: 'margin', type: 'dimensions', label: 'Margin' },
-                { name: 'css_classes', type: 'text', label: 'CSS Classes' }
+                { name: 'css_classes', type: 'text', label: 'CSS Classes' },
+                { name: 'motion_effects', type: 'motion_effects', label: 'Motion Effects' }
             ]
         };
     }
@@ -242,6 +246,7 @@ export const useBuilderStore = defineStore('builder', () => {
             id: generateId(),
             elType: 'widget',
             widgetType: widgetType,
+            type: widgetType, // Add for backwards compatibility
             settings: getWidgetDefaults(widgetType)
         };
 
@@ -285,16 +290,51 @@ export const useBuilderStore = defineStore('builder', () => {
 
     function getSetting(name) {
         const el = selectedElementData.value;
+        if (!el) return undefined;
+
+        // For hover state, check hover_settings first
+        if (hoverState.value === 'hover') {
+            if (el.hover_settings && el.hover_settings[name] !== undefined) {
+                return el.hover_settings[name];
+            }
+        }
+
+        // For responsive, check device-specific settings
+        if (responsiveDevice.value !== 'desktop') {
+            const deviceKey = `${name}_${responsiveDevice.value}`;
+            if (el.settings && el.settings[deviceKey] !== undefined) {
+                return el.settings[deviceKey];
+            }
+        }
+
         return el?.settings?.[name];
     }
 
     function updateSetting(name, value) {
         const el = selectedElementData.value;
-        if (el) {
-            if (!el.settings) el.settings = {};
-            el.settings[name] = value;
-            isDirty.value = true;
+        if (!el) return;
+
+        if (!el.settings) el.settings = {};
+
+        // Update hover state settings
+        if (hoverState.value === 'hover') {
+            if (!el.hover_settings) el.hover_settings = {};
+            el.hover_settings[name] = value;
         }
+        // Update responsive device settings
+        else if (responsiveDevice.value !== 'desktop') {
+            const deviceKey = `${name}_${responsiveDevice.value}`;
+            el.settings[deviceKey] = value;
+        }
+        // Update normal desktop settings
+        else {
+            el.settings[name] = value;
+        }
+
+        // Update settings hash to trigger reactivity
+        el.settingsHash = Date.now();
+
+        isDirty.value = true;
     }
 
     function deleteElement(id) {
@@ -431,13 +471,25 @@ export const useBuilderStore = defineStore('builder', () => {
                 })
             });
 
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Save failed with status:', response.status, errorData);
+                alert(`Save failed: ${errorData.message || 'Unknown error'}`);
+                return;
+            }
+
             const data = await response.json();
             if (data.success) {
                 isDirty.value = false;
-                lastSaved.value = data.saved_at;
+                lastSaved.value = data.saved_at || 'just now';
+                console.log('Save successful');
+            } else {
+                console.error('Save failed:', data.message || 'Unknown error');
+                alert(`Save failed: ${data.message || 'Unknown error'}`);
             }
         } catch (error) {
-            console.error('Save failed:', error);
+            console.error('Save failed with error:', error);
+            alert(`Save failed: ${error.message || 'Network error'}`);
         } finally {
             isSaving.value = false;
         }
@@ -514,6 +566,8 @@ export const useBuilderStore = defineStore('builder', () => {
         activeTab,
         leftPanel,
         previewMode,
+        hoverState,
+        responsiveDevice,
         history,
         historyIndex,
         clipboard,

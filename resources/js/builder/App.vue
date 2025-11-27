@@ -102,37 +102,15 @@
           </div>
         </div>
 
-        <!-- Navigator -->
-        <div v-show="store.leftPanel === 'navigator'" class="flex-1 overflow-y-auto p-4">
-          <div v-if="store.content.length === 0" class="text-sm text-gray-400 text-center py-4">No elements</div>
-          <div v-for="section in store.content" :key="section.id" class="mb-2">
-            <div @click="store.selectElement(section.id, 'section')"
-                 :class="store.selectedElement === section.id ? 'bg-indigo-50 text-indigo-700' : ''"
-                 class="flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer hover:bg-gray-50">
-              <span class="text-xs">Section</span>
-            </div>
-            <div class="ml-4">
-              <div v-for="column in section.elements" :key="column.id">
-                <div @click="store.selectElement(column.id, 'column')"
-                     :class="store.selectedElement === column.id ? 'bg-blue-50 text-blue-700' : ''"
-                     class="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-gray-50">
-                  <span class="text-xs">Column</span>
-                </div>
-                <div class="ml-4">
-                  <div v-for="widget in column.elements" :key="widget.id"
-                       @click="store.selectElement(widget.id, 'widget')"
-                       :class="store.selectedElement === widget.id ? 'bg-green-50 text-green-700' : ''"
-                       class="flex items-center gap-2 px-2 py-1 rounded cursor-pointer hover:bg-gray-50">
-                    <span class="text-xs capitalize">{{ widget.widgetType }}</span>
-                    <button @click.stop="store.deleteElement(widget.id)" class="ml-auto text-gray-400 hover:text-red-500">
-                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- Navigator Panel -->
+        <Navigator
+          v-show="store.leftPanel === 'navigator'"
+          :content="store.content"
+          :selectedElement="store.selectedElement"
+          @select="(id) => { const el = store.findElement(id); store.selectElement(id, el.elType); }"
+          @delete="store.deleteElement"
+          @duplicate="store.duplicateElement"
+        />
       </aside>
 
       <!-- Canvas -->
@@ -149,11 +127,15 @@
             <!-- Sections -->
             <div v-for="section in store.content" :key="section.id"
                  @click.stop="store.selectElement(section.id, 'section')"
+                 :data-element-id="section.id"
+                 :data-element-type="'section'"
                  :class="store.selectedElement === section.id ? 'ring-2 ring-indigo-500' : ''"
                  class="section-container relative group">
               <div class="flex" :style="`min-height: ${section.settings?.min_height || 100}px`">
                 <div v-for="column in section.elements" :key="column.id"
                      @click.stop="store.selectElement(column.id, 'column')"
+                     :data-element-id="column.id"
+                     :data-element-type="'column'"
                      :class="store.selectedElement === column.id ? 'ring-2 ring-blue-500' : ''"
                      :style="`width: ${column.settings?._column_size || 100}%`"
                      class="column-container relative group/col border border-dashed border-transparent hover:border-gray-300"
@@ -166,6 +148,8 @@
                     <!-- Widgets -->
                     <div v-for="widget in column.elements" :key="widget.id"
                          @click.stop="store.selectElement(widget.id, 'widget')"
+                         :data-element-id="widget.id"
+                         :data-element-type="'widget'"
                          :class="store.selectedElement === widget.id ? 'ring-2 ring-green-500' : ''"
                          class="widget-container relative group/widget mb-4">
                       <!-- Widget toolbar -->
@@ -181,7 +165,7 @@
                         </div>
                       </div>
                       <!-- Widget content -->
-                      <WidgetRenderer :widget="widget" />
+                      <WidgetRenderer :widget="widget" :key="`widget-${widget.id}-${widget.settingsHash || JSON.stringify(widget.settings)}`" />
                     </div>
                   </div>
                 </div>
@@ -211,6 +195,24 @@
             <button @click="store.activeTab = 'advanced'" :class="store.activeTab === 'advanced' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'" class="flex-1 py-2 text-sm font-medium border-b-2">Advanced</button>
           </div>
 
+          <!-- Hover State & Responsive Controls (Only show in Style tab) -->
+          <div v-if="store.activeTab === 'style'" class="p-3 border-b space-y-3 bg-gray-50">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Hover State</label>
+              <HoverStateToggle
+                :state="store.hoverState"
+                @update:state="store.hoverState = $event"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Responsive</label>
+              <ResponsiveToggle
+                :device="store.responsiveDevice"
+                @update:device="store.responsiveDevice = $event"
+              />
+            </div>
+          </div>
+
           <!-- Controls -->
           <div class="flex-1 overflow-y-auto p-4">
             <div v-for="control in store.currentControls" :key="control.name">
@@ -238,18 +240,40 @@
       @close="store.showMediaLibrary = false"
       @select="store.selectMediaItem($event)"
     />
+
+    <!-- Context Menu -->
+    <ContextMenu
+      :visible="contextMenu.visible"
+      :position="contextMenu.position"
+      :elementType="contextMenu.elementType"
+      :elementData="contextMenu.elementData"
+      @close="contextMenu.visible = false"
+      @action="handleContextMenuAction"
+    />
   </div>
 </template>
 
 <script setup>
-import { onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, reactive } from 'vue';
 import { useBuilderStore } from './stores/builder';
 import WidgetRenderer from './components/WidgetRenderer.vue';
 import ControlRenderer from './components/ControlRenderer.vue';
 import MediaLibraryModal from './components/MediaLibraryModal.vue';
+import ContextMenu from './components/ContextMenu.vue';
+import HoverStateToggle from './components/HoverStateToggle.vue';
+import ResponsiveToggle from './components/ResponsiveToggle.vue';
+import Navigator from './components/Navigator.vue';
 
 const store = useBuilderStore();
 const backUrl = '/pages';
+
+// Context menu state
+const contextMenu = reactive({
+  visible: false,
+  position: { x: 0, y: 0 },
+  elementType: null,
+  elementData: null
+});
 
 // Initialize from page data
 onMounted(() => {
@@ -262,6 +286,9 @@ onMounted(() => {
   // Keyboard shortcuts
   document.addEventListener('keydown', handleKeydown);
 
+  // Context menu
+  document.addEventListener('contextmenu', handleContextMenu);
+
   // Autosave
   const autosaveInterval = setInterval(() => {
     if (store.isDirty && !store.isSaving) {
@@ -271,31 +298,208 @@ onMounted(() => {
 
   onUnmounted(() => {
     document.removeEventListener('keydown', handleKeydown);
+    document.removeEventListener('contextmenu', handleContextMenu);
     clearInterval(autosaveInterval);
   });
 });
 
+function handleContextMenu(e) {
+  // Find if we're right-clicking on a builder element
+  const target = e.target.closest('[data-element-id]');
+
+  if (target) {
+    e.preventDefault();
+    const elementId = target.dataset.elementId;
+    const elementType = target.dataset.elementType;
+    const elementData = store.findElement(elementId);
+
+    contextMenu.visible = true;
+    contextMenu.position = { x: e.clientX, y: e.clientY };
+    contextMenu.elementType = elementType;
+    contextMenu.elementData = elementData;
+  } else if (e.target.closest('.bg-white.min-h-\\[600px\\]')) {
+    // Right-click on canvas
+    e.preventDefault();
+    contextMenu.visible = true;
+    contextMenu.position = { x: e.clientX, y: e.clientY };
+    contextMenu.elementType = 'canvas';
+    contextMenu.elementData = null;
+  }
+}
+
+function handleContextMenuAction({ action, elementData }) {
+  switch (action) {
+    case 'edit':
+      if (elementData) {
+        store.selectElement(elementData.id, elementData.elType);
+      }
+      break;
+    case 'duplicate':
+      if (elementData) {
+        store.duplicateElement(elementData.id);
+      }
+      break;
+    case 'copy':
+      store.copy();
+      break;
+    case 'paste':
+      store.paste();
+      break;
+    case 'delete':
+      if (elementData) {
+        store.deleteElement(elementData.id);
+      }
+      break;
+    case 'add_section':
+      store.addSection('100');
+      break;
+    case 'navigator':
+      store.leftPanel = 'navigator';
+      if (elementData) {
+        store.selectElement(elementData.id, elementData.elType);
+      }
+      break;
+    case 'reset_style':
+      // TODO: Implement style reset
+      break;
+    case 'save_global':
+    case 'save_template':
+      // TODO: Implement save as template
+      break;
+  }
+}
+
 function handleKeydown(e) {
+  // Save: Ctrl+S
   if ((e.ctrlKey || e.metaKey) && e.key === 's') {
     e.preventDefault();
     store.save();
-  } else if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+  }
+  // Undo: Ctrl+Z
+  else if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
     e.preventDefault();
     store.undo();
-  } else if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+  }
+  // Redo: Ctrl+Shift+Z or Ctrl+Y
+  else if (((e.ctrlKey || e.metaKey) && e.key === 'z' && e.shiftKey) || ((e.ctrlKey || e.metaKey) && e.key === 'y')) {
     e.preventDefault();
     store.redo();
-  } else if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
-    store.copy();
-  } else if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
-    store.paste();
-  } else if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+  }
+  // Copy: Ctrl+C
+  else if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+    if (!isInputFocused()) {
+      e.preventDefault();
+      store.copy();
+    }
+  }
+  // Paste: Ctrl+V
+  else if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+    if (!isInputFocused()) {
+      e.preventDefault();
+      store.paste();
+    }
+  }
+  // Cut: Ctrl+X
+  else if ((e.ctrlKey || e.metaKey) && e.key === 'x') {
+    if (!isInputFocused() && store.selectedElement) {
+      e.preventDefault();
+      store.cut();
+    }
+  }
+  // Duplicate: Ctrl+D
+  else if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
     e.preventDefault();
     if (store.selectedElement) {
       store.duplicateElement(store.selectedElement);
     }
-  } else if (e.key === 'Delete' && store.selectedElement) {
+  }
+  // Delete: Delete or Backspace
+  else if ((e.key === 'Delete' || e.key === 'Backspace') && store.selectedElement && !isInputFocused()) {
+    e.preventDefault();
     store.deleteElement(store.selectedElement);
+  }
+  // Group (select section): Ctrl+G
+  else if ((e.ctrlKey || e.metaKey) && e.key === 'g') {
+    e.preventDefault();
+    if (store.selectedElement) {
+      const parent = store.findParent(store.selectedElement);
+      if (parent) {
+        store.selectElement(parent.id, parent.elType);
+      }
+    }
+  }
+  // Escape: Deselect
+  else if (e.key === 'Escape') {
+    store.selectedElement = null;
+    store.selectedType = null;
+    contextMenu.visible = false;
+  }
+  // Enter: Open settings panel
+  else if (e.key === 'Enter' && store.selectedElement && !isInputFocused()) {
+    e.preventDefault();
+    store.activeTab = 'content';
+  }
+  // Arrow Up: Select previous sibling
+  else if (e.key === 'ArrowUp' && store.selectedElement && !isInputFocused()) {
+    e.preventDefault();
+    selectPreviousSibling();
+  }
+  // Arrow Down: Select next sibling
+  else if (e.key === 'ArrowDown' && store.selectedElement && !isInputFocused()) {
+    e.preventDefault();
+    selectNextSibling();
+  }
+  // Arrow Right: Select first child
+  else if (e.key === 'ArrowRight' && store.selectedElement && !isInputFocused()) {
+    e.preventDefault();
+    selectFirstChild();
+  }
+  // Arrow Left: Select parent
+  else if (e.key === 'ArrowLeft' && store.selectedElement && !isInputFocused()) {
+    e.preventDefault();
+    const parent = store.findParent(store.selectedElement);
+    if (parent) {
+      store.selectElement(parent.id, parent.elType);
+    }
+  }
+}
+
+// Helper to check if an input/textarea is focused
+function isInputFocused() {
+  const activeEl = document.activeElement;
+  return activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.isContentEditable);
+}
+
+// Navigate to previous sibling element
+function selectPreviousSibling() {
+  const parent = store.findParent(store.selectedElement);
+  if (!parent?.elements) return;
+
+  const currentIndex = parent.elements.findIndex(el => el.id === store.selectedElement);
+  if (currentIndex > 0) {
+    const prevSibling = parent.elements[currentIndex - 1];
+    store.selectElement(prevSibling.id, prevSibling.elType);
+  }
+}
+
+// Navigate to next sibling element
+function selectNextSibling() {
+  const parent = store.findParent(store.selectedElement);
+  if (!parent?.elements) return;
+
+  const currentIndex = parent.elements.findIndex(el => el.id === store.selectedElement);
+  if (currentIndex < parent.elements.length - 1) {
+    const nextSibling = parent.elements[currentIndex + 1];
+    store.selectElement(nextSibling.id, nextSibling.elType);
+  }
+}
+
+// Navigate to first child element
+function selectFirstChild() {
+  const current = store.findElement(store.selectedElement);
+  if (current?.elements && current.elements.length > 0) {
+    const firstChild = current.elements[0];
+    store.selectElement(firstChild.id, firstChild.elType);
   }
 }
 
