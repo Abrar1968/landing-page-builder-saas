@@ -125,9 +125,11 @@ erDiagram
         bigint page_id FK
         bigint template_id FK
         string type
+        string label
         string name
         json properties
         json styles
+        json advanced
         integer sort_order
         bigint parent_id FK
         boolean is_visible
@@ -546,7 +548,9 @@ return new class extends Migration
 };
 ```
 
-### 8. Elements Table Migration
+### 8. Elements/Widgets Table Migration
+
+**Note:** This table stores all page builder widgets following the Elementor-inspired widget system (28 Basic widgets).
 
 ```php
 <?php
@@ -566,20 +570,31 @@ return new class extends Migration
             $table->id();
             $table->foreignId('page_id')->nullable()->constrained()->onDelete('cascade');
             $table->foreignId('template_id')->nullable()->constrained()->onDelete('cascade');
-            $table->string('type');
-            $table->string('name')->nullable();
-            $table->json('properties')->nullable();
-            $table->json('styles')->nullable();
-            $table->integer('sort_order')->default(0);
-            $table->unsignedBigInteger('parent_id')->nullable();
+
+            // Widget identification
+            $table->string('type', 50)->comment('Widget type: heading, button, image, etc.');
+            $table->string('label', 100)->comment('Human-readable widget label');
+            $table->string('name')->nullable()->comment('Optional custom name for the widget instance');
+
+            // Widget data (JSON structures)
+            $table->json('properties')->nullable()->comment('Content Tab properties');
+            $table->json('styles')->nullable()->comment('Style Tab properties');
+            $table->json('advanced')->nullable()->comment('Advanced Tab properties (margin, padding, background, etc.)');
+
+            // Hierarchy and ordering
+            $table->integer('sort_order')->default(0)->comment('Display order within parent');
+            $table->unsignedBigInteger('parent_id')->nullable()->comment('For nested widgets (e.g., Container children)');
+
+            // Visibility
             $table->boolean('is_visible')->default(true);
+
             $table->timestamps();
             $table->softDeletes();
 
-            // Self-referential foreign key
+            // Self-referential foreign key for nested widgets
             $table->foreign('parent_id')->references('id')->on('elements')->onDelete('cascade');
 
-            // Indexes
+            // Indexes for performance
             $table->index('type');
             $table->index('sort_order');
             $table->index('parent_id');
@@ -587,6 +602,7 @@ return new class extends Migration
             $table->index(['page_id', 'sort_order']);
             $table->index(['template_id', 'sort_order']);
             $table->index(['page_id', 'is_visible']);
+            $table->index(['type', 'page_id']); // Query widgets by type within a page
         });
     }
 
@@ -599,6 +615,79 @@ return new class extends Migration
     }
 };
 ```
+
+#### Widget Data Structure Example
+
+Each widget is stored with the following JSON structure:
+
+```json
+{
+  "id": 123,
+  "page_id": 456,
+  "type": "heading",
+  "label": "Heading",
+  "name": null,
+  "properties": {
+    "content": "Welcome to Our Site",
+    "tag": "h1",
+    "link": "",
+    "color": "#000000",
+    "fontSize": "48px",
+    "fontWeight": "700"
+  },
+  "styles": {
+    "margin": "0 0 20px 0",
+    "padding": "0",
+    "textAlign": "center"
+  },
+  "advanced": {
+    "layout": {
+      "margin": "0 0 20px 0",
+      "padding": "10px",
+      "zIndex": "auto"
+    },
+    "background": {
+      "type": "none"
+    },
+    "border": {
+      "type": "none"
+    },
+    "responsive": {
+      "hideOnDesktop": false,
+      "hideOnTablet": false,
+      "hideOnMobile": false
+    },
+    "attributes": {
+      "id": "main-heading",
+      "classes": "hero-title",
+      "dataAttributes": {}
+    }
+  },
+  "sort_order": 1,
+  "parent_id": null,
+  "is_visible": true,
+  "created_at": "2025-11-27T10:00:00Z",
+  "updated_at": "2025-11-27T10:00:00Z"
+}
+```
+
+#### Supported Widget Types
+
+The `type` field supports 28 Elementor Basic widgets:
+
+**Typography (5):** `heading`, `text-editor`, `icon-list`, `text-path`, `alert`
+
+**Media (5):** `image`, `video`, `image-box`, `image-carousel`, `soundcloud`
+
+**Interactive (6):** `button`, `star-rating`, `social-icons`, `tabs`, `accordion`, `toggle`
+
+**Layout (6):** `container`, `inner-section`, `divider`, `spacer`, `sidebar`, `menu-anchor`
+
+**Content (4):** `icon-box`, `basic-gallery`, `testimonial`, `counter`
+
+**Advanced (2):** `html`, `shortcode`
+
+**Additional (2):** `progress-bar`, `google-maps`
 
 ### 9. Media Table Migration
 
