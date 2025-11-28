@@ -2,13 +2,22 @@
 
 Complete setup guide for the Landing Page Builder SaaS application.
 
+> **⚠️ TECH STACK NOTE**
+>
+> This guide was written for the original plan using AlpineJS. The **actual implementation uses Vue.js 3 + Pinia** for the page builder SPA, while AlpineJS is used for dashboard/marketing pages.
+>
+> **Tech Stack:**
+> - **Page Builder**: Vue.js 3 + Pinia + Vite 5.x
+> - **Dashboard/Marketing**: AlpineJS + Blade
+> - **Styling**: TailwindCSS v4 (global)
+
 ## Table of Contents
 
 1. [Prerequisites](#prerequisites)
 2. [Laravel Installation](#laravel-installation)
 3. [Database Setup](#database-setup)
 4. [TailwindCSS v4 Installation](#tailwindcss-v4-installation)
-5. [AlpineJS Setup](#alpinejs-setup)
+5. [Frontend Setup (Vue.js 3 + Pinia + AlpineJS)](#frontend-setup-vuejs-3--pinia--alpinejs)
 6. [Directory Structure](#directory-structure)
 7. [Environment Configuration](#environment-configuration)
 8. [Laravel Vite Setup](#laravel-vite-setup)
@@ -479,15 +488,74 @@ Add to your main layout `resources/views/layouts/app.blade.php`:
 
 ---
 
-## AlpineJS Setup
+## Frontend Setup (Vue.js 3 + Pinia + AlpineJS)
 
-### Install AlpineJS
+### Install Frontend Dependencies
 
 ```bash
+# Vue.js 3 ecosystem for page builder SPA
+npm install vue@^3 pinia
+
+# AlpineJS for dashboard/marketing pages
 npm install alpinejs
+
+# Development dependencies
+npm install -D @vitejs/plugin-vue
 ```
 
-### Configure AlpineJS
+### Configure Vite for Vue.js
+
+Update `vite.config.js`:
+
+```javascript
+import { defineConfig } from 'vite';
+import laravel from 'laravel-vite-plugin';
+import vue from '@vitejs/plugin-vue';
+
+export default defineConfig({
+    plugins: [
+        laravel({
+            input: [
+                'resources/css/app.css',
+                'resources/js/app.js',
+                'resources/js/builder/main.js'  // Vue.js builder SPA entry point
+            ],
+            refresh: true,
+        }),
+        vue({
+            template: {
+                transformAssetUrls: {
+                    base: null,
+                    includeAbsolute: false,
+                },
+            },
+        }),
+    ],
+    resolve: {
+        alias: {
+            '@': '/resources/js',
+        },
+    },
+});
+```
+
+### Create Vue.js Builder Entry Point
+
+Create `resources/js/builder/main.js`:
+
+```javascript
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import App from './App.vue';
+
+const pinia = createPinia();
+const app = createApp(App);
+
+app.use(pinia);
+app.mount('#builder-app');
+```
+
+### Configure AlpineJS for Dashboard
 
 Update `resources/js/app.js`:
 
