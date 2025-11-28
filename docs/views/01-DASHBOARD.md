@@ -6,6 +6,8 @@ The dashboard serves as the main control center for users to manage their landin
 
 **Tech Stack: TailwindCSS v4 + AlpineJS + Laravel Blade**
 
+> **📝 NOTE**: This document covers the **dashboard UI** which uses **AlpineJS + Blade**. The **page builder** is a separate Vue.js 3 SPA. See [docs/frontend/03-DRAG-DROP-BUILDER.md](../frontend/03-DRAG-DROP-BUILDER.md) for builder architecture.
+
 ---
 
 ## 1. Dashboard Layout
