@@ -30,7 +30,14 @@
             :value="modelValue"
             :min="control.min"
             :max="control.max"
-            @input="$emit('update:modelValue', Number($event.target.value))"
+            @input="
+                $emit(
+                    'update:modelValue',
+                    $event.target.value === ''
+                        ? ''
+                        : Number($event.target.value)
+                )
+            "
             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
         />
 
@@ -103,9 +110,23 @@
                     "
                     class="flex-1"
                 />
-                <span class="text-sm text-gray-600 w-16 text-right">
-                    {{ modelValue ?? control.default ?? control.min
-                    }}{{ control.unit || "" }}
+                <input
+                    type="number"
+                    :value="modelValue ?? control.default ?? control.min"
+                    :min="control.min"
+                    :max="control.max"
+                    @input="
+                        $emit(
+                            'update:modelValue',
+                            $event.target.value === ''
+                                ? ''
+                                : Number($event.target.value)
+                        )
+                    "
+                    class="w-16 px-2 py-1 text-sm border border-gray-300 rounded"
+                />
+                <span class="text-sm text-gray-600 w-8 text-right">
+                    {{ control.unit || "" }}
                 </span>
             </div>
         </div>
@@ -221,7 +242,7 @@
                 <label class="text-xs text-gray-500">Top</label>
                 <input
                     type="number"
-                    :value="modelValue?.top ?? 0"
+                    :value="modelValue?.top"
                     @input="updateDimension('top', $event.target.value)"
                     class="w-full px-2 py-1 text-sm border border-gray-300 rounded"
                 />
@@ -230,7 +251,7 @@
                 <label class="text-xs text-gray-500">Right</label>
                 <input
                     type="number"
-                    :value="modelValue?.right ?? 0"
+                    :value="modelValue?.right"
                     @input="updateDimension('right', $event.target.value)"
                     class="w-full px-2 py-1 text-sm border border-gray-300 rounded"
                 />
@@ -239,7 +260,7 @@
                 <label class="text-xs text-gray-500">Bottom</label>
                 <input
                     type="number"
-                    :value="modelValue?.bottom ?? 0"
+                    :value="modelValue?.bottom"
                     @input="updateDimension('bottom', $event.target.value)"
                     class="w-full px-2 py-1 text-sm border border-gray-300 rounded"
                 />
@@ -248,7 +269,7 @@
                 <label class="text-xs text-gray-500">Left</label>
                 <input
                     type="number"
-                    :value="modelValue?.left ?? 0"
+                    :value="modelValue?.left"
                     @input="updateDimension('left', $event.target.value)"
                     class="w-full px-2 py-1 text-sm border border-gray-300 rounded"
                 />
@@ -1415,7 +1436,7 @@ function updateDimension(key, value) {
     };
     emit("update:modelValue", {
         ...current,
-        [key]: Number(value),
+        [key]: value === "" ? "" : value,
     });
 }
 
@@ -1465,7 +1486,7 @@ function updateBorderWidth(side, value) {
         ...current,
         width: {
             ...width,
-            [side]: Number(value),
+            [side]: value === "" ? "" : value,
         },
     });
 }
@@ -1482,7 +1503,7 @@ function updateBorderRadius(corner, value) {
         ...current,
         radius: {
             ...radius,
-            [corner]: Number(value),
+            [corner]: value === "" ? "" : value,
         },
     });
 }
@@ -1498,59 +1519,59 @@ function updateBoxShadow(key, value) {
 
 // Gaps control helpers
 function updateGap(key, value) {
-  const current = props.modelValue || { column: 20, row: 20, linked: false };
-  const numValue = Number(value);
-  
-  if (current.linked) {
-    emit('update:modelValue', {
-      ...current,
-      column: numValue,
-      row: numValue
-    });
-  } else {
-    emit('update:modelValue', {
-      ...current,
-      [key]: numValue
-    });
-  }
+    const current = props.modelValue || { column: 20, row: 20, linked: false };
+    const numValue = value === "" ? "" : value;
+
+    if (current.linked) {
+        emit("update:modelValue", {
+            ...current,
+            column: numValue,
+            row: numValue,
+        });
+    } else {
+        emit("update:modelValue", {
+            ...current,
+            [key]: numValue,
+        });
+    }
 }
 
 function toggleGapLink() {
-  const current = props.modelValue || { column: 20, row: 20, linked: false };
-  const newLinked = !current.linked;
-  
-  emit('update:modelValue', {
-    ...current,
-    linked: newLinked,
-    // If linking, sync row to column value
-    ...(newLinked ? { row: current.column } : {})
-  });
+    const current = props.modelValue || { column: 20, row: 20, linked: false };
+    const newLinked = !current.linked;
+
+    emit("update:modelValue", {
+        ...current,
+        linked: newLinked,
+        // If linking, sync row to column value
+        ...(newLinked ? { row: current.column } : {}),
+    });
 }
 
 // Size control helper
 function updateSize(key, value) {
-  const current = props.modelValue || {};
-  emit('update:modelValue', {
-    ...current,
-    [key]: value
-  });
+    const current = props.modelValue || {};
+    emit("update:modelValue", {
+        ...current,
+        [key]: value,
+    });
 }
 
 // Position control helper
 function updatePosition(key, value) {
-  const current = props.modelValue || {};
-  emit('update:modelValue', {
-    ...current,
-    [key]: value
-  });
+    const current = props.modelValue || {};
+    emit("update:modelValue", {
+        ...current,
+        [key]: value,
+    });
 }
 
 // Shape divider control helper
 function updateShapeDivider(key, value) {
-  const current = props.modelValue || {};
-  emit('update:modelValue', {
-    ...current,
-    [key]: value
-  });
+    const current = props.modelValue || {};
+    emit("update:modelValue", {
+        ...current,
+        [key]: value,
+    });
 }
 </script>
