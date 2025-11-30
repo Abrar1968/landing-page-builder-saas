@@ -1,59 +1,396 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Landing Page Builder SaaS
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A modern SaaS landing page builder application powered by **Laravel 12** and **Vue.js 3**, featuring an Elementor-inspired drag-and-drop page builder with 22+ professional widgets.
 
-## About Laravel
+## 🚀 Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Page Builder (Vue.js 3 SPA)
+- ✅ **22+ Elementor-inspired widgets** (Heading, Image, Button, Video, Accordion, Tabs, etc.)
+- ✅ **Real-time visual editing** with live preview
+- ✅ **Property panels** with Content/Style/Advanced tabs
+- ✅ **Undo/Redo** functionality
+- ✅ **Auto-save** feature
+- ✅ **Media library** integration
+- ✅ **Responsive preview** modes (Desktop/Tablet/Mobile)
+- ✅ **Widget registry** system for extensibility
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Backend Services
+- ✅ **Service-Repository pattern** architecture
+- ✅ **Page management** with versioning
+- ✅ **Template system** with pre-built designs
+- ✅ **Media management** with upload/organization
+- ✅ **Domain management** for custom domains
+- ✅ **Stripe integration** for subscriptions
+- ✅ **Analytics tracking** for page views
+- ✅ **Form submissions** collection
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### User Features
+- ✅ **Multi-tier subscriptions** (Free, Pro, Business)
+- ✅ **Custom domains** support
+- ✅ **Page publishing** workflow
+- ✅ **Template library** for quick starts
+- ✅ **User dashboard** with analytics
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## 🛠 Technology Stack
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Backend
+- **Laravel 12** (PHP 8.2+)
+- **MySQL 8.0+** for data storage
+- **Redis** for caching (optional)
+- **Laravel Sanctum** for API authentication
+- **Stripe API** for payments
 
-## Laravel Sponsors
+### Frontend
+- **Vue.js 3** (Composition API) - Page Builder SPA
+- **Pinia** - State management
+- **Vite 5.x** - Build tool & dev server
+- **TailwindCSS v4** - Utility-first CSS
+- **Laravel Blade** - Marketing pages & dashboard
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### Development
+- **Composer** - PHP dependencies
+- **NPM** - JavaScript dependencies
+- **Pint** - PHP code formatting (PSR-12)
+- **ESLint** - JavaScript linting
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## 📋 Prerequisites
 
-## Contributing
+- PHP 8.2 or higher
+- Composer 2.x
+- Node.js 18.x or higher
+- NPM 9.x or higher
+- MySQL 8.0 or higher
+- Redis (optional, for caching)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## 🚀 Quick Start
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 1. Clone the Repository
 
-## Security Vulnerabilities
+```bash
+git clone https://github.com/Abrar1968/landing-page-builder-saas.git
+cd landing-page-builder-saas
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 2. Install Dependencies
 
-## License
+```bash
+# Install PHP dependencies
+composer install
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# Install JavaScript dependencies
+npm install
+```
+
+### 3. Environment Setup
+
+```bash
+# Copy environment file
+cp .env.example .env
+
+# Generate application key
+php artisan key:generate
+
+# Configure database in .env file
+DB_DATABASE=your_database_name
+DB_USERNAME=your_database_user
+DB_PASSWORD=your_database_password
+```
+
+### 4. Database Migration
+
+```bash
+# Run migrations
+php artisan migrate
+
+# (Optional) Seed database with sample data
+php artisan migrate --seed
+```
+
+### 5. Start Development Servers
+
+**Terminal 1 - Frontend (Vite):**
+```bash
+npm run dev
+```
+
+**Terminal 2 - Backend (Laravel):**
+```bash
+php artisan serve
+```
+
+**Terminal 3 - Queue Worker (Optional):**
+```bash
+php artisan queue:work
+```
+
+### 6. Access the Application
+
+- **Application**: http://localhost:8000
+- **Register**: http://localhost:8000/register
+- **Login**: http://localhost:8000/login
+
+---
+
+## 📂 Project Structure
+
+```
+landing-page-builder-saas/
+├── app/
+│   ├── Http/Controllers/     # HTTP controllers
+│   ├── Models/                # Eloquent models
+│   ├── Services/              # Business logic layer
+│   ├── Repositories/          # Data access layer
+│   └── Observers/             # Model event observers
+│
+├── resources/
+│   ├── js/
+│   │   ├── app.js            # Blade pages entry
+│   │   └── builder/          # Vue.js 3 SPA
+│   │       ├── main.js       # Vue app entry
+│   │       ├── App.vue       # Main builder component
+│   │       ├── widgets/      # Widget registry
+│   │       ├── components/   # Vue components
+│   │       └── stores/       # Pinia stores
+│   │
+│   ├── views/                # Blade templates
+│   │   ├── builder/          # Builder views
+│   │   ├── dashboard/        # Dashboard views
+│   │   └── layouts/          # Layout templates
+│   │
+│   └── css/                  # Stylesheets
+│
+├── routes/
+│   ├── web.php               # Web routes
+│   └── api.php               # API routes
+│
+├── database/
+│   ├── migrations/           # Database migrations
+│   └── seeders/              # Database seeders
+│
+└── docs/                     # Documentation
+    ├── CLAUDE.md             # Project overview
+    ├── REVISED-WIDGET-IMPLEMENTATION-PLAN.md  # Implementation plan
+    ├── features/             # Feature specifications
+    ├── backend/              # Backend documentation
+    └── frontend/             # Frontend documentation
+```
+
+---
+
+## 🎨 Architecture
+
+### Service-Repository Pattern
+
+```
+HTTP Request
+     ↓
+Controller (validation, HTTP responses)
+     ↓
+Service (business logic)
+     ↓
+Repository (database queries)
+     ↓
+Model (Eloquent ORM)
+     ↓
+Database
+```
+
+### Page Builder Architecture
+
+```
+Vue.js SPA (resources/js/builder/)
+     ↓
+Pinia Store (state management)
+     ↓
+Widget Registry (22+ widgets)
+     ↓
+API Endpoints (Laravel backend)
+     ↓
+PageService → PageRepository
+     ↓
+Page Model (stores widgets as JSON)
+```
+
+---
+
+## 🎯 Widget System
+
+The page builder includes **22+ Elementor-inspired widgets**:
+
+### Basic Widgets
+✅ Heading, Text Editor, Image, Button, Video, Divider, Spacer, Icon, Icon Box, Counter, Progress Bar, Testimonial, Social Icons, Alert
+
+### Media Widgets
+✅ Image Box, Star Rating, Google Maps
+
+### Interactive Widgets
+✅ Tabs, Accordion, Countdown
+
+### Marketing Widgets
+✅ Call to Action, Flip Box, Price Table
+
+### Missing Widgets (6)
+To complete the Elementor 28 Basic set:
+- Toggle, Icon List, Text Path
+- Image Carousel, Basic Gallery, SoundCloud
+
+**Reference:** `docs/REVISED-WIDGET-IMPLEMENTATION-PLAN.md`
+
+---
+
+## 📝 Development Commands
+
+### Frontend Development
+
+```bash
+npm run dev        # Start Vite dev server with hot reload
+npm run build      # Build for production
+npm run lint       # Run ESLint
+npm run lint:fix   # Auto-fix lint issues
+```
+
+### Backend Development
+
+```bash
+php artisan serve              # Start development server
+php artisan migrate            # Run database migrations
+php artisan migrate:fresh --seed  # Fresh migration with seeders
+php artisan test               # Run tests
+php artisan optimize:clear     # Clear all caches
+```
+
+### Code Quality
+
+```bash
+./vendor/bin/pint              # Format PHP code (PSR-12)
+./vendor/bin/phpstan analyse   # Static analysis (if installed)
+npx eslint resources/js        # Lint JavaScript
+npx prettier --write .         # Format all files
+```
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+php artisan test
+
+# Run with coverage
+php artisan test --coverage
+
+# Run specific test file
+php artisan test tests/Feature/PageServiceTest.php
+```
+
+---
+
+## 📚 Documentation
+
+- **[CLAUDE.md](CLAUDE.md)** - Comprehensive project overview
+- **[REVISED-WIDGET-IMPLEMENTATION-PLAN.md](docs/REVISED-WIDGET-IMPLEMENTATION-PLAN.md)** - Implementation guide
+- **[Widget System](docs/features/07-WIDGET-SYSTEM.md)** - Complete widget specifications
+- **[Database Schema](docs/backend/02-DATABASE-SCHEMA.md)** - Database structure
+- **[API Endpoints](docs/backend/03-API-ENDPOINTS.md)** - API documentation
+
+---
+
+## 🔑 Key Features Implementation Status
+
+### ✅ Completed
+- Page builder with Vue.js 3 + Pinia
+- 22+ working widgets
+- Service-Repository pattern
+- Page management (CRUD)
+- Template system
+- Media library
+- User authentication
+- Subscription billing (Stripe)
+- Domain management
+- Analytics tracking
+- Form submissions
+
+### 🚧 In Progress (3-4 days)
+- Complete missing 6 widgets
+- Add layout widgets (Container, Inner Section, etc.)
+- Backend Widget API
+- Testing & documentation
+
+### 📅 Planned
+- A/B testing
+- Email marketing integration
+- CRM integrations
+- Advanced SEO tools
+- Mobile app
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Commit Message Convention
+
+```
+type(scope): description
+
+Types: feat, fix, docs, style, refactor, test, chore
+```
+
+---
+
+## 📄 License
+
+This project is proprietary software. All rights reserved.
+
+---
+
+## 🆘 Support
+
+For support and questions:
+- Check the [documentation](docs/)
+- Review [CLAUDE.md](CLAUDE.md) for architecture details
+- See [REVISED-WIDGET-IMPLEMENTATION-PLAN.md](docs/REVISED-WIDGET-IMPLEMENTATION-PLAN.md) for development guidance
+
+---
+
+## 🎯 Project Status
+
+**Status:** ✅ 75% Complete
+**Current Phase:** Completing widget system
+**Remaining Work:** 3-4 days to complete Elementor 28 widget set
+
+### Technology Stack
+- ✅ Laravel 12 + Vue.js 3 + Pinia
+- ✅ Service-Repository pattern
+- ✅ MySQL with JSON widget storage
+- ✅ TailwindCSS v4
+- ✅ Vite 5.x build system
+
+### Widget Progress
+- ✅ 22 widgets implemented
+- 🔨 6 widgets remaining (Toggle, Icon List, Text Path, Image Carousel, Gallery, SoundCloud)
+- 📋 6 layout/advanced widgets to add
+
+---
+
+## 🔗 Related Documentation
+
+- [Vue.js 3 Documentation](https://vuejs.org/)
+- [Pinia Documentation](https://pinia.vuejs.org/)
+- [Laravel 12 Documentation](https://laravel.com/docs/12.x)
+- [TailwindCSS v4 Documentation](https://tailwindcss.com/)
+
+---
+
+Made with ❤️ using Laravel 12 + Vue.js 3

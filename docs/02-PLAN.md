@@ -1,5 +1,14 @@
 # Landing Page Builder SaaS - Project Plan
 
+> **⚠️ IMPORTANT: TECH STACK UPDATE**
+>
+> This plan was created with the original approach using **AlpineJS** for the page builder. The **actual implementation uses Vue.js 3 + Pinia** for the page builder SPA.
+>
+> **For Current Implementation**, see:
+> - [docs/REVISED-WIDGET-IMPLEMENTATION-PLAN.md](REVISED-WIDGET-IMPLEMENTATION-PLAN.md) - 3-4 day plan for completing widget system
+> - [docs/frontend/03-DRAG-DROP-BUILDER.md](frontend/03-DRAG-DROP-BUILDER.md) - Vue.js builder architecture
+> - [CLAUDE.md](../CLAUDE.md) - Actual project status (75% complete, 22 widgets working)
+
 ## Project Overview
 
 **Project Name:** Landing Page Builder SaaS
@@ -7,9 +16,13 @@
 **Start Date:** Day 1
 **End Date:** Day 14
 
-### Tech Stack
+### Tech Stack (Original Plan)
+
+> **NOTE:** Actual implementation differs from plan below. See warning above.
+
 - **Backend:** Laravel 12 (Service-Repository, Observer, Strategy patterns)
-- **Frontend:** TailwindCSS v4, AlpineJS, Blade Templates
+- **Frontend (Page Builder):** Vue.js 3 + Pinia + Vite 5.x ← **ACTUAL IMPLEMENTATION**
+- **Frontend (Dashboard/Marketing):** TailwindCSS v4, AlpineJS, Blade Templates
 - **Database:** MySQL 8.0
 - **Additional:** Redis (caching), Laravel Sanctum (API auth)
 
@@ -24,8 +37,9 @@ Build a fully functional SaaS platform enabling users to create, customize, and 
 |------|------------------|------------|
 | **Tech Lead** | Architecture decisions, code reviews, pattern implementation | 100% |
 | **Backend Developer** | Laravel services, repositories, API endpoints | 100% |
-| **Frontend Developer** | AlpineJS components, TailwindCSS styling, Blade templates | 100% |
-| **Full-Stack Developer** | Integration work, builder core, feature development | 100% |
+| **Frontend Developer (Builder)** | Vue.js 3 SPA, Pinia stores, widget components, TailwindCSS | 100% |
+| **Frontend Developer (Dashboard)** | AlpineJS components, Blade templates, TailwindCSS | 50% |
+| **Full-Stack Developer** | Integration work, builder API, feature development | 100% |
 | **QA Engineer** | Testing, bug tracking, performance validation | 50% (Days 8-14) |
 
 ---
@@ -37,7 +51,7 @@ Build a fully functional SaaS platform enabling users to create, customize, and 
 #### Day 1 - Project Setup & Architecture
 - [ ] Initialize Laravel project with required packages
 - [ ] Configure MySQL database and migrations structure
-- [ ] Set up TailwindCSS v4 and AlpineJS
+- [ ] Set up TailwindCSS v4, Vue.js 3 + Pinia (builder), AlpineJS (dashboard), and Vite
 - [ ] Implement base Service-Repository pattern
 - [ ] Create base Observer classes
 - [ ] Configure development environment (Docker/Sail)
@@ -78,25 +92,32 @@ Build a fully functional SaaS platform enabling users to create, customize, and 
 
 **Deliverables:** Functional template selection and preview
 
-#### Day 5 - Drag-and-Drop Builder Core
-- [ ] Build AlpineJS drag-and-drop component system
-- [ ] Create component palette (headers, sections, footers)
-- [ ] Implement canvas rendering engine
-- [ ] Build component state management
+#### Day 5 - Drag-and-Drop Builder Core (Vue.js 3 SPA)
+> **ACTUAL IMPLEMENTATION:** Vue.js 3 + Pinia SPA (not AlpineJS as originally planned)
+
+- [ ] Build Vue.js 3 SPA for page builder
+- [ ] Create Pinia store for builder state management
+- [ ] Implement widget palette with section/column structure
+- [ ] Build Vue.js canvas rendering with WidgetRenderer component
+- [ ] Create PropertyPanel component with Content/Style/Advanced tabs
+- [ ] Implement undo/redo with Pinia history state
 - [ ] Create real-time preview functionality
-- [ ] Implement undo/redo system
 
-**Deliverables:** Working drag-and-drop interface
+**Deliverables:** Working Vue.js drag-and-drop interface with Pinia state
 
-#### Day 6 - Component Library
-- [ ] Create 20+ reusable components using Strategy pattern
-- [ ] Build component configuration panels
-- [ ] Implement component styling interface
-- [ ] Create responsive preview modes
-- [ ] Build component duplication/deletion
-- [ ] Implement component ordering system
+#### Day 6 - Widget Library (28 Elementor-Inspired Widgets)
+> **ACTUAL IMPLEMENTATION:** Vue.js widget registry + components (22+ already implemented)
 
-**Deliverables:** Complete component library with configurations
+- [ ] Create 28 Elementor Basic widgets using widget registry pattern
+- [ ] Implement JavaScript widgetRegistry.register() system
+- [ ] Build widget configuration with 15+ control types (text, color, slider, repeater, etc.)
+- [ ] Create Vue.js widget components for rendering (22+ widgets ✅ DONE)
+- [ ] Build widget palette with categories and search (✅ DONE)
+- [ ] Create responsive preview modes (desktop/tablet/mobile) (✅ DONE)
+- [ ] Build widget duplication/deletion system (✅ DONE)
+- [ ] Create backend WidgetRenderer service for published pages
+
+**Deliverables:** Complete 28-widget library with Vue.js components (22/28 widgets implemented)
 
 #### Day 7 - Page Management
 - [ ] Build PageService and PageRepository

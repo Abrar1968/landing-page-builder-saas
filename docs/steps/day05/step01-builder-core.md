@@ -1,6 +1,8 @@
 # Day 5 - Step 1: Drag-and-Drop Builder Core
 
-## Objective
+> **⚠️ OUTDATED**: This guide describes an AlpineJS implementation. **Actual implementation uses Vue.js 3 + Pinia SPA**. See [docs/frontend/03-DRAG-DROP-BUILDER.md](../../frontend/03-DRAG-DROP-BUILDER.md) for current architecture.
+
+## Objective (Original Plan - Not Implemented)
 Build AlpineJS drag-and-drop component system with canvas.
 
 ## Tasks

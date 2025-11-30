@@ -5,6 +5,20 @@
 **Date:** November 22, 2025
 **Project Timeline:** 2 Weeks
 
+> **⚠️ IMPORTANT: TECH STACK UPDATE**
+>
+> This SRS document was created with the original plan to use **AlpineJS** for the page builder. However, the **actual implementation uses Vue.js 3 + Pinia** for the page builder SPA.
+>
+> **Actual Tech Stack:**
+> - **Page Builder**: Vue.js 3 (Composition API) + Pinia state management + Vite 5.x
+> - **Marketing Pages & Dashboard**: Laravel Blade + AlpineJS (as originally planned)
+> - **Styling**: TailwindCSS v4 (across entire application)
+>
+> **For Current Implementation**, see:
+> - [docs/frontend/03-DRAG-DROP-BUILDER.md](frontend/03-DRAG-DROP-BUILDER.md) - Vue.js builder architecture
+> - [docs/REVISED-WIDGET-IMPLEMENTATION-PLAN.md](REVISED-WIDGET-IMPLEMENTATION-PLAN.md) - Current implementation plan
+> - [CLAUDE.md](../CLAUDE.md) - Project overview with actual tech stack
+
 ---
 
 ## Table of Contents
@@ -70,19 +84,27 @@ The Landing Page Builder SaaS is a web-based application that enables users to c
 | JWT | JSON Web Token |
 | RBAC | Role-Based Access Control |
 | Blade | Laravel's templating engine |
-| AlpineJS | Lightweight JavaScript framework |
+| Vue.js | Progressive JavaScript framework (used for page builder SPA) |
+| Pinia | State management library for Vue.js |
+| Vite | Build tool and dev server |
+| AlpineJS | Lightweight JavaScript framework (used for marketing/dashboard UI) |
 | TailwindCSS | Utility-first CSS framework |
+| SPA | Single Page Application |
 
 ### 1.4 References
 
 - IEEE 830-1998 Standard for Software Requirements Specifications
 - Laravel 12.x Documentation
+- Vue.js 3 Documentation (Page Builder)
+- Pinia Documentation (State Management)
+- Vite 5.x Documentation (Build Tool)
 - TailwindCSS v4 Documentation
-- AlpineJS v3 Documentation
+- AlpineJS v3 Documentation (Dashboard/Marketing UI)
 - MySQL 8.0 Reference Manual
 - Stripe Payment API Documentation
 - Webflow Design System Guidelines
 - Wix Editor X Architecture Patterns
+- Elementor Widget System (Widget Inspiration)
 
 ### 1.5 Document Overview
 
@@ -1203,11 +1225,21 @@ Built with TailwindCSS v4 and AlpineJS:
 
 #### 4.3.2 Frontend Dependencies
 
+**Page Builder (Vue.js SPA):**
+
 | Component | Version | Purpose |
 |-----------|---------|---------|
-| TailwindCSS | 4.x | Styling |
-| AlpineJS | 3.x | Interactivity |
-| SortableJS | 1.15 | Drag-and-drop |
+| Vue.js | 3.x | Page builder SPA framework |
+| Pinia | Latest | State management (builder store) |
+| Vite | 5.x | Build tool & dev server |
+| TailwindCSS | 4.x | Styling (global) |
+
+**Marketing Pages & Dashboard (Blade + AlpineJS):**
+
+| Component | Version | Purpose |
+|-----------|---------|---------|
+| AlpineJS | 3.x | Dashboard/marketing interactivity |
+| TailwindCSS | 4.x | Styling (global) |
 | Chart.js | 4.x | Analytics charts |
 
 #### 4.3.3 External Service Integrations

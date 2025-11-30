@@ -1,7 +1,9 @@
 # Day 1 - Step 3: TailwindCSS v4 & AlpineJS Setup
 
+> **📝 NOTE**: This guide sets up AlpineJS for **dashboard and marketing pages**. For the page builder, **Vue.js 3 + Pinia** is used instead. See [docs/03-SETUP.md](../../03-SETUP.md) for complete frontend setup including Vue.js.
+
 ## Objective
-Configure TailwindCSS v4 with Vite plugin and initialize AlpineJS.
+Configure TailwindCSS v4 with Vite plugin and initialize AlpineJS for dashboard/marketing pages.
 
 ## Tasks
 

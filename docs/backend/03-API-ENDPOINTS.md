@@ -12,10 +12,11 @@ This document provides complete API endpoint documentation including route defin
 2. [Authentication Routes](#authentication-routes)
 3. [Page Builder API](#page-builder-api)
 4. [Template API](#template-api)
-5. [Media Library API](#media-library-api)
-6. [Publishing API](#publishing-api)
-7. [Subscription API](#subscription-api)
-8. [Middleware](#middleware)
+5. [Widget System API](#widget-system-api)
+6. [Media Library API](#media-library-api)
+7. [Publishing API](#publishing-api)
+8. [Subscription API](#subscription-api)
+9. [Middleware](#middleware)
 
 ---
 
@@ -30,6 +31,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PageController;
 use App\Http\Controllers\Api\TemplateController;
+use App\Http\Controllers\Api\WidgetController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\PublishController;
 use App\Http\Controllers\Api\SubscriptionController;
@@ -77,6 +79,11 @@ Route::prefix('v1')->group(function () {
             Route::put('/templates/{template}', [TemplateController::class, 'update']);
             Route::delete('/templates/{template}', [TemplateController::class, 'destroy']);
         });
+
+        // Widget System Routes (28 Elementor-inspired widgets)
+        Route::get('/widgets', [WidgetController::class, 'index']);
+        Route::get('/widgets/{type}', [WidgetController::class, 'show']);
+        Route::get('/widgets/category/{category}', [WidgetController::class, 'byCategory']);
 
         // Media Library Routes
         Route::middleware(['subscription.check', 'throttle:uploads'])->group(function () {
