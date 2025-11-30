@@ -4,6 +4,10 @@ namespace App\Services;
 
 class WidgetRenderer
 {
+    public function __construct(
+        protected HtmlSanitizer $htmlSanitizer
+    ) {}
+
     /**
      * Render a widget to HTML
      */
@@ -67,6 +71,10 @@ class WidgetRenderer
     protected function renderTextEditor(array $settings): string
     {
         $content = $settings['editor'] ?? '<p>Lorem ipsum dolor sit amet</p>';
+
+        // ✅ Sanitize HTML to prevent XSS attacks
+        $content = $this->htmlSanitizer->sanitize($content);
+
         $color = $settings['text_color'] ?? '#4b5563';
         $alignment = $settings['alignment'] ?? 'left';
 
@@ -498,7 +506,10 @@ class WidgetRenderer
 
     protected function renderHtml(array $settings): string
     {
-        return $settings['html_code'] ?? '<div class="custom-html"><p>Add your custom HTML here</p></div>';
+        $htmlCode = $settings['html_code'] ?? '<div class="custom-html"><p>Add your custom HTML here</p></div>';
+
+        // ✅ Sanitize custom HTML to prevent XSS
+        return $this->htmlSanitizer->sanitize($htmlCode);
     }
 
     protected function renderShortcode(array $settings): string
@@ -508,18 +519,369 @@ class WidgetRenderer
         return "<!-- Shortcode: {$shortcode} -->";
     }
 
-    // Existing widget renderers (stubs for widgets already implemented)
-    protected function renderImageBox(array $settings): string { return '<!-- Image Box -->'; }
-    protected function renderStarRating(array $settings): string { return '<!-- Star Rating -->'; }
-    protected function renderTabs(array $settings): string { return '<!-- Tabs -->'; }
-    protected function renderAccordion(array $settings): string { return '<!-- Accordion -->'; }
-    protected function renderCountdown(array $settings): string { return '<!-- Countdown -->'; }
-    protected function renderGoogleMaps(array $settings): string { return '<!-- Google Maps -->'; }
-    protected function renderCallToAction(array $settings): string { return '<!-- Call to Action -->'; }
-    protected function renderFlipBox(array $settings): string { return '<!-- Flip Box -->'; }
-    protected function renderPriceTable(array $settings): string { return '<!-- Price Table -->'; }
-    protected function renderForm(array $settings): string { return '<!-- Form -->'; }
-    protected function renderSlider(array $settings): string { return '<!-- Slider -->'; }
+    // Pro widget renderers (fully implemented)
+
+    protected function renderImageBox(array $settings): string
+    {
+        $imageUrl = $settings['image_url'] ?? '';
+        $title = e($settings['title'] ?? 'Image Box');
+        $description = e($settings['description'] ?? 'Click here to add your own text.');
+        $titleColor = $settings['title_color'] ?? '#1f2937';
+        $descColor = $settings['description_color'] ?? '#6b7280';
+        $alignment = $settings['alignment'] ?? 'center';
+
+        $html = "<div style=\"text-align: {$alignment};\">";
+
+        if ($imageUrl) {
+            $imageUrl = e($imageUrl);
+            $html .= "<img src=\"{$imageUrl}\" style=\"width: 100%; height: 10rem; object-fit: cover; border-radius: 0.5rem; margin-bottom: 1rem;\" alt=\"\" />";
+        } else {
+            $html .= '<div style="width: 100%; height: 10rem; background-color: #e5e7eb; border-radius: 0.5rem; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 2.25rem;">🖼️</div>';
+        }
+
+        $html .= "<h4 style=\"color: {$titleColor}; font-weight: 600; font-size: 1.125rem;\">{$title}</h4>";
+        $html .= "<p style=\"color: {$descColor}; margin-top: 0.5rem;\">{$description}</p>";
+        $html .= "</div>";
+
+        return $html;
+    }
+
+    protected function renderStarRating(array $settings): string
+    {
+        $rating = $settings['rating'] ?? 4;
+        $size = $settings['size'] ?? 24;
+        $color = $settings['color'] ?? '#fbbf24';
+        $unmarkedColor = $settings['unmarked_color'] ?? '#d1d5db';
+        $title = e($settings['title'] ?? '');
+        $alignment = $settings['alignment'] ?? 'left';
+
+        $html = "<div style=\"text-align: {$alignment};\">";
+        $html .= "<div style=\"font-size: {$size}px;\">";
+
+        for ($i = 1; $i <= 5; $i++) {
+            $starColor = $i <= $rating ? $color : $unmarkedColor;
+            $html .= "<span style=\"color: {$starColor};\">★</span>";
+        }
+
+        $html .= "</div>";
+
+        if ($title) {
+            $html .= "<div style=\"font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;\">{$title}</div>";
+        }
+
+        $html .= "</div>";
+
+        return $html;
+    }
+
+    protected function renderTabs(array $settings): string
+    {
+        $tabColor = $settings['tab_color'] ?? '#4f46e5';
+        $contentColor = $settings['content_color'] ?? '#1f2937';
+
+        $tab1Title = e($settings['tab1_title'] ?? 'Tab 1');
+        $tab2Title = e($settings['tab2_title'] ?? 'Tab 2');
+        $tab3Title = e($settings['tab3_title'] ?? 'Tab 3');
+        $tab1Content = $settings['tab1_content'] ?? '<p>Tab 1 content goes here.</p>';
+
+        // ✅ Sanitize HTML content
+        $tab1Content = $this->htmlSanitizer->sanitize($tab1Content);
+
+        $html = '<div class="tabs-widget">';
+        $html .= '<div style="display: flex; border-bottom: 1px solid #e5e7eb;">';
+        $html .= "<button style=\"padding: 0.5rem 1rem; font-weight: 500; color: {$tabColor}; border: none; background: none; border-bottom: 2px solid {$tabColor}; cursor: pointer;\">{$tab1Title}</button>";
+        $html .= "<button style=\"padding: 0.5rem 1rem; color: #6b7280; border: none; background: none; cursor: pointer;\">{$tab2Title}</button>";
+        $html .= "<button style=\"padding: 0.5rem 1rem; color: #6b7280; border: none; background: none; cursor: pointer;\">{$tab3Title}</button>";
+        $html .= '</div>';
+        $html .= "<div style=\"padding: 1rem; color: {$contentColor};\">{$tab1Content}</div>";
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    protected function renderAccordion(array $settings): string
+    {
+        $titleBg = $settings['title_background'] ?? '#f3f4f6';
+        $titleColor = $settings['title_color'] ?? '#1f2937';
+        $contentColor = $settings['content_color'] ?? '#4b5563';
+        $firstOpen = $settings['first_open'] ?? true;
+
+        $html = '<div style="border: 1px solid #e5e7eb; border-radius: 0.5rem; overflow: hidden;">';
+
+        for ($i = 1; $i <= 3; $i++) {
+            $title = e($settings["item{$i}_title"] ?? "Accordion Item {$i}");
+            $content = $settings["item{$i}_content"] ?? "<p>Content for accordion item {$i}.</p>";
+
+            // ✅ Sanitize HTML content
+            $content = $this->htmlSanitizer->sanitize($content);
+
+            $html .= '<div style="border-bottom: 1px solid #e5e7eb;">';
+            $html .= "<div style=\"background-color: {$titleBg}; color: {$titleColor}; padding: 0.75rem 1rem; font-weight: 500; display: flex; justify-content: space-between; align-items: center;\">";
+            $html .= "<span>{$title}</span>";
+            $html .= "<span>" . ($i === 1 && $firstOpen ? '−' : '+') . "</span>";
+            $html .= "</div>";
+
+            if ($i === 1 && $firstOpen) {
+                $html .= "<div style=\"padding: 0.75rem 1rem; color: {$contentColor};\">{$content}</div>";
+            }
+
+            $html .= '</div>';
+        }
+
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    protected function renderCountdown(array $settings): string
+    {
+        $numberSize = $settings['number_size'] ?? 48;
+        $numberColor = $settings['number_color'] ?? '#1f2937';
+        $labelColor = $settings['label_color'] ?? '#6b7280';
+        $showDays = $settings['show_days'] ?? true;
+        $showHours = $settings['show_hours'] ?? true;
+        $showMinutes = $settings['show_minutes'] ?? true;
+        $showSeconds = $settings['show_seconds'] ?? true;
+        $showLabels = $settings['show_labels'] ?? true;
+
+        $html = '<div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">';
+
+        $units = [
+            ['show' => $showDays, 'label' => 'Days', 'value' => '00'],
+            ['show' => $showHours, 'label' => 'Hours', 'value' => '00'],
+            ['show' => $showMinutes, 'label' => 'Minutes', 'value' => '00'],
+            ['show' => $showSeconds, 'label' => 'Seconds', 'value' => '00'],
+        ];
+
+        foreach ($units as $unit) {
+            if ($unit['show']) {
+                $html .= '<div style="text-align: center;">';
+                $html .= "<div style=\"font-size: {$numberSize}px; color: {$numberColor}; font-weight: bold; line-height: 1;\">{$unit['value']}</div>";
+
+                if ($showLabels) {
+                    $html .= "<div style=\"color: {$labelColor}; font-size: 0.875rem; margin-top: 0.25rem;\">{$unit['label']}</div>";
+                }
+
+                $html .= '</div>';
+            }
+        }
+
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    protected function renderGoogleMaps(array $settings): string
+    {
+        $address = e($settings['address'] ?? 'New York, USA');
+        $zoom = $settings['zoom'] ?? 14;
+        $height = $settings['height'] ?? 400;
+
+        $html = "<div style=\"height: {$height}px; background-color: #e5e7eb; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; color: #6b7280;\">";
+        $html .= '<div style="text-align: center;">';
+        $html .= '<div style="font-size: 2.25rem; margin-bottom: 0.5rem;">🗺️</div>';
+        $html .= "<p style=\"margin: 0.5rem 0; font-size: 1rem;\">{$address}</p>";
+        $html .= "<p style=\"margin: 0; font-size: 0.75rem;\">Zoom: {$zoom}</p>";
+        $html .= '</div>';
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    protected function renderCallToAction(array $settings): string
+    {
+        $title = e($settings['title'] ?? 'This is the heading');
+        $description = e($settings['description'] ?? 'Click here to add your own text and edit me.');
+        $buttonText = e($settings['button_text'] ?? 'Click Here');
+        $titleColor = $settings['title_color'] ?? '#1f2937';
+        $descColor = $settings['description_color'] ?? '#4b5563';
+        $buttonBg = $settings['button_background'] ?? '#4f46e5';
+        $buttonColor = $settings['button_color'] ?? '#ffffff';
+        $ribbonText = e($settings['ribbon_text'] ?? '');
+        $ribbonColor = $settings['ribbon_color'] ?? '#ef4444';
+
+        $html = '<div style="position: relative; padding: 2rem; border-radius: 0.5rem;">';
+
+        if ($ribbonText) {
+            $html .= "<div style=\"position: absolute; top: 0; right: 0; background-color: {$ribbonColor}; color: white; padding: 0.25rem 0.75rem; font-size: 0.875rem; font-weight: 500;\">{$ribbonText}</div>";
+        }
+
+        $html .= "<h3 style=\"color: {$titleColor}; font-size: 1.5rem; font-weight: bold; margin: 0 0 0.5rem 0;\">{$title}</h3>";
+        $html .= "<p style=\"color: {$descColor}; margin: 0 0 1rem 0;\">{$description}</p>";
+        $html .= "<button style=\"background-color: {$buttonBg}; color: {$buttonColor}; padding: 0.5rem 1.5rem; border-radius: 0.375rem; font-weight: 500; border: none; cursor: pointer;\">{$buttonText}</button>";
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    protected function renderFlipBox(array $settings): string
+    {
+        $height = $settings['height'] ?? 300;
+        $frontBg = $settings['front_background'] ?? '#ffffff';
+        $frontColor = $settings['front_color'] ?? '#1f2937';
+        $frontIcon = e($settings['front_icon'] ?? '⚡');
+        $frontTitle = e($settings['front_title'] ?? 'Front Title');
+        $frontDesc = e($settings['front_description'] ?? 'This is the front content.');
+
+        $html = "<div style=\"position: relative; height: {$height}px; perspective: 1000px;\">";
+        $html .= "<div style=\"width: 100%; height: 100%; background-color: {$frontBg}; color: {$frontColor}; border-radius: 0.5rem; padding: 1.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);\">";
+        $html .= "<div style=\"font-size: 2.25rem; margin-bottom: 1rem;\">{$frontIcon}</div>";
+        $html .= "<h4 style=\"font-weight: 600; font-size: 1.125rem; margin: 0 0 0.5rem 0;\">{$frontTitle}</h4>";
+        $html .= "<p style=\"margin: 0; font-size: 0.875rem; opacity: 0.8;\">{$frontDesc}</p>";
+        $html .= '</div>';
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    protected function renderPriceTable(array $settings): string
+    {
+        $title = e($settings['title'] ?? 'Pro');
+        $price = e($settings['price'] ?? '$49');
+        $period = e($settings['period'] ?? '/month');
+        $features = $settings['features'] ?? "10 Projects\n50GB Storage\nPriority Support\nCustom Domain";
+        $buttonText = e($settings['button_text'] ?? 'Get Started');
+        $headerBg = $settings['header_background'] ?? '#4f46e5';
+        $headerColor = $settings['header_color'] ?? '#ffffff';
+        $priceColor = $settings['price_color'] ?? '#1f2937';
+        $featuresColor = $settings['features_color'] ?? '#4b5563';
+        $buttonBg = $settings['button_background'] ?? '#4f46e5';
+        $buttonColor = $settings['button_color'] ?? '#ffffff';
+        $featured = $settings['featured'] ?? false;
+        $ribbonText = e($settings['ribbon_text'] ?? 'Popular');
+
+        $html = '<div style="position: relative; border: 1px solid #e5e7eb; border-radius: 0.5rem; overflow: hidden;">';
+
+        if ($featured && $ribbonText) {
+            $html .= "<div style=\"position: absolute; top: 1rem; right: -0.5rem; background-color: #4f46e5; color: white; padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 500; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\">{$ribbonText}</div>";
+        }
+
+        $html .= "<div style=\"background-color: {$headerBg}; color: {$headerColor}; padding: 1.5rem; text-align: center;\">";
+        $html .= "<h3 style=\"font-size: 1.25rem; font-weight: bold; margin: 0;\">{$title}</h3>";
+        $html .= '</div>';
+
+        $html .= '<div style="padding: 1.5rem;">';
+        $html .= "<div style=\"text-align: center; margin-bottom: 1.5rem;\">";
+        $html .= "<div style=\"font-size: 2.25rem; font-weight: bold; color: {$priceColor};\">{$price}<span style=\"font-size: 1.125rem; font-weight: normal;\">{$period}</span></div>";
+        $html .= "</div>";
+
+        $html .= "<ul style=\"list-style: none; padding: 0; margin: 0 0 1.5rem 0; color: {$featuresColor};\">";
+        foreach (explode("\n", $features) as $feature) {
+            if (trim($feature)) {
+                $html .= "<li style=\"display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;\"><span style=\"color: #10b981; font-size: 1.125rem;\">✓</span> <span>" . e(trim($feature)) . "</span></li>";
+            }
+        }
+        $html .= '</ul>';
+
+        $html .= "<button style=\"background-color: {$buttonBg}; color: {$buttonColor}; width: 100%; padding: 0.75rem; border-radius: 0.375rem; font-weight: 500; border: none; cursor: pointer;\">{$buttonText}</button>";
+        $html .= '</div>';
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    protected function renderForm(array $settings): string
+    {
+        $formName = e($settings['form_name'] ?? 'Contact Form');
+        $showLabels = $settings['show_labels'] ?? true;
+        $nameField = $settings['name_field'] ?? true;
+        $emailField = $settings['email_field'] ?? true;
+        $messageField = $settings['message_field'] ?? true;
+        $buttonText = e($settings['button_text'] ?? 'Send Message');
+        $fieldBg = $settings['field_background'] ?? '#ffffff';
+        $fieldBorder = $settings['field_border'] ?? '#d1d5db';
+        $fieldText = $settings['field_text'] ?? '#1f2937';
+        $buttonBg = $settings['button_background'] ?? '#4f46e5';
+        $buttonTextColor = $settings['button_text'] ?? '#ffffff';
+        $spacing = $settings['spacing'] ?? 16;
+
+        $html = '<div class="form-widget">';
+
+        if ($formName) {
+            $html .= "<h3 style=\"font-size: 1.25rem; font-weight: 600; margin: 0 0 1rem 0;\">{$formName}</h3>";
+        }
+
+        $html .= '<form>';
+
+        if ($nameField) {
+            if ($showLabels) {
+                $html .= '<label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.25rem; color: #374151;">Name</label>';
+            }
+            $html .= "<input type=\"text\" placeholder=\"Your Name\" style=\"width: 100%; padding: 0.5rem 1rem; border: 1px solid {$fieldBorder}; background-color: {$fieldBg}; color: {$fieldText}; border-radius: 0.375rem; margin-bottom: {$spacing}px; box-sizing: border-box;\" />";
+        }
+
+        if ($emailField) {
+            if ($showLabels) {
+                $html .= '<label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.25rem; color: #374151;">Email</label>';
+            }
+            $html .= "<input type=\"email\" placeholder=\"your@email.com\" style=\"width: 100%; padding: 0.5rem 1rem; border: 1px solid {$fieldBorder}; background-color: {$fieldBg}; color: {$fieldText}; border-radius: 0.375rem; margin-bottom: {$spacing}px; box-sizing: border-box;\" />";
+        }
+
+        if ($messageField) {
+            if ($showLabels) {
+                $html .= '<label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.25rem; color: #374151;">Message</label>';
+            }
+            $html .= "<textarea placeholder=\"Your Message\" rows=\"4\" style=\"width: 100%; padding: 0.5rem 1rem; border: 1px solid {$fieldBorder}; background-color: {$fieldBg}; color: {$fieldText}; border-radius: 0.375rem; resize: vertical; box-sizing: border-box;\"></textarea>";
+        }
+
+        $html .= "<button type=\"submit\" style=\"background-color: {$buttonBg}; color: {$buttonTextColor}; padding: 0.75rem 1.5rem; border-radius: 0.375rem; font-weight: 500; margin-top: 1rem; border: none; cursor: pointer;\">{$buttonText}</button>";
+        $html .= '</form>';
+        $html .= '</div>';
+
+        return $html;
+    }
+
+    protected function renderSlider(array $settings): string
+    {
+        $height = $settings['height'] ?? 500;
+        $slide1Title = e($settings['slide1_title'] ?? 'First Slide');
+        $slide1Desc = e($settings['slide1_description'] ?? 'This is the first slide content.');
+        $slide1Button = e($settings['slide1_button'] ?? '');
+        $slide1Link = e($settings['slide1_link'] ?? '#');
+        $titleColor = $settings['title_color'] ?? '#ffffff';
+        $descColor = $settings['description_color'] ?? '#f3f4f6';
+        $buttonBg = $settings['button_background'] ?? '#4f46e5';
+        $buttonColor = $settings['button_color'] ?? '#ffffff';
+        $overlayColor = $settings['overlay_color'] ?? 'rgba(0,0,0,0.3)';
+        $showArrows = $settings['show_arrows'] ?? true;
+        $showDots = $settings['show_dots'] ?? true;
+        $arrowsColor = $settings['arrows_color'] ?? '#ffffff';
+        $dotsColor = $settings['dots_color'] ?? '#ffffff';
+
+        $html = "<div style=\"position: relative; overflow: hidden; border-radius: 0.5rem; height: {$height}px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);\">";
+
+        $html .= '<div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; color: white;">';
+        $html .= "<div style=\"position: absolute; inset: 0; background-color: {$overlayColor};\"></div>";
+        $html .= '<div style="position: relative; z-index: 10; padding: 0 2rem; max-width: 48rem;">';
+        $html .= "<h2 style=\"font-size: 2.25rem; font-weight: bold; margin: 0 0 1rem 0; color: {$titleColor};\">{$slide1Title}</h2>";
+        $html .= "<p style=\"font-size: 1.125rem; margin: 0 0 1.5rem 0; color: {$descColor};\">{$slide1Desc}</p>";
+
+        if ($slide1Button) {
+            $html .= "<a href=\"{$slide1Link}\" style=\"display: inline-block; background-color: {$buttonBg}; color: {$buttonColor}; padding: 0.75rem 1.5rem; border-radius: 0.375rem; font-weight: 500; text-decoration: none;\">{$slide1Button}</a>";
+        }
+
+        $html .= '</div>';
+        $html .= '</div>';
+
+        if ($showArrows) {
+            $html .= '<div style="position: absolute; top: 50%; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 1rem; transform: translateY(-50%); pointer-events: none;">';
+            $html .= "<button style=\"width: 2.5rem; height: 2.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.3); color: {$arrowsColor}; border: none; pointer-events: auto; cursor: pointer; font-size: 1.5rem;\">‹</button>";
+            $html .= "<button style=\"width: 2.5rem; height: 2.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.3); color: {$arrowsColor}; border: none; pointer-events: auto; cursor: pointer; font-size: 1.5rem;\">›</button>";
+            $html .= '</div>';
+        }
+
+        if ($showDots) {
+            $html .= '<div style="position: absolute; bottom: 1rem; left: 50%; transform: translateX(-50%); display: flex; gap: 0.5rem;">';
+            $html .= "<span style=\"width: 0.5rem; height: 0.5rem; border-radius: 50%; background-color: {$dotsColor};\"></span>";
+            $html .= "<span style=\"width: 0.5rem; height: 0.5rem; border-radius: 50%; background-color: {$dotsColor}; opacity: 0.5;\"></span>";
+            $html .= "<span style=\"width: 0.5rem; height: 0.5rem; border-radius: 50%; background-color: {$dotsColor}; opacity: 0.5;\"></span>";
+            $html .= '</div>';
+        }
+
+        $html .= '</div>';
+
+        return $html;
+    }
 
     protected function renderUnknown(string $type): string
     {
