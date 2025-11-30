@@ -143,44 +143,49 @@ export const useBuilderStore = defineStore('builder', () => {
         });
     }
 
+    // Static control definitions
+    const sectionControls = {
+        content: [
+            { name: 'structure', type: 'select', label: 'Structure', options: {
+                '100': '1 Column', '50-50': '2 Columns', '33-33-33': '3 Columns'
+            }},
+            { name: 'content_width', type: 'select', label: 'Content Width', options: { boxed: 'Boxed', full: 'Full Width' } },
+            { name: 'min_height', type: 'slider', label: 'Min Height', min: 0, max: 1000, unit: 'px' }
+        ],
+        style: [
+            { name: 'background_color', type: 'color', label: 'Background Color' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'css_classes', type: 'text', label: 'CSS Classes' },
+            { name: 'css_id', type: 'text', label: 'CSS ID' },
+            { name: 'motion_effects', type: 'motion_effects', label: 'Motion Effects' }
+        ]
+    };
+
+    const columnControls = {
+        content: [
+            { name: '_column_size', type: 'slider', label: 'Column Width', min: 0, max: 100, unit: '%' },
+            { name: 'vertical_align', type: 'select', label: 'Vertical Align', options: { top: 'Top', middle: 'Middle', bottom: 'Bottom' } }
+        ],
+        style: [
+            { name: 'background_color', type: 'color', label: 'Background Color' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'css_classes', type: 'text', label: 'CSS Classes' },
+            { name: 'motion_effects', type: 'motion_effects', label: 'Motion Effects' }
+        ]
+    };
+
     function getSectionControls() {
-        return {
-            content: [
-                { name: 'structure', type: 'select', label: 'Structure', options: {
-                    '100': '1 Column', '50-50': '2 Columns', '33-33-33': '3 Columns'
-                }},
-                { name: 'content_width', type: 'select', label: 'Content Width', options: { boxed: 'Boxed', full: 'Full Width' } },
-                { name: 'min_height', type: 'slider', label: 'Min Height', min: 0, max: 1000, unit: 'px' }
-            ],
-            style: [
-                { name: 'background_color', type: 'color', label: 'Background Color' },
-                { name: 'padding', type: 'dimensions', label: 'Padding' }
-            ],
-            advanced: [
-                { name: 'margin', type: 'dimensions', label: 'Margin' },
-                { name: 'css_classes', type: 'text', label: 'CSS Classes' },
-                { name: 'css_id', type: 'text', label: 'CSS ID' },
-                { name: 'motion_effects', type: 'motion_effects', label: 'Motion Effects' }
-            ]
-        };
+        return sectionControls;
     }
 
     function getColumnControls() {
-        return {
-            content: [
-                { name: '_column_size', type: 'slider', label: 'Column Width', min: 0, max: 100, unit: '%' },
-                { name: 'vertical_align', type: 'select', label: 'Vertical Align', options: { top: 'Top', middle: 'Middle', bottom: 'Bottom' } }
-            ],
-            style: [
-                { name: 'background_color', type: 'color', label: 'Background Color' },
-                { name: 'padding', type: 'dimensions', label: 'Padding' }
-            ],
-            advanced: [
-                { name: 'margin', type: 'dimensions', label: 'Margin' },
-                { name: 'css_classes', type: 'text', label: 'CSS Classes' },
-                { name: 'motion_effects', type: 'motion_effects', label: 'Motion Effects' }
-            ]
-        };
+        return columnControls;
     }
 
     // Actions

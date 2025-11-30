@@ -20,7 +20,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Register widget services as singletons
+        $this->app->singleton(\App\Services\WidgetRegistry::class);
+        $this->app->singleton(\App\Services\WidgetRenderer::class);
     }
 
     /**
