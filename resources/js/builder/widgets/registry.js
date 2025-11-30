@@ -22,7 +22,7 @@ widgetRegistry.register('heading', {
     category: 'basic',
     controls: {
         content: [
-            { name: 'title', type: 'textarea', label: 'Title', default: 'Heading' },
+            { name: 'title', type: 'textarea', label: 'Title', default: 'Add Your Heading Text Here' },
             { name: 'link', type: 'url', label: 'Link' },
             { name: 'size', type: 'select', label: 'HTML Tag', default: 'h2', options: { h1: 'H1', h2: 'H2', h3: 'H3', h4: 'H4', h5: 'H5', h6: 'H6' } },
             { name: 'alignment', type: 'choose', label: 'Alignment', default: 'left', options: {
@@ -51,7 +51,7 @@ widgetRegistry.register('text-editor', {
     category: 'basic',
     controls: {
         content: [
-            { name: 'editor', type: 'wysiwyg', label: 'Text Editor', default: '<p>Lorem ipsum dolor sit amet</p>' }
+            { name: 'editor', type: 'wysiwyg', label: 'Text Editor', default: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.</p>' }
         ],
         style: [
             { name: 'text_color', type: 'color', label: 'Text Color', default: '#4b5563' },
@@ -181,7 +181,7 @@ widgetRegistry.register('icon', {
     category: 'basic',
     controls: {
         content: [
-            { name: 'icon', type: 'text', label: 'Icon (emoji)', default: '★' },
+            { name: 'icon', type: 'icon', label: 'Choose Icon', default: '⭐' },
             { name: 'link', type: 'text', label: 'Link' }
         ],
         style: [
@@ -205,9 +205,9 @@ widgetRegistry.register('icon-box', {
     category: 'basic',
     controls: {
         content: [
-            { name: 'icon', type: 'text', label: 'Icon', default: '⚡' },
-            { name: 'title', type: 'text', label: 'Title', default: 'Icon Box' },
-            { name: 'description', type: 'textarea', label: 'Description', default: 'Click here to add your own text.' }
+            { name: 'icon', type: 'icon', label: 'Choose Icon', default: '⚡' },
+            { name: 'title', type: 'text', label: 'Title', default: 'This is the heading' },
+            { name: 'description', type: 'textarea', label: 'Description', default: 'Click here to change this text. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut elit tellus, luctus nec ullamcorper mattis, pulvinar dapibus leo.' }
         ],
         style: [
             { name: 'icon_color', type: 'color', label: 'Icon Color', default: '#4f46e5' },
@@ -595,6 +595,81 @@ widgetRegistry.register('price-table', {
         advanced: [
             { name: 'margin', type: 'dimensions', label: 'Margin' },
             { name: 'padding', type: 'dimensions', label: 'Padding' },
+            { name: 'css_classes', type: 'text', label: 'CSS Classes' }
+        ]
+    }
+});
+
+// Form Builder Widget
+widgetRegistry.register('form', {
+    title: 'Form',
+    icon: '📝',
+    category: 'pro',
+    controls: {
+        content: [
+            { name: 'form_name', type: 'text', label: 'Form Name', default: 'Contact Form' },
+            { name: 'show_labels', type: 'switcher', label: 'Show Labels', default: true },
+            { name: 'name_field', type: 'switcher', label: 'Name Field', default: true },
+            { name: 'email_field', type: 'switcher', label: 'Email Field', default: true },
+            { name: 'message_field', type: 'switcher', label: 'Message Field', default: true },
+            { name: 'button_text', type: 'text', label: 'Button Text', default: 'Send Message' },
+            { name: 'success_message', type: 'textarea', label: 'Success Message', default: 'Thank you! Your message has been sent.' }
+        ],
+        style: [
+            { name: 'field_background', type: 'color', label: 'Field Background', default: '#ffffff' },
+            { name: 'field_border', type: 'color', label: 'Field Border', default: '#d1d5db' },
+            { name: 'field_text', type: 'color', label: 'Field Text', default: '#1f2937' },
+            { name: 'button_background', type: 'color', label: 'Button Background', default: '#4f46e5' },
+            { name: 'button_text', type: 'color', label: 'Button Text', default: '#ffffff' },
+            { name: 'spacing', type: 'slider', label: 'Field Spacing', min: 0, max: 50, default: 16, unit: 'px' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' },
+            { name: 'css_classes', type: 'text', label: 'CSS Classes' }
+        ]
+    }
+});
+
+// Slider/Carousel Widget
+widgetRegistry.register('slider', {
+    title: 'Slider',
+    icon: '🎠',
+    category: 'pro',
+    controls: {
+        content: [
+            { name: 'slide1_image', type: 'media', label: 'Slide 1 Image' },
+            { name: 'slide1_title', type: 'text', label: 'Slide 1 Title', default: 'First Slide' },
+            { name: 'slide1_description', type: 'textarea', label: 'Slide 1 Description', default: 'This is the first slide content.' },
+            { name: 'slide1_button', type: 'text', label: 'Slide 1 Button Text', default: 'Learn More' },
+            { name: 'slide1_link', type: 'url', label: 'Slide 1 Button Link' },
+            { name: 'slide2_image', type: 'media', label: 'Slide 2 Image' },
+            { name: 'slide2_title', type: 'text', label: 'Slide 2 Title', default: 'Second Slide' },
+            { name: 'slide2_description', type: 'textarea', label: 'Slide 2 Description', default: 'This is the second slide content.' },
+            { name: 'slide2_button', type: 'text', label: 'Slide 2 Button Text', default: 'Learn More' },
+            { name: 'slide2_link', type: 'url', label: 'Slide 2 Button Link' },
+            { name: 'slide3_image', type: 'media', label: 'Slide 3 Image' },
+            { name: 'slide3_title', type: 'text', label: 'Slide 3 Title', default: 'Third Slide' },
+            { name: 'slide3_description', type: 'textarea', label: 'Slide 3 Description', default: 'This is the third slide content.' },
+            { name: 'slide3_button', type: 'text', label: 'Slide 3 Button Text', default: 'Learn More' },
+            { name: 'slide3_link', type: 'url', label: 'Slide 3 Button Link' },
+            { name: 'autoplay', type: 'switcher', label: 'Autoplay', default: true },
+            { name: 'autoplay_speed', type: 'slider', label: 'Autoplay Speed (ms)', min: 1000, max: 10000, default: 3000, unit: 'ms' },
+            { name: 'show_arrows', type: 'switcher', label: 'Show Arrows', default: true },
+            { name: 'show_dots', type: 'switcher', label: 'Show Dots', default: true }
+        ],
+        style: [
+            { name: 'height', type: 'slider', label: 'Height', min: 200, max: 800, default: 500, unit: 'px' },
+            { name: 'overlay_color', type: 'color', label: 'Overlay Color', default: 'rgba(0,0,0,0.3)' },
+            { name: 'title_color', type: 'color', label: 'Title Color', default: '#ffffff' },
+            { name: 'description_color', type: 'color', label: 'Description Color', default: '#f3f4f6' },
+            { name: 'button_background', type: 'color', label: 'Button Background', default: '#4f46e5' },
+            { name: 'button_color', type: 'color', label: 'Button Color', default: '#ffffff' },
+            { name: 'arrows_color', type: 'color', label: 'Arrows Color', default: '#ffffff' },
+            { name: 'dots_color', type: 'color', label: 'Dots Color', default: '#ffffff' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
             { name: 'css_classes', type: 'text', label: 'CSS Classes' }
         ]
     }

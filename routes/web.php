@@ -60,12 +60,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/media', [MediaController::class, 'index'])->name('media.index');
 
     // Media API routes
-    Route::get('/api/media', [ApiMediaController::class, 'index']);
-    Route::post('/api/media/upload', [ApiMediaController::class, 'store'])->middleware('throttle:upload');
-    Route::get('/api/media/{media}', [ApiMediaController::class, 'show']);
-    Route::patch('/api/media/{media}', [ApiMediaController::class, 'update']);
-    Route::delete('/api/media/{media}', [ApiMediaController::class, 'destroy']);
-    Route::post('/api/media/bulk-delete', [ApiMediaController::class, 'bulkDestroy']);
+    Route::get('/api/media', [ApiMediaController::class, 'index'])->name('api.media.index');
+    Route::post('/api/media/upload', [ApiMediaController::class, 'store'])->name('api.media.store')->middleware('throttle:upload');
+    Route::get('/api/media/{media}', [ApiMediaController::class, 'show'])->name('api.media.show');
+    Route::patch('/api/media/{media}', [ApiMediaController::class, 'update'])->name('api.media.update');
+    Route::delete('/api/media/{media}', [ApiMediaController::class, 'destroy'])->name('api.media.destroy');
+    Route::post('/api/media/bulk-delete', [ApiMediaController::class, 'bulkDestroy'])->name('api.media.bulk-delete');
 
     // Domain routes
     Route::get('/domains', [DomainController::class, 'index'])->name('domains.index');

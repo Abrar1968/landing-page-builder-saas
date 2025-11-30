@@ -3,7 +3,7 @@
     <!-- Heading Widget -->
     <component
       :is="getTagName()"
-      v-if="widget.type === 'heading'"
+      v-if="widget.widgetType === 'heading'"
       :style="getHeadingStyles()"
     >
       {{ settings.title ?? 'Heading' }}
@@ -11,13 +11,13 @@
 
     <!-- Text Editor Widget -->
     <div
-      v-else-if="widget.type === 'text-editor'"
+      v-else-if="widget.widgetType === 'text-editor'"
       :style="getTextEditorStyles()"
       v-html="settings.editor ?? '<p>Lorem ipsum dolor sit amet</p>'"
-    ></div>
+    </div>
 
     <!-- Image Widget -->
-    <div v-else-if="widget.type === 'image'" :style="getImageStyles()">
+    <div v-else-if="widget.widgetType === 'image'" :style="getImageStyles()">
       <img
         v-if="settings.image_url"
         :src="settings.image_url"
@@ -32,7 +32,7 @@
     </div>
 
     <!-- Button Widget -->
-    <div v-else-if="widget.type === 'button'" :style="getButtonContainerStyles()">
+    <div v-else-if="widget.widgetType === 'button'" :style="getButtonContainerStyles()">
       <a
         :href="settings.link || '#'"
         :target="settings.target ? '_blank' : '_self'"
@@ -44,7 +44,7 @@
     </div>
 
     <!-- Video Widget -->
-    <div v-else-if="widget.type === 'video'" class="video-wrapper" :style="getVideoStyles()">
+    <div v-else-if="widget.widgetType === 'video'" class="video-wrapper" :style="getVideoStyles()">
       <iframe
         v-if="getVideoEmbedUrl()"
         :src="getVideoEmbedUrl()"
@@ -59,18 +59,18 @@
     </div>
 
     <!-- Divider Widget -->
-    <div v-else-if="widget.type === 'divider'" :style="getDividerContainerStyles()">
+    <div v-else-if="widget.widgetType === 'divider'" :style="getDividerContainerStyles()">
       <hr :style="getDividerStyles()" />
     </div>
 
     <!-- Spacer Widget -->
     <div
-      v-else-if="widget.type === 'spacer'"
+      v-else-if="widget.widgetType === 'spacer'"
       :style="{ height: (settings.space ?? 50) + 'px' }"
     ></div>
 
     <!-- Icon Widget -->
-    <div v-else-if="widget.type === 'icon'" :style="getIconContainerStyles()">
+    <div v-else-if="widget.widgetType === 'icon'" :style="getIconContainerStyles()">
       <a v-if="settings.link" :href="settings.link">
         <span :style="getIconStyles()">{{ settings.icon ?? '★' }}</span>
       </a>
@@ -78,7 +78,7 @@
     </div>
 
     <!-- Icon Box Widget -->
-    <div v-else-if="widget.type === 'icon-box'" :style="getIconBoxStyles()">
+    <div v-else-if="widget.widgetType === 'icon-box'" :style="getIconBoxStyles()">
       <div :style="{ fontSize: (settings.icon_size ?? 50) + 'px', color: settings.icon_color ?? '#4f46e5' }">
         {{ settings.icon ?? '⚡' }}
       </div>
@@ -89,7 +89,7 @@
     </div>
 
     <!-- Counter Widget -->
-    <div v-else-if="widget.type === 'counter'" :style="getCounterStyles()">
+    <div v-else-if="widget.widgetType === 'counter'" :style="getCounterStyles()">
       <div :style="{ fontSize: (settings.number_size ?? 48) + 'px', color: settings.number_color ?? '#4f46e5' }" class="font-bold">
         {{ settings.prefix ?? '' }}{{ settings.ending_number ?? 100 }}{{ settings.suffix ?? '' }}
       </div>
@@ -97,7 +97,7 @@
     </div>
 
     <!-- Progress Bar Widget -->
-    <div v-else-if="widget.type === 'progress-bar'">
+    <div v-else-if="widget.widgetType === 'progress-bar'">
       <div v-if="settings.title" class="mb-2 flex justify-between">
         <span>{{ settings.title }}</span>
         <span v-if="settings.display_percent !== false">{{ settings.percent ?? 75 }}%</span>
@@ -114,7 +114,7 @@
     </div>
 
     <!-- Testimonial Widget -->
-    <div v-else-if="widget.type === 'testimonial'" :style="getTestimonialStyles()">
+    <div v-else-if="widget.widgetType === 'testimonial'" :style="getTestimonialStyles()">
       <p :style="{ color: settings.content_color ?? '#4b5563' }" class="italic mb-4">
         "{{ settings.content ?? 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.' }}"
       </p>
@@ -134,7 +134,7 @@
     </div>
 
     <!-- Social Icons Widget -->
-    <div v-else-if="widget.type === 'social-icons'" :style="getSocialIconsStyles()">
+    <div v-else-if="widget.widgetType === 'social-icons'" :style="getSocialIconsStyles()">
       <a v-if="settings.facebook" :href="settings.facebook" class="mx-2" :style="getSocialIconStyle()">f</a>
       <a v-if="settings.twitter" :href="settings.twitter" class="mx-2" :style="getSocialIconStyle()">𝕏</a>
       <a v-if="settings.instagram" :href="settings.instagram" class="mx-2" :style="getSocialIconStyle()">📷</a>
@@ -145,7 +145,7 @@
     </div>
 
     <!-- Alert Widget -->
-    <div v-else-if="widget.type === 'alert'" :class="getAlertClasses()" class="p-4 rounded-lg">
+    <div v-else-if="widget.widgetType === 'alert'" :class="getAlertClasses()" class="p-4 rounded-lg">
       <div class="flex items-start gap-3">
         <span v-if="settings.show_icon !== false" class="text-xl">{{ getAlertIcon() }}</span>
         <div>
@@ -156,7 +156,7 @@
     </div>
 
     <!-- Image Box Widget -->
-    <div v-else-if="widget.type === 'image-box'" :style="getImageBoxStyles()" class="text-center">
+    <div v-else-if="widget.widgetType === 'image-box'" :style="getImageBoxStyles()" class="text-center">
       <img v-if="settings.image_url" :src="settings.image_url" class="w-full h-40 object-cover rounded-lg mb-4" />
       <div v-else class="w-full h-40 bg-gray-200 rounded-lg mb-4 flex items-center justify-center text-gray-400">🖼️</div>
       <h4 :style="{ color: settings.title_color ?? '#1f2937' }" class="font-semibold text-lg">{{ settings.title ?? 'Image Box' }}</h4>
@@ -164,7 +164,7 @@
     </div>
 
     <!-- Star Rating Widget -->
-    <div v-else-if="widget.type === 'star-rating'" :style="{ textAlign: settings.alignment ?? 'left' }">
+    <div v-else-if="widget.widgetType === 'star-rating'" :style="{ textAlign: settings.alignment ?? 'left' }">
       <div :style="{ fontSize: (settings.size ?? 24) + 'px' }">
         <span v-for="i in 5" :key="i" :style="{ color: i <= (settings.rating ?? 4) ? (settings.color ?? '#fbbf24') : (settings.unmarked_color ?? '#d1d5db') }">★</span>
       </div>
@@ -172,7 +172,7 @@
     </div>
 
     <!-- Tabs Widget -->
-    <div v-else-if="widget.type === 'tabs'" class="tabs-widget">
+    <div v-else-if="widget.widgetType === 'tabs'" class="tabs-widget">
       <div class="flex border-b">
         <button class="px-4 py-2 font-medium" :style="{ color: settings.tab_color ?? '#4f46e5', borderBottom: '2px solid ' + (settings.tab_color ?? '#4f46e5') }">{{ settings.tab1_title ?? 'Tab 1' }}</button>
         <button class="px-4 py-2 text-gray-500">{{ settings.tab2_title ?? 'Tab 2' }}</button>
@@ -182,7 +182,7 @@
     </div>
 
     <!-- Accordion Widget -->
-    <div v-else-if="widget.type === 'accordion'" class="accordion-widget border rounded-lg overflow-hidden">
+    <div v-else-if="widget.widgetType === 'accordion'" class="accordion-widget border rounded-lg overflow-hidden">
       <div v-for="i in 3" :key="i" class="border-b last:border-b-0">
         <div :style="{ backgroundColor: settings.title_background ?? '#f3f4f6', color: settings.title_color ?? '#1f2937' }" class="px-4 py-3 font-medium flex justify-between items-center cursor-pointer">
           <span>{{ settings[`item${i}_title`] ?? `Accordion Item ${i}` }}</span>
@@ -193,7 +193,7 @@
     </div>
 
     <!-- Countdown Widget -->
-    <div v-else-if="widget.type === 'countdown'" class="flex justify-center gap-4">
+    <div v-else-if="widget.widgetType === 'countdown'" class="flex justify-center gap-4">
       <div v-if="settings.show_days ?? true" class="text-center">
         <div :style="{ fontSize: (settings.number_size ?? 48) + 'px', color: settings.number_color ?? '#1f2937' }" class="font-bold">00</div>
         <div v-if="settings.show_labels ?? true" :style="{ color: settings.label_color ?? '#6b7280' }" class="text-sm">Days</div>
@@ -213,7 +213,7 @@
     </div>
 
     <!-- Google Maps Widget -->
-    <div v-else-if="widget.type === 'google-maps'" :style="{ height: (settings.height ?? 400) + 'px' }" class="bg-gray-200 rounded-lg flex items-center justify-center">
+    <div v-else-if="widget.widgetType === 'google-maps'" :style="{ height: (settings.height ?? 400) + 'px' }" class="bg-gray-200 rounded-lg flex items-center justify-center">
       <div class="text-center text-gray-500">
         <span class="text-4xl">🗺️</span>
         <p class="mt-2">{{ settings.address ?? 'New York, USA' }}</p>
@@ -222,7 +222,7 @@
     </div>
 
     <!-- Call to Action Widget -->
-    <div v-else-if="widget.type === 'call-to-action'" class="relative p-8 rounded-lg" :style="getCtaStyles()">
+    <div v-else-if="widget.widgetType === 'call-to-action'" class="relative p-8 rounded-lg" :style="getCtaStyles()">
       <div v-if="settings.ribbon_text" class="absolute top-0 right-0 px-3 py-1 text-white text-sm font-medium" :style="{ backgroundColor: settings.ribbon_color ?? '#ef4444' }">{{ settings.ribbon_text }}</div>
       <h3 :style="{ color: settings.title_color ?? '#1f2937' }" class="text-2xl font-bold">{{ settings.title ?? 'This is the heading' }}</h3>
       <p :style="{ color: settings.description_color ?? '#4b5563' }" class="mt-2">{{ settings.description ?? 'Click here to add your own text and edit me.' }}</p>
@@ -230,7 +230,7 @@
     </div>
 
     <!-- Flip Box Widget -->
-    <div v-else-if="widget.type === 'flip-box'" class="relative" :style="{ height: (settings.height ?? 300) + 'px', perspective: '1000px' }">
+    <div v-else-if="widget.widgetType === 'flip-box'" class="relative" :style="{ height: (settings.height ?? 300) + 'px', perspective: '1000px' }">
       <div class="w-full h-full rounded-lg p-6 flex flex-col items-center justify-center text-center" :style="{ backgroundColor: settings.front_background ?? '#ffffff', color: settings.front_color ?? '#1f2937' }">
         <div class="text-4xl mb-4">{{ settings.front_icon ?? '⚡' }}</div>
         <h4 class="font-semibold text-lg">{{ settings.front_title ?? 'Front Title' }}</h4>
@@ -239,7 +239,7 @@
     </div>
 
     <!-- Price Table Widget -->
-    <div v-else-if="widget.type === 'price-table'" class="relative rounded-lg overflow-hidden border" :style="getPriceTableStyles()">
+    <div v-else-if="widget.widgetType === 'price-table'" class="relative rounded-lg overflow-hidden border" :style="getPriceTableStyles()">
       <div v-if="settings.featured && settings.ribbon_text" class="absolute top-4 right-0 px-3 py-1 text-white text-xs font-medium bg-indigo-600 transform translate-x-2">{{ settings.ribbon_text }}</div>
       <div class="p-6 text-center" :style="{ backgroundColor: settings.header_background ?? '#4f46e5', color: settings.header_color ?? '#ffffff' }">
         <h3 class="text-xl font-bold">{{ settings.title ?? 'Pro' }}</h3>
@@ -255,9 +255,121 @@
       </div>
     </div>
 
+    <!-- Form Widget -->
+    <div v-else-if="widget.widgetType === 'form'" class="form-widget" :style="getFormStyles()">
+      <h3 v-if="settings.form_name" class="text-xl font-semibold mb-4">{{ settings.form_name }}</h3>
+
+      <form class="space-y-4" :style="{ '--field-spacing': (settings.spacing ?? 16) + 'px' }">
+        <!-- Name Field -->
+        <div v-if="settings.name_field ?? true">
+          <label v-if="settings.show_labels ?? true" class="block text-sm font-medium mb-1">Name</label>
+          <input
+            type="text"
+            placeholder="Your Name"
+            class="w-full px-4 py-2 rounded border"
+            :style="{
+              backgroundColor: settings.field_background ?? '#ffffff',
+              borderColor: settings.field_border ?? '#d1d5db',
+              color: settings.field_text ?? '#1f2937',
+              marginBottom: settings.spacing + 'px'
+            }"
+          />
+        </div>
+
+        <!-- Email Field -->
+        <div v-if="settings.email_field ?? true">
+          <label v-if="settings.show_labels ?? true" class="block text-sm font-medium mb-1">Email</label>
+          <input
+            type="email"
+            placeholder="your@email.com"
+            class="w-full px-4 py-2 rounded border"
+            :style="{
+              backgroundColor: settings.field_background ?? '#ffffff',
+              borderColor: settings.field_border ?? '#d1d5db',
+              color: settings.field_text ?? '#1f2937',
+              marginBottom: settings.spacing + 'px'
+            }"
+          />
+        </div>
+
+        <!-- Message Field -->
+        <div v-if="settings.message_field ?? true">
+          <label v-if="settings.show_labels ?? true" class="block text-sm font-medium mb-1">Message</label>
+          <textarea
+            placeholder="Your Message"
+            rows="4"
+            class="w-full px-4 py-2 rounded border resize-none"
+            :style="{
+              backgroundColor: settings.field_background ?? '#ffffff',
+              borderColor: settings.field_border ?? '#d1d5db',
+              color: settings.field_text ?? '#1f2937'
+            }"
+          ></textarea>
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          class="px-6 py-3 rounded font-medium"
+          :style="{
+            backgroundColor: settings.button_background ?? '#4f46e5',
+            color: settings.button_text ?? '#ffffff'
+          }"
+        >
+          {{ settings.button_text ?? 'Send Message' }}
+        </button>
+      </form>
+    </div>
+
+    <!-- Slider Widget -->
+    <div v-else-if="widget.widgetType === 'slider'" class="slider-widget relative overflow-hidden rounded-lg" :style="getSliderStyles()">
+      <!-- Slide 1 -->
+      <div class="slide relative w-full h-full flex items-center justify-center text-center text-white">
+        <div
+          v-if="settings.slide1_image"
+          class="absolute inset-0 bg-cover bg-center"
+          :style="{ backgroundImage: `url(${settings.slide1_image})` }"
+        ></div>
+        <div class="absolute inset-0" :style="{ backgroundColor: settings.overlay_color ?? 'rgba(0,0,0,0.3)' }"></div>
+
+        <div class="relative z-10 px-8 max-w-3xl">
+          <h2 class="text-4xl font-bold mb-4" :style="{ color: settings.title_color ?? '#ffffff' }">
+            {{ settings.slide1_title ?? 'First Slide' }}
+          </h2>
+          <p class="text-lg mb-6" :style="{ color: settings.description_color ?? '#f3f4f6' }">
+            {{ settings.slide1_description ?? 'This is the first slide content.' }}
+          </p>
+          <a
+            v-if="settings.slide1_button"
+            :href="settings.slide1_link || '#'"
+            class="inline-block px-6 py-3 rounded font-medium"
+            :style="{
+              backgroundColor: settings.button_background ?? '#4f46e5',
+              color: settings.button_color ?? '#ffffff'
+            }"
+          >
+            {{ settings.slide1_button }}
+          </a>
+        </div>
+      </div>
+
+      <!-- Navigation Arrows -->
+      <div v-if="settings.show_arrows ?? true" class="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-4 pointer-events-none">
+        <button class="w-10 h-10 rounded-full flex items-center justify-center pointer-events-auto" :style="{ backgroundColor: 'rgba(0,0,0,0.3)', color: settings.arrows_color ?? '#ffffff' }">‹</button>
+        <button class="w-10 h-10 rounded-full flex items-center justify-center pointer-events-auto" :style="{ backgroundColor: 'rgba(0,0,0,0.3)', color: settings.arrows_color ?? '#ffffff' }">›</button>
+      </div>
+
+      <!-- Navigation Dots -->
+      <div v-if="settings.show_dots ?? true" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+        <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: settings.dots_color ?? '#ffffff', opacity: 1 }"></span>
+        <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: settings.dots_color ?? '#ffffff', opacity: 0.5 }"></span>
+        <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: settings.dots_color ?? '#ffffff', opacity: 0.5 }"></span>
+      </div>
+    </div>
+
     <!-- Default/Unknown Widget -->
     <div v-else class="p-4 bg-gray-100 rounded text-center text-gray-500">
-      Unknown widget: {{ widget.type }}
+      Unknown widget: {{ widget.widgetType }}
     </div>
   </div>
 </template>
@@ -525,6 +637,20 @@ function getPriceTableStyles() {
   }
 
   return styles;
+}
+
+function getFormStyles() {
+  return {
+    margin: formatDimensions(settings.value.margin),
+    padding: formatDimensions(settings.value.padding)
+  };
+}
+
+function getSliderStyles() {
+  return {
+    height: (settings.value.height ?? 500) + 'px',
+    margin: formatDimensions(settings.value.margin)
+  };
 }
 </script>
 

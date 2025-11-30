@@ -20,12 +20,14 @@ class Page extends Model
         'settings',
         'status',
         'published_at',
+        'views',
     ];
 
     protected $casts = [
         'content' => 'array',
         'settings' => 'array',
         'published_at' => 'datetime',
+        'views' => 'integer',
     ];
 
     // Relationships

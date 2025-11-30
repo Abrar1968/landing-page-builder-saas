@@ -140,6 +140,14 @@
       </button>
     </div>
 
+    <!-- Icon Picker -->
+    <div v-else-if="control.type === 'icon'">
+      <IconPicker
+        :modelValue="modelValue"
+        @update:modelValue="$emit('update:modelValue', $event)"
+      />
+    </div>
+
     <!-- WYSIWYG Editor -->
     <div v-else-if="control.type === 'wysiwyg'">
       <div class="border border-gray-300 rounded-md overflow-hidden">
@@ -568,6 +576,13 @@
       <p class="text-xs text-gray-500 mt-1">Use "selector" to target this element</p>
     </div>
 
+    <!-- Motion Effects Control -->
+    <MotionEffects
+      v-else-if="control.type === 'motion_effects'"
+      :modelValue="modelValue || {}"
+      @update:modelValue="$emit('update:modelValue', $event)"
+    />
+
     <!-- Fallback for unknown types -->
     <input
       v-else
@@ -581,6 +596,8 @@
 
 <script setup>
 import { ref } from 'vue';
+import IconPicker from './IconPicker.vue';
+import MotionEffects from './MotionEffects.vue';
 
 const props = defineProps({
   control: {
