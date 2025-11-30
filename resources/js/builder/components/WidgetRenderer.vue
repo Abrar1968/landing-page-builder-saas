@@ -367,6 +367,127 @@
       </div>
     </div>
 
+    <!-- Toggle Widget -->
+    <div v-else-if="widget.widgetType === 'toggle'" class="toggle-widget border rounded-lg overflow-hidden">
+      <div v-for="i in 3" :key="i" class="border-b last:border-b-0">
+        <div :style="{ backgroundColor: settings.title_background ?? '#f3f4f6', color: settings.title_color ?? '#1f2937' }" class="px-4 py-3 font-medium flex justify-between items-center cursor-pointer">
+          <span>{{ settings[`item${i}_title`] ?? `Toggle Item ${i}` }}</span>
+          <span>+</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Icon List Widget -->
+    <div v-else-if="widget.widgetType === 'icon-list'" class="icon-list-widget">
+      <div v-for="i in 3" :key="i" class="flex items-center gap-3" :style="{ marginBottom: (settings.spacing ?? 12) + 'px' }">
+        <a v-if="settings[`item${i}_link`]" :href="settings[`item${i}_link`]" class="flex items-center gap-3 no-underline">
+          <span :style="{ fontSize: (settings.icon_size ?? 20) + 'px', color: settings.icon_color ?? '#4f46e5' }">{{ settings[`item${i}_icon`] ?? '✓' }}</span>
+          <span :style="{ color: settings.text_color ?? '#1f2937' }">{{ settings[`item${i}_text`] ?? `List Item ${i}` }}</span>
+        </a>
+        <div v-else class="flex items-center gap-3">
+          <span :style="{ fontSize: (settings.icon_size ?? 20) + 'px', color: settings.icon_color ?? '#4f46e5' }">{{ settings[`item${i}_icon`] ?? '✓' }}</span>
+          <span :style="{ color: settings.text_color ?? '#1f2937' }">{{ settings[`item${i}_text`] ?? `List Item ${i}` }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Text Path Widget -->
+    <div v-else-if="widget.widgetType === 'text-path'" class="text-path-widget text-center">
+      <svg viewBox="0 0 500 100" class="w-full" style="max-width: 500px; margin: 0 auto;">
+        <defs>
+          <path v-if="settings.path_type === 'wave'" id="textPath" d="M 0 50 Q 125 20, 250 50 T 500 50" />
+          <path v-else-if="settings.path_type === 'circle'" id="textPath" d="M 50 50 m -40 0 a 40 40 0 1 1 80 0 a 40 40 0 1 1 -80 0" />
+          <path v-else id="textPath" d="M 50 80 Q 250 20, 450 80" />
+        </defs>
+        <text :style="{ fontSize: (settings.font_size ?? 24) + 'px', fill: settings.text_color ?? '#1f2937', fontWeight: settings.font_weight ?? '400' }">
+          <textPath href="#textPath" startOffset="50%" text-anchor="middle">
+            {{ settings.text ?? 'Curved Text' }}
+          </textPath>
+        </text>
+      </svg>
+    </div>
+
+    <!-- Image Carousel Widget -->
+    <div v-else-if="widget.widgetType === 'image-carousel'" class="image-carousel-widget relative">
+      <div class="flex gap-2 overflow-hidden" :style="{ gap: (settings.image_spacing ?? 10) + 'px' }">
+        <div v-for="i in (settings.slides_to_show ?? 3)" :key="i" class="flex-shrink-0" :style="{ width: `calc(${100 / (settings.slides_to_show ?? 3)}% - ${(settings.image_spacing ?? 10) * ((settings.slides_to_show ?? 3) - 1) / (settings.slides_to_show ?? 3)}px)` }">
+          <img v-if="settings[`image${i}`]" :src="settings[`image${i}`]" class="w-full h-48 object-cover" :style="{ borderRadius: (settings.border_radius ?? 8) + 'px' }" />
+          <div v-else class="w-full h-48 bg-gray-200 rounded flex items-center justify-center text-gray-400" :style="{ borderRadius: (settings.border_radius ?? 8) + 'px' }">
+            <span class="text-4xl">🖼️</span>
+          </div>
+        </div>
+      </div>
+      <div v-if="settings.show_arrows ?? true" class="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-2 pointer-events-none">
+        <button class="w-8 h-8 rounded-full flex items-center justify-center pointer-events-auto" :style="{ backgroundColor: 'rgba(0,0,0,0.5)', color: settings.arrow_color ?? '#ffffff' }">‹</button>
+        <button class="w-8 h-8 rounded-full flex items-center justify-center pointer-events-auto" :style="{ backgroundColor: 'rgba(0,0,0,0.5)', color: settings.arrow_color ?? '#ffffff' }">›</button>
+      </div>
+      <div v-if="settings.show_dots ?? true" class="flex justify-center gap-2 mt-4">
+        <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: settings.dot_color ?? '#4f46e5' }"></span>
+        <span class="w-2 h-2 rounded-full bg-gray-300"></span>
+        <span class="w-2 h-2 rounded-full bg-gray-300"></span>
+      </div>
+    </div>
+
+    <!-- Basic Gallery Widget -->
+    <div v-else-if="widget.widgetType === 'basic-gallery'" class="basic-gallery-widget">
+      <div class="grid" :style="{ gridTemplateColumns: `repeat(${settings.columns ?? 3}, 1fr)`, gap: (settings.gap ?? 10) + 'px' }">
+        <div v-for="i in 6" :key="i" class="gallery-item relative overflow-hidden cursor-pointer" :class="{ 'hover-zoom': settings.hover_effect === 'zoom', 'hover-grayscale': settings.hover_effect === 'grayscale' }">
+          <img v-if="settings[`image${i}`]" :src="settings[`image${i}`]" class="w-full h-40 object-cover transition-transform duration-300" :style="{ borderRadius: (settings.border_radius ?? 8) + 'px' }" />
+          <div v-else class="w-full h-40 bg-gray-200 flex items-center justify-center text-gray-400" :style="{ borderRadius: (settings.border_radius ?? 8) + 'px' }">
+            <span class="text-3xl">🖼️</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SoundCloud Widget -->
+    <div v-else-if="widget.widgetType === 'soundcloud'" class="soundcloud-widget">
+      <iframe v-if="settings.url" width="100%" :height="settings.height ?? 166" scrolling="no" frameborder="no" allow="autoplay" :src="getSoundCloudEmbedUrl()"></iframe>
+      <div v-else class="bg-gray-200 rounded flex items-center justify-center text-gray-500" :style="{ height: (settings.height ?? 166) + 'px' }">
+        <div class="text-center">
+          <span class="text-4xl">🎵</span>
+          <p class="mt-2 text-sm">Add SoundCloud URL</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Container Widget -->
+    <component v-else-if="widget.widgetType === 'container'" :is="settings.html_tag ?? 'div'" :style="getContainerStyles()" class="container-widget">
+      <div :class="settings.content_width === 'boxed' ? 'max-w-7xl mx-auto px-4' : 'w-full'">
+        <div class="text-center text-gray-400 py-8 border-2 border-dashed border-gray-300 rounded">
+          <span class="text-2xl">▭</span>
+          <p class="mt-2">Drop widgets here</p>
+        </div>
+      </div>
+    </component>
+
+    <!-- Inner Section Widget -->
+    <div v-else-if="widget.widgetType === 'inner-section'" :style="getInnerSectionStyles()" class="inner-section-widget">
+      <div class="grid" :style="{ gridTemplateColumns: `repeat(${settings.columns ?? 2}, 1fr)`, gap: (settings.column_gap ?? 20) + 'px' }">
+        <div v-for="i in parseInt(settings.columns ?? 2)" :key="i" class="border-2 border-dashed border-gray-300 rounded p-4 text-center text-gray-400">
+          <p>Column {{ i }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menu Anchor Widget -->
+    <div v-else-if="widget.widgetType === 'menu-anchor'" :id="settings.anchor_id ?? 'anchor'" class="menu-anchor-widget h-0"></div>
+
+    <!-- Sidebar Widget -->
+    <div v-else-if="widget.widgetType === 'sidebar'" class="sidebar-widget border-2 border-dashed border-gray-300 rounded p-4 text-center text-gray-400">
+      <span class="text-2xl">▐</span>
+      <p class="mt-2">Sidebar: {{ settings.sidebar_id ?? 'primary' }}</p>
+    </div>
+
+    <!-- HTML Widget -->
+    <div v-else-if="widget.widgetType === 'html'" class="html-widget" v-html="settings.html_code ?? '<div class=\'custom-html\'><p>Add your custom HTML here</p></div>'"></div>
+
+    <!-- Shortcode Widget -->
+    <div v-else-if="widget.widgetType === 'shortcode'" class="shortcode-widget border-2 border-dashed border-gray-300 rounded p-4 text-center text-gray-500">
+      <span class="text-xl">[ ]</span>
+      <p class="mt-2 font-mono text-sm">{{ settings.shortcode ?? '[shortcode]' }}</p>
+    </div>
+
     <!-- Default/Unknown Widget -->
     <div v-else class="p-4 bg-gray-100 rounded text-center text-gray-500">
       Unknown widget: {{ widget.widgetType }}
@@ -652,6 +773,83 @@ function getSliderStyles() {
     margin: formatDimensions(settings.value.margin)
   };
 }
+
+function getSoundCloudEmbedUrl() {
+  const url = settings.value.url;
+  if (!url) return null;
+
+  const visual = settings.value.visual ? 'true' : 'false';
+  const autoPlay = settings.value.auto_play ? 'true' : 'false';
+  const buying = settings.value.buying ? 'true' : 'false';
+  const sharing = settings.value.sharing ? 'true' : 'false';
+  const download = settings.value.download ? 'true' : 'false';
+
+  return `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&visual=${visual}&auto_play=${autoPlay}&buying=${buying}&sharing=${sharing}&download=${download}`;
+}
+
+function getContainerStyles() {
+  const bg = settings.value.background;
+  const border = settings.value.border;
+  const shadow = settings.value.box_shadow;
+
+  const styles = {
+    minHeight: (settings.value.min_height ?? 0) + 'px',
+    margin: formatDimensions(settings.value.margin),
+    padding: formatDimensions(settings.value.padding)
+  };
+
+  if (settings.value.z_index) {
+    styles.zIndex = settings.value.z_index;
+  }
+
+  if (bg?.type === 'gradient') {
+    styles.background = `linear-gradient(${bg.gradientAngle ?? 180}deg, ${bg.gradientColor1 ?? '#6366f1'}, ${bg.gradientColor2 ?? '#8b5cf6'})`;
+  } else if (bg?.color) {
+    styles.backgroundColor = bg.color;
+  }
+
+  if (border?.style && border.style !== 'none') {
+    styles.borderStyle = border.style;
+    styles.borderColor = border.color ?? '#e5e7eb';
+    styles.borderWidth = '1px';
+  }
+  if (border?.radius) {
+    styles.borderRadius = `${border.radius.topLeft ?? 0}px ${border.radius.topRight ?? 0}px ${border.radius.bottomRight ?? 0}px ${border.radius.bottomLeft ?? 0}px`;
+  }
+  if (shadow && (shadow.horizontal || shadow.vertical || shadow.blur)) {
+    const inset = shadow.position === 'inset' ? 'inset ' : '';
+    styles.boxShadow = `${inset}${shadow.horizontal ?? 0}px ${shadow.vertical ?? 0}px ${shadow.blur ?? 0}px ${shadow.spread ?? 0}px ${shadow.color ?? 'rgba(0,0,0,0.1)'}`;
+  }
+
+  return styles;
+}
+
+function getInnerSectionStyles() {
+  const bg = settings.value.background;
+  const border = settings.value.border;
+
+  const styles = {
+    margin: formatDimensions(settings.value.margin),
+    padding: formatDimensions(settings.value.padding)
+  };
+
+  if (bg?.type === 'gradient') {
+    styles.background = `linear-gradient(${bg.gradientAngle ?? 180}deg, ${bg.gradientColor1 ?? '#6366f1'}, ${bg.gradientColor2 ?? '#8b5cf6'})`;
+  } else if (bg?.color) {
+    styles.backgroundColor = bg.color;
+  }
+
+  if (border?.style && border.style !== 'none') {
+    styles.borderStyle = border.style;
+    styles.borderColor = border.color ?? '#e5e7eb';
+    styles.borderWidth = '1px';
+  }
+  if (border?.radius) {
+    styles.borderRadius = `${border.radius.topLeft ?? 0}px ${border.radius.topRight ?? 0}px ${border.radius.bottomRight ?? 0}px ${border.radius.bottomLeft ?? 0}px`;
+  }
+
+  return styles;
+}
 </script>
 
 <style scoped>
@@ -691,5 +889,18 @@ function getSliderStyles() {
   left: 0;
   width: 100%;
   height: 100%;
+}
+
+.gallery-item.hover-zoom:hover img {
+  transform: scale(1.1);
+}
+
+.gallery-item.hover-grayscale img {
+  filter: grayscale(0);
+  transition: filter 0.3s;
+}
+
+.gallery-item.hover-grayscale:hover img {
+  filter: grayscale(100%);
 }
 </style>

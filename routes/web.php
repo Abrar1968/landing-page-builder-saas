@@ -67,6 +67,11 @@ Route::middleware('auth')->group(function () {
     Route::delete('/api/media/{media}', [ApiMediaController::class, 'destroy'])->name('api.media.destroy');
     Route::post('/api/media/bulk-delete', [ApiMediaController::class, 'bulkDestroy'])->name('api.media.bulk-delete');
 
+    // Widget API routes
+    Route::get('/api/widgets', [\App\Http\Controllers\Api\WidgetController::class, 'index'])->name('api.widgets.index');
+    Route::get('/api/widgets/{type}', [\App\Http\Controllers\Api\WidgetController::class, 'show'])->name('api.widgets.show');
+    Route::get('/api/widgets/category/{category}', [\App\Http\Controllers\Api\WidgetController::class, 'byCategory'])->name('api.widgets.category');
+
     // Domain routes
     Route::get('/domains', [DomainController::class, 'index'])->name('domains.index');
     Route::post('/domains', [DomainController::class, 'store'])->name('domains.store');
