@@ -2023,11 +2023,27 @@ widgetRegistry.register("container", {
     controls: {
         content: [
             {
+                name: "container_layout",
+                type: "select",
+                label: "Container Layout",
+                default: "flexbox",
+                options: { flexbox: "Flexbox", grid: "Grid" },
+            },
+            {
                 name: "content_width",
                 type: "select",
                 label: "Content Width",
                 default: "boxed",
                 options: { boxed: "Boxed", full: "Full Width" },
+            },
+            {
+                name: "width",
+                type: "slider",
+                label: "Width",
+                min: 0,
+                max: 2000,
+                default: 1140,
+                unit: "px",
             },
             {
                 name: "min_height",
@@ -2037,6 +2053,38 @@ widgetRegistry.register("container", {
                 max: 1000,
                 default: 0,
                 unit: "px",
+            },
+            // Items Section
+            {
+                name: "flex_direction",
+                type: "flexbox_direction",
+                label: "Direction",
+                default: "row",
+            },
+            {
+                name: "justify_content",
+                type: "flexbox_justify",
+                label: "Justify Content",
+                default: "flex-start",
+            },
+            {
+                name: "align_items",
+                type: "flexbox_align",
+                label: "Align Items",
+                default: "flex-start",
+            },
+            {
+                name: "gaps",
+                type: "gaps",
+                label: "Gaps",
+                default: { column: 20, row: 20, linked: true },
+                unit: "px",
+            },
+            {
+                name: "flex_wrap",
+                type: "flexbox_wrap",
+                label: "Wrap",
+                default: "nowrap",
             },
             {
                 name: "html_tag",
@@ -2060,9 +2108,28 @@ widgetRegistry.register("container", {
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
             { name: "padding", type: "dimensions", label: "Padding" },
+            {
+                name: "align_self",
+                type: "align_self",
+                label: "Align Self",
+                default: "auto",
+            },
+            { name: "order", type: "order", label: "Order", default: 0 },
+            {
+                name: "size",
+                type: "size_control",
+                label: "Size",
+                default: { type: "default" },
+            },
+            {
+                name: "position",
+                type: "position",
+                label: "Position",
+                default: { type: "default" },
+            },
             { name: "z_index", type: "number", label: "Z-Index", default: 0 },
-            { name: "css_classes", type: "text", label: "CSS Classes" },
             { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "css_classes", type: "text", label: "CSS Classes" },
         ],
     },
 });

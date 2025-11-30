@@ -791,23 +791,81 @@ function getContainerStyles() {
   const bg = settings.value.background;
   const border = settings.value.border;
   const shadow = settings.value.box_shadow;
+  const position = settings.value.position;
+  const size = settings.value.size;
 
   const styles = {
     minHeight: (settings.value.min_height ?? 0) + 'px',
     margin: formatDimensions(settings.value.margin),
-    padding: formatDimensions(settings.value.padding)
+    padding: formatDimensions(settings.value.padding),
+    // Flexbox layout
+    display: 'flex',
+    flexDirection: settings.value.flex_direction ?? 'row',
+    justifyContent: settings.value.justify_content ?? 'flex-start',
+    alignItems: settings.value.align_items ?? 'flex-start',
+    flexWrap: settings.value.flex_wrap ?? 'nowrap',
   };
 
+  // Gaps
+  if (settings.value.gaps) {
+    const gaps = settings.value.gaps;
+    styles.gap = `${gaps.row ?? 20}px ${gaps.column ?? 20}px`;
+  }
+
+  // Width
+  if (settings.value.width) {
+    styles.width = settings.value.width + 'px';
+  }
+
+  // Size control
+  if (size?.type === 'full') {
+    styles.width = '100%';
+  } else if (size?.type === 'custom') {
+    styles.width = (size.width ?? 100) + (size.widthUnit ?? '%');
+    if (size.maxWidth) {
+      styles.maxWidth = (size.maxWidth ?? 1140) + (size.maxWidthUnit ?? 'px');
+    }
+  }
+
+  // Align Self
+  if (settings.value.align_self && settings.value.align_self !== 'auto') {
+    styles.alignSelf = settings.value.align_self;
+  }
+
+  // Order
+  if (settings.value.order) {
+    styles.order = settings.value.order;
+  }
+
+  // Z-Index
   if (settings.value.z_index) {
     styles.zIndex = settings.value.z_index;
   }
 
+  // Position
+  if (position?.type && position.type !== 'default') {
+    styles.position = position.type;
+    if (position.top) styles.top = position.top + 'px';
+    if (position.right) styles.right = position.right + 'px';
+    if (position.bottom) styles.bottom = position.bottom + 'px';
+    if (position.left) styles.left = position.left + 'px';
+  }
+
+  // Background
   if (bg?.type === 'gradient') {
     styles.background = `linear-gradient(${bg.gradientAngle ?? 180}deg, ${bg.gradientColor1 ?? '#6366f1'}, ${bg.gradientColor2 ?? '#8b5cf6'})`;
   } else if (bg?.color) {
     styles.backgroundColor = bg.color;
   }
 
+  if (bg?.image) {
+    styles.backgroundImage = `url(${bg.image})`;
+    styles.backgroundPosition = bg.position ?? 'center center';
+    styles.backgroundSize = bg.size ?? 'cover';
+    styles.backgroundRepeat = bg.repeat ?? 'no-repeat';
+  }
+
+  // Border
   if (border?.style && border.style !== 'none') {
     styles.borderStyle = border.style;
     styles.borderColor = border.color ?? '#e5e7eb';
@@ -816,6 +874,8 @@ function getContainerStyles() {
   if (border?.radius) {
     styles.borderRadius = `${border.radius.topLeft ?? 0}px ${border.radius.topRight ?? 0}px ${border.radius.bottomRight ?? 0}px ${border.radius.bottomLeft ?? 0}px`;
   }
+
+  // Box Shadow
   if (shadow && (shadow.horizontal || shadow.vertical || shadow.blur)) {
     const inset = shadow.position === 'inset' ? 'inset ' : '';
     styles.boxShadow = `${inset}${shadow.horizontal ?? 0}px ${shadow.vertical ?? 0}px ${shadow.blur ?? 0}px ${shadow.spread ?? 0}px ${shadow.color ?? 'rgba(0,0,0,0.1)'}`;
