@@ -319,24 +319,33 @@ export const useBuilderStore = defineStore('builder', () => {
         const el = selectedElementData.value;
         if (!el) return;
 
-        if (!el.settings) el.settings = {};
-
         // Update hover state settings
         if (hoverState.value === 'hover') {
-            if (!el.hover_settings) el.hover_settings = {};
-            el.hover_settings[name] = value;
+            // Create new object to trigger reactivity
+            el.hover_settings = {
+                ...(el.hover_settings || {}),
+                [name]: value
+            };
         }
         // Update responsive device settings
         else if (responsiveDevice.value !== 'desktop') {
             const deviceKey = `${name}_${responsiveDevice.value}`;
-            el.settings[deviceKey] = value;
+            // Create new settings object to trigger reactivity
+            el.settings = {
+                ...(el.settings || {}),
+                [deviceKey]: value
+            };
         }
         // Update normal desktop settings
         else {
-            el.settings[name] = value;
+            // Create new settings object to trigger reactivity
+            el.settings = {
+                ...(el.settings || {}),
+                [name]: value
+            };
         }
 
-        // Update settings hash to trigger reactivity
+        // Update settings hash to trigger additional reactivity
         el.settingsHash = Date.now();
 
         isDirty.value = true;

@@ -11,12 +11,24 @@ class Page extends Model
 {
     use HasFactory;
 
+    protected static function booted()
+    {
+        static::deleting(function ($page) {
+            // Cascade delete related records
+            $page->versions()->delete();
+            $page->pageViews()->delete();
+            $page->formSubmissions()->delete();
+            $page->domain()->delete();
+        });
+    }
+
     protected $fillable = [
         'user_id',
         'template_id',
         'title',
         'slug',
         'content',
+        'published_content',
         'settings',
         'status',
         'published_at',
@@ -25,6 +37,7 @@ class Page extends Model
 
     protected $casts = [
         'content' => 'array',
+        'published_content' => 'array',
         'settings' => 'array',
         'published_at' => 'datetime',
         'views' => 'integer',

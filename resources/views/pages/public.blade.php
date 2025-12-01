@@ -13,6 +13,13 @@
     <meta property="og:title" content="{{ $page->settings['metaTitle'] ?? $page->title }}">
     <meta property="og:type" content="website">
     @vite(['resources/css/app.css'])
+    
+    {{-- Widget-generated CSS for hover states and responsive breakpoints --}}
+    @if(!empty($widgetCss))
+    <style>
+        {!! $widgetCss !!}
+    </style>
+    @endif
 </head>
 <body class="min-h-screen">
     {!! $html !!}

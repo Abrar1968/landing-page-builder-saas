@@ -62,10 +62,70 @@ class WidgetRenderer
     {
         $title = e($settings['title'] ?? 'Heading');
         $tag = $settings['size'] ?? 'h2';
-        $color = $settings['text_color'] ?? '#1f2937';
-        $alignment = $settings['alignment'] ?? 'left';
-
-        return "<{$tag} style=\"color: {$color}; text-align: {$alignment};\">{$title}</{$tag}>";
+        $link = $settings['link'] ?? '';
+        $target = !empty($settings['target']) ? '_blank' : '_self';
+        $nofollow = !empty($settings['nofollow']) ? 'nofollow' : '';
+        
+        // Build inline styles
+        $styles = [];
+        
+        // Text color
+        if (!empty($settings['text_color'])) {
+            $styles[] = "color: {$settings['text_color']}";
+        }
+        
+        // Alignment
+        if (!empty($settings['alignment'])) {
+            $styles[] = "text-align: {$settings['alignment']}";
+        }
+        
+        // Typography settings
+        if (!empty($settings['typography']) && is_array($settings['typography'])) {
+            $typo = $settings['typography'];
+            
+            if (!empty($typo['family']) && $typo['family'] !== 'Default') {
+                $styles[] = "font-family: {$typo['family']}";
+            }
+            
+            if (!empty($typo['size'])) {
+                $unit = $typo['sizeUnit'] ?? 'px';
+                $styles[] = "font-size: {$typo['size']}{$unit}";
+            }
+            
+            if (!empty($typo['weight']) && $typo['weight'] !== 'Normal') {
+                $styles[] = "font-weight: {$typo['weight']}";
+            }
+            
+            if (!empty($typo['transform']) && $typo['transform'] !== 'None') {
+                $styles[] = "text-transform: " . strtolower($typo['transform']);
+            }
+            
+            if (!empty($typo['style']) && $typo['style'] !== 'Normal') {
+                $styles[] = "font-style: " . strtolower($typo['style']);
+            }
+            
+            if (!empty($typo['lineHeight'])) {
+                $styles[] = "line-height: {$typo['lineHeight']}";
+            }
+            
+            if (!empty($typo['letterSpacing'])) {
+                $unit = $typo['letterSpacingUnit'] ?? 'px';
+                $styles[] = "letter-spacing: {$typo['letterSpacing']}{$unit}";
+            }
+        }
+        
+        $styleAttr = !empty($styles) ? ' style="' . implode('; ', $styles) . '"' : '';
+        
+        // Build the heading HTML
+        $headingContent = "<{$tag}{$styleAttr}>{$title}</{$tag}>";
+        
+        // Wrap in link if provided
+        if (!empty($link)) {
+            $relAttr = $nofollow ? ' rel="nofollow"' : '';
+            $headingContent = "<a href=\"{$link}\" target=\"{$target}\"{$relAttr}>{$headingContent}</a>";
+        }
+        
+        return $headingContent;
     }
 
     protected function renderTextEditor(array $settings): string

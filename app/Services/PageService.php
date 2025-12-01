@@ -50,10 +50,14 @@ class PageService
 
     public function publish(Page $page): bool
     {
-        return $this->repository->update($page, [
+        \Illuminate\Support\Facades\Log::info('Publishing page: ' . $page->id);
+        $result = $this->repository->update($page, [
             'status' => 'published',
             'published_at' => now(),
+            'published_content' => $page->content, // Save current content as published version
         ]);
+        \Illuminate\Support\Facades\Log::info('Publish result: ' . ($result ? 'success' : 'failure'));
+        return $result;
     }
 
     public function unpublish(Page $page): bool
