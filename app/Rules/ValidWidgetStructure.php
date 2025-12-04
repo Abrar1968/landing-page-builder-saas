@@ -66,7 +66,45 @@ class ValidWidgetStructure implements Rule
             return false;
         }
 
-        foreach ($section['elements'] as $column) {
+        foreach ($section['elements'] as $element) {
+            // Support both new 3-level (container) and old 2-level (column) structure
+            if (isset($element['elType'])) {
+                if ($element['elType'] === 'container') {
+                    if (!$this->validateContainer($element)) {
+                        return false;
+                    }
+                } elseif ($element['elType'] === 'column') {
+                    if (!$this->validateColumn($element)) {
+                        return false;
+                    }
+                } else {
+                    $this->message = 'Section elements must be containers or columns.';
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    protected function validateContainer(array $container): bool
+    {
+        if (!isset($container['elType']) || $container['elType'] !== 'container') {
+            $this->message = 'Invalid container structure. Expected elType: "container".';
+            return false;
+        }
+
+        if (!isset($container['id'])) {
+            $this->message = 'Container must have an ID.';
+            return false;
+        }
+
+        if (!isset($container['elements']) || !is_array($container['elements'])) {
+            $this->message = 'Container must have elements array.';
+            return false;
+        }
+
+        foreach ($container['elements'] as $column) {
             if (!$this->validateColumn($column)) {
                 return false;
             }

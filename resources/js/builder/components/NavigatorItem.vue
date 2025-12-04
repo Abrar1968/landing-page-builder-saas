@@ -97,6 +97,7 @@ function toggleExpand() {
 
 function getIcon() {
   if (props.item.elType === 'section') return '📦';
+  if (props.item.elType === 'container') return '🟪';
   if (props.item.elType === 'column') return '📊';
   if (props.item.elType === 'widget') {
     const widget = widgetRegistry.get(props.item.widgetType);
@@ -107,7 +108,11 @@ function getIcon() {
 
 function getLabel() {
   if (props.item.elType === 'section') {
-    return `Section (${props.item.elements?.length || 0} columns)`;
+    return `Section (${props.item.elements?.length || 0} containers)`;
+  }
+  if (props.item.elType === 'container') {
+    const width = props.item.settings?.content_width || 'boxed';
+    return `Container (${width})`;
   }
   if (props.item.elType === 'column') {
     const width = props.item.settings?._column_size || 100;

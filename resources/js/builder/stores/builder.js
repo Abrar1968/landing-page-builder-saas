@@ -33,6 +33,8 @@ export const useBuilderStore = defineStore('builder', () => {
     // Modals
     const showMediaLibrary = ref(false);
     const showDeleteConfirm = ref(false);
+    const showLayoutPicker = ref(false);
+    const layoutPickerPosition = ref({ x: 0, y: 0 });
     const mediaControlName = ref(null);
     const mediaItems = ref([]);
     const mediaLoading = ref(false);
@@ -68,6 +70,10 @@ export const useBuilderStore = defineStore('builder', () => {
 
         if (el.elType === 'section') {
             return getSectionControls()[activeTab.value] || [];
+        }
+
+        if (el.elType === 'container') {
+            return getContainerControls()[activeTab.value] || [];
         }
 
         if (el.elType === 'column') {
@@ -146,10 +152,6 @@ export const useBuilderStore = defineStore('builder', () => {
     // Static control definitions
     const sectionControls = {
         content: [
-            { name: 'structure', type: 'select', label: 'Structure', options: {
-                '100': '1 Column', '50-50': '2 Columns', '33-33-33': '3 Columns'
-            }},
-            { name: 'content_width', type: 'select', label: 'Content Width', options: { boxed: 'Boxed', full: 'Full Width' } },
             { name: 'min_height', type: 'slider', label: 'Min Height', min: 0, max: 1000, unit: 'px' }
         ],
         style: [
@@ -159,8 +161,27 @@ export const useBuilderStore = defineStore('builder', () => {
         advanced: [
             { name: 'margin', type: 'dimensions', label: 'Margin' },
             { name: 'css_classes', type: 'text', label: 'CSS Classes' },
-            { name: 'css_id', type: 'text', label: 'CSS ID' },
-            { name: 'motion_effects', type: 'motion_effects', label: 'Motion Effects' }
+            { name: 'css_id', type: 'text', label: 'CSS ID' }
+        ]
+    };
+
+    const containerControls = {
+        content: [
+            { name: 'content_width', type: 'select', label: 'Content Width', options: { boxed: 'Boxed', full: 'Full Width' }, default: 'boxed' }
+        ],
+        style: [
+            { name: 'column_direction', type: 'choose', label: 'Column Direction',
+              options: {
+                row: { title: 'Horizontal', icon: '→' },
+                column: { title: 'Vertical', icon: '↓' }
+              },
+              default: 'row' },
+            { name: 'background_color', type: 'color', label: 'Background Color' },
+            { name: 'padding', type: 'dimensions', label: 'Padding' }
+        ],
+        advanced: [
+            { name: 'margin', type: 'dimensions', label: 'Margin' },
+            { name: 'css_classes', type: 'text', label: 'CSS Classes' }
         ]
     };
 
@@ -184,8 +205,32 @@ export const useBuilderStore = defineStore('builder', () => {
         return sectionControls;
     }
 
+    function getContainerControls() {
+        return containerControls;
+    }
+
     function getColumnControls() {
         return columnControls;
+    }
+
+    // Normalize widget type property recursively
+    function normalizeWidgetTypes(elements) {
+        if (!Array.isArray(elements)) return;
+
+        elements.forEach(el => {
+            // Convert 'type' to 'widgetType' for widgets
+            if (el.elType === 'widget' && el.type && !el.widgetType) {
+                el.widgetType = el.type;
+            }
+            // Ensure both properties exist for backwards compatibility
+            if (el.elType === 'widget' && el.widgetType && !el.type) {
+                el.type = el.widgetType;
+            }
+            // Recursively normalize nested elements
+            if (el.elements) {
+                normalizeWidgetTypes(el.elements);
+            }
+        });
     }
 
     // Actions
@@ -198,7 +243,43 @@ export const useBuilderStore = defineStore('builder', () => {
 
         if (Array.isArray(loadedContent) && loadedContent.length > 0) {
             if (loadedContent[0]?.elType === 'section') {
-                content.value = loadedContent;
+                // Migrate old 2-level structure to 3-level (Section → Container → Column)
+                content.value = loadedContent.map(section => {
+                    // Check if section has old structure (direct columns) or empty
+                    const firstElement = section.elements?.[0];
+                    const hasOldStructure = firstElement?.elType === 'column' || section.elements?.length === 0;
+
+                    if (hasOldStructure) {
+                        // Ensure all columns have elements array
+                        const columns = (section.elements || []).map(col => ({
+                            ...col,
+                            elements: col.elements || []
+                        }));
+
+                        // Create container wrapper
+                        const container = {
+                            id: generateId(),
+                            elType: 'container',
+                            settings: {
+                                content_width: section.settings?.content_width || 'boxed'
+                            },
+                            elements: columns
+                        };
+
+                        // Remove content_width from section (now in container)
+                        const newSectionSettings = { ...section.settings };
+                        delete newSectionSettings.content_width;
+
+                        return {
+                            ...section,
+                            settings: newSectionSettings,
+                            elements: [container]
+                        };
+                    }
+
+                    // Already has new structure
+                    return section;
+                });
             } else {
                 content.value = [{
                     id: generateId(),
@@ -206,20 +287,29 @@ export const useBuilderStore = defineStore('builder', () => {
                     settings: {},
                     elements: [{
                         id: generateId(),
-                        elType: 'column',
-                        settings: { _column_size: 100 },
-                        elements: loadedContent.map(el => ({
-                            id: el.id || generateId(),
-                            elType: 'widget',
-                            widgetType: el.type || el.widgetType,
-                            settings: el.settings || {}
-                        }))
+                        elType: 'container',
+                        settings: { content_width: 'boxed' },
+                        elements: [{
+                            id: generateId(),
+                            elType: 'column',
+                            settings: { _column_size: 100 },
+                            elements: loadedContent.map(el => ({
+                                id: el.id || generateId(),
+                                elType: 'widget',
+                                widgetType: el.type || el.widgetType,
+                                type: el.type || el.widgetType,
+                                settings: el.settings || {}
+                            }))
+                        }]
                     }]
                 }];
             }
         } else {
             content.value = [];
         }
+
+        // Normalize all widget types recursively
+        normalizeWidgetTypes(content.value);
 
         applyDefaultsToContent(content.value);
         addToHistory();
@@ -233,16 +323,67 @@ export const useBuilderStore = defineStore('builder', () => {
             elements: []
         }));
 
+        const container = {
+            id: generateId(),
+            elType: 'container',
+            settings: { content_width: 'boxed' },
+            elements: columns
+        };
+
         const section = {
             id: generateId(),
             elType: 'section',
-            settings: { structure: layout, content_width: 'boxed' },
-            elements: columns
+            settings: { structure: layout },
+            elements: [container]
         };
 
         addToHistory();
         content.value.push(section);
         selectElement(section.id, 'section');
+        isDirty.value = true;
+    }
+
+    function addSectionAtIndex(layout = '100', index) {
+        const columns = layout.split('-').map(size => ({
+            id: generateId(),
+            elType: 'column',
+            settings: { _column_size: parseInt(size) },
+            elements: []
+        }));
+
+        const container = {
+            id: generateId(),
+            elType: 'container',
+            settings: { content_width: 'boxed' },
+            elements: columns
+        };
+
+        const section = {
+            id: generateId(),
+            elType: 'section',
+            settings: { structure: layout },
+            elements: [container]
+        };
+
+        addToHistory();
+        // Insert at specific index
+        content.value.splice(index, 0, section);
+        selectElement(section.id, 'section');
+        isDirty.value = true;
+    }
+
+    function moveSectionToIndex(fromIndex, toIndex) {
+        addToHistory();
+
+        // Remove section from old position
+        const [section] = content.value.splice(fromIndex, 1);
+
+        // Adjust target index if we removed an item before it
+        const adjustedIndex = fromIndex < toIndex ? toIndex - 1 : toIndex;
+
+        // Insert at new position
+        content.value.splice(adjustedIndex, 0, section);
+
         isDirty.value = true;
     }
 
@@ -262,6 +403,48 @@ export const useBuilderStore = defineStore('builder', () => {
             selectElement(widget.id, 'widget');
             isDirty.value = true;
         }
+    }
+
+    function addWidgetAtIndex(widgetType, columnId, index) {
+        const widget = {
+            id: generateId(),
+            elType: 'widget',
+            widgetType: widgetType,
+            type: widgetType,
+            settings: getWidgetDefaults(widgetType)
+        };
+
+        const column = findElement(columnId);
+        if (column) {
+            addToHistory();
+            column.elements.splice(index, 0, widget);
+            selectElement(widget.id, 'widget');
+            isDirty.value = true;
+        }
+    }
+
+    function moveWidget(widgetId, sourceColumnId, sourceIndex, targetColumnId, targetIndex) {
+        addToHistory();
+
+        const sourceColumn = findElement(sourceColumnId);
+        const targetColumn = findElement(targetColumnId);
+
+        if (!sourceColumn || !targetColumn) return;
+
+        // Remove widget from source column
+        const [widget] = sourceColumn.elements.splice(sourceIndex, 1);
+
+        // If moving within the same column and target is after source, adjust index
+        if (sourceColumnId === targetColumnId && targetIndex > sourceIndex) {
+            targetIndex--;
+        }
+
+        // Insert widget into target column at target index
+        targetColumn.elements.splice(targetIndex, 0, widget);
+
+        // Select the moved widget
+        selectElement(widgetId, 'widget');
+        isDirty.value = true;
     }
 
     function clickAddWidget(widgetType) {
@@ -319,6 +502,8 @@ export const useBuilderStore = defineStore('builder', () => {
         const el = selectedElementData.value;
         if (!el) return;
 
+        addToHistory();
+
         // Update hover state settings
         if (hoverState.value === 'hover') {
             // Create new object to trigger reactivity
@@ -347,6 +532,9 @@ export const useBuilderStore = defineStore('builder', () => {
 
         // Update settings hash to trigger additional reactivity
         el.settingsHash = Date.now();
+
+        // Force Vue reactivity by updating the content array reference
+        content.value = [...content.value];
 
         isDirty.value = true;
     }
@@ -487,22 +675,24 @@ export const useBuilderStore = defineStore('builder', () => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                console.error('Save failed with status:', response.status, errorData);
+                console.error('Save failed:', errorData);
                 alert(`Save failed: ${errorData.message || 'Unknown error'}`);
                 return;
             }
 
             const data = await response.json();
             if (data.success) {
+                // Re-normalize widget types after save to ensure consistency
+                normalizeWidgetTypes(content.value);
+
                 isDirty.value = false;
                 lastSaved.value = data.saved_at || 'just now';
-                console.log('Save successful');
             } else {
-                console.error('Save failed:', data.message || 'Unknown error');
+                console.error('Save failed:', data.message);
                 alert(`Save failed: ${data.message || 'Unknown error'}`);
             }
         } catch (error) {
-            console.error('Save failed with error:', error);
+            console.error('Save error:', error);
             alert(`Save failed: ${error.message || 'Network error'}`);
         } finally {
             isSaving.value = false;
@@ -512,6 +702,7 @@ export const useBuilderStore = defineStore('builder', () => {
     async function publish() {
         try {
             await save();
+
             const routes = window.builderRoutes || {};
             const response = await fetch(routes.publish || `/builder/${documentId.value}/publish`, {
                 method: 'POST',
@@ -524,9 +715,13 @@ export const useBuilderStore = defineStore('builder', () => {
             const data = await response.json();
             if (data.success && data.url) {
                 window.open(data.url, '_blank');
+            } else {
+                console.error('Publish failed:', data);
+                alert(`Publish failed: ${data.message || 'Unknown error'}`);
             }
         } catch (error) {
-            console.error('Publish failed:', error);
+            console.error('Publish error:', error);
+            alert(`Publish failed: ${error.message}`);
         }
     }
 
@@ -534,6 +729,8 @@ export const useBuilderStore = defineStore('builder', () => {
         const routes = window.builderRoutes || {};
         if (routes.preview) {
             window.open(routes.preview, '_blank');
+        } else {
+            console.error('Preview route not configured');
         }
     }
 
@@ -590,6 +787,8 @@ export const useBuilderStore = defineStore('builder', () => {
         lastSaved,
         showMediaLibrary,
         showDeleteConfirm,
+        showLayoutPicker,
+        layoutPickerPosition,
         mediaControlName,
         mediaItems,
         mediaLoading,
@@ -603,7 +802,11 @@ export const useBuilderStore = defineStore('builder', () => {
         // Actions
         init,
         addSection,
+        addSectionAtIndex,
+        moveSectionToIndex,
         addWidget,
+        addWidgetAtIndex,
+        moveWidget,
         clickAddWidget,
         selectElement,
         getSetting,

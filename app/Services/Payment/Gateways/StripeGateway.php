@@ -14,16 +14,28 @@ use Stripe\Exception\SignatureVerificationException;
 
 class StripeGateway implements PaymentGatewayInterface
 {
-    protected StripeClient $stripe;
+    protected ?StripeClient $stripe = null;
 
     public function __construct()
     {
-        $this->stripe = new StripeClient(config('services.stripe.secret'));
+        // Only initialize Stripe if we have a valid secret key
+        $secret = config('services.stripe.secret');
+        if ($secret && !str_contains($secret, 'placeholder')) {
+            $this->stripe = new StripeClient($secret);
+        }
+    }
+
+    protected function getStripe(): StripeClient
+    {
+        if (!$this->stripe) {
+            throw new \RuntimeException('Stripe is not configured. Please set STRIPE_SECRET in your .env file.');
+        }
+        return $this->stripe;
     }
 
     public function createCustomer(User $user): string
     {
-        $customer = $this->stripe->customers->create([
+        $customer = $this->getStripe()->customers->create([
             'email' => $user->email,
             'name' => $user->name,
             'metadata' => ['user_id' => $user->id],
@@ -38,7 +50,7 @@ class StripeGateway implements PaymentGatewayInterface
     {
         $customerId = $user->stripe_customer_id ?? $this->createCustomer($user);
 
-        $session = $this->stripe->checkout->sessions->create([
+        $session = $this->getStripe()->checkout->sessions->create([
             'customer' => $customerId,
             'mode' => 'subscription',
             'line_items' => [[
@@ -55,7 +67,7 @@ class StripeGateway implements PaymentGatewayInterface
 
     public function createBillingPortalSession(User $user, string $returnUrl): string
     {
-        $session = $this->stripe->billingPortal->sessions->create([
+        $session = $this->getStripe()->billingPortal->sessions->create([
             'customer' => $user->stripe_customer_id,
             'return_url' => $returnUrl,
         ]);
@@ -66,7 +78,7 @@ class StripeGateway implements PaymentGatewayInterface
     public function cancelSubscription(string $subscriptionId): PaymentResult
     {
         try {
-            $this->stripe->subscriptions->update($subscriptionId, [
+            $this->getStripe()->subscriptions->update($subscriptionId, [
                 'cancel_at_period_end' => true,
             ]);
 
@@ -79,7 +91,7 @@ class StripeGateway implements PaymentGatewayInterface
     public function resumeSubscription(string $subscriptionId): PaymentResult
     {
         try {
-            $this->stripe->subscriptions->update($subscriptionId, [
+            $this->getStripe()->subscriptions->update($subscriptionId, [
                 'cancel_at_period_end' => false,
             ]);
 
@@ -125,7 +137,7 @@ class StripeGateway implements PaymentGatewayInterface
     public function getSubscription(string $subscriptionId): ?array
     {
         try {
-            $subscription = $this->stripe->subscriptions->retrieve($subscriptionId);
+            $subscription = $this->getStripe()->subscriptions->retrieve($subscriptionId);
             return [
                 'id' => $subscription->id,
                 'status' => $subscription->status,
@@ -144,7 +156,7 @@ class StripeGateway implements PaymentGatewayInterface
             return PaymentResult::failure('User not found');
         }
 
-        $stripeSubscription = $this->stripe->subscriptions->retrieve($session->subscription);
+        $stripeSubscription = $this->getStripe()->subscriptions->retrieve($session->subscription);
         $plan = $this->getPlanFromPriceId($stripeSubscription->items->data[0]->price->id);
 
         Subscription::updateOrCreate(

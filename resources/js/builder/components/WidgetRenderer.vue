@@ -1,13 +1,120 @@
 <template>
   <div class="widget-content">
     <!-- Heading Widget -->
-    <component
-      :is="getTagName()"
-      v-if="widget.widgetType === 'heading'"
-      :style="getHeadingStyles()"
+    <h1
+      v-if="widget.widgetType === 'heading' && headingTag === 'h1'"
+      :style="headingStyles"
+      :class="settings.css_classes"
+      :id="settings.css_id"
     >
-      {{ settings.title ?? 'Heading' }}
-    </component>
+      <a
+        v-if="settings.link?.url"
+        :href="settings.link.url"
+        :target="settings.link.is_external ? '_blank' : '_self'"
+        :rel="settings.link.nofollow ? 'nofollow' : ''"
+        style="color: inherit; text-decoration: inherit;"
+      >
+        {{ settings.title ?? 'Heading' }}
+      </a>
+      <template v-else>
+        {{ settings.title ?? 'Heading' }}
+      </template>
+    </h1>
+    <h2
+      v-else-if="widget.widgetType === 'heading' && headingTag === 'h2'"
+      :style="headingStyles"
+      :class="settings.css_classes"
+      :id="settings.css_id"
+    >
+      <a
+        v-if="settings.link?.url"
+        :href="settings.link.url"
+        :target="settings.link.is_external ? '_blank' : '_self'"
+        :rel="settings.link.nofollow ? 'nofollow' : ''"
+        style="color: inherit; text-decoration: inherit;"
+      >
+        {{ settings.title ?? 'Heading' }}
+      </a>
+      <template v-else>
+        {{ settings.title ?? 'Heading' }}
+      </template>
+    </h2>
+    <h3
+      v-else-if="widget.widgetType === 'heading' && headingTag === 'h3'"
+      :style="headingStyles"
+      :class="settings.css_classes"
+      :id="settings.css_id"
+    >
+      <a
+        v-if="settings.link?.url"
+        :href="settings.link.url"
+        :target="settings.link.is_external ? '_blank' : '_self'"
+        :rel="settings.link.nofollow ? 'nofollow' : ''"
+        style="color: inherit; text-decoration: inherit;"
+      >
+        {{ settings.title ?? 'Heading' }}
+      </a>
+      <template v-else>
+        {{ settings.title ?? 'Heading' }}
+      </template>
+    </h3>
+    <h4
+      v-else-if="widget.widgetType === 'heading' && headingTag === 'h4'"
+      :style="headingStyles"
+      :class="settings.css_classes"
+      :id="settings.css_id"
+    >
+      <a
+        v-if="settings.link?.url"
+        :href="settings.link.url"
+        :target="settings.link.is_external ? '_blank' : '_self'"
+        :rel="settings.link.nofollow ? 'nofollow' : ''"
+        style="color: inherit; text-decoration: inherit;"
+      >
+        {{ settings.title ?? 'Heading' }}
+      </a>
+      <template v-else>
+        {{ settings.title ?? 'Heading' }}
+      </template>
+    </h4>
+    <h5
+      v-else-if="widget.widgetType === 'heading' && headingTag === 'h5'"
+      :style="headingStyles"
+      :class="settings.css_classes"
+      :id="settings.css_id"
+    >
+      <a
+        v-if="settings.link?.url"
+        :href="settings.link.url"
+        :target="settings.link.is_external ? '_blank' : '_self'"
+        :rel="settings.link.nofollow ? 'nofollow' : ''"
+        style="color: inherit; text-decoration: inherit;"
+      >
+        {{ settings.title ?? 'Heading' }}
+      </a>
+      <template v-else>
+        {{ settings.title ?? 'Heading' }}
+      </template>
+    </h5>
+    <h6
+      v-else-if="widget.widgetType === 'heading' && headingTag === 'h6'"
+      :style="headingStyles"
+      :class="settings.css_classes"
+      :id="settings.css_id"
+    >
+      <a
+        v-if="settings.link?.url"
+        :href="settings.link.url"
+        :target="settings.link.is_external ? '_blank' : '_self'"
+        :rel="settings.link.nofollow ? 'nofollow' : ''"
+        style="color: inherit; text-decoration: inherit;"
+      >
+        {{ settings.title ?? 'Heading' }}
+      </a>
+      <template v-else>
+        {{ settings.title ?? 'Heading' }}
+      </template>
+    </h6>
 
     <!-- Text Editor Widget -->
     <div
@@ -496,7 +603,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted, onUpdated, onBeforeUnmount } from 'vue';
 
 const props = defineProps({
   widget: {
@@ -507,19 +614,126 @@ const props = defineProps({
 
 const settings = computed(() => props.widget.settings || {});
 
-// Helper functions for styles
-function getTagName() {
-  return settings.value.size ?? 'h2';
-}
+// Computed property for heading tag (H1-H6) - ensures reactivity
+const headingTag = computed(() => {
+  // Check both 'size' and 'tag' properties for backwards compatibility
+  return settings.value.size || settings.value.tag || 'h2';
+});
 
-function getHeadingStyles() {
-  return {
+// Computed property for heading styles - ensures reactivity
+const headingStyles = computed(() => {
+  const typography = settings.value.typography || {};
+  const styles = {
     color: settings.value.text_color ?? '#1f2937',
     textAlign: settings.value.alignment ?? 'left',
     margin: formatDimensions(settings.value.margin),
     padding: formatDimensions(settings.value.padding)
   };
+
+  // Apply typography settings with proper fallbacks and validation
+  // Font Family
+  if (typography.family && typography.family !== 'Default' && typography.family !== '') {
+    // Wrap font names with spaces in quotes
+    const fontFamily = typography.family.includes(' ')
+      ? `'${typography.family}', sans-serif`
+      : `${typography.family}, sans-serif`;
+    styles.fontFamily = fontFamily;
+  }
+
+  // Font Size - with default sizes for heading levels
+  if (typography.size) {
+    const sizeValue = typeof typography.size === 'string' ? parseFloat(typography.size) : typography.size;
+    const unit = typography.sizeUnit || 'px';
+    if (!isNaN(sizeValue) && sizeValue > 0) {
+      styles.fontSize = sizeValue + unit;
+    }
+  } else {
+    // Apply default font sizes based on heading tag if no custom size is set
+    const defaultSizes = {
+      h1: '2.5rem',
+      h2: '2rem',
+      h3: '1.75rem',
+      h4: '1.5rem',
+      h5: '1.25rem',
+      h6: '1rem'
+    };
+    const tag = headingTag.value;
+    if (defaultSizes[tag]) {
+      styles.fontSize = defaultSizes[tag];
+    }
+  }
+
+  // Font Weight
+  if (typography.weight) {
+    // Handle both string and number weights
+    const weight = typeof typography.weight === 'string' ? typography.weight : String(typography.weight);
+    if (weight && weight !== '400' && weight !== 'Normal') {
+      styles.fontWeight = weight;
+    }
+  }
+
+  // Text Transform
+  if (typography.transform && typography.transform !== 'None' && typography.transform !== 'none') {
+    styles.textTransform = typography.transform.toLowerCase();
+  }
+
+  // Font Style
+  if (typography.style && typography.style !== 'Normal' && typography.style !== 'normal') {
+    styles.fontStyle = typography.style.toLowerCase();
+  }
+
+  // Line Height
+  if (typography.lineHeight !== undefined && typography.lineHeight !== null && typography.lineHeight !== '') {
+    const lineHeightValue = typeof typography.lineHeight === 'string' ? parseFloat(typography.lineHeight) : typography.lineHeight;
+    if (!isNaN(lineHeightValue) && lineHeightValue > 0) {
+      styles.lineHeight = lineHeightValue;
+    }
+  }
+
+  // Letter Spacing
+  if (typography.letterSpacing !== undefined && typography.letterSpacing !== null && typography.letterSpacing !== '') {
+    const spacingValue = typeof typography.letterSpacing === 'string' ? parseFloat(typography.letterSpacing) : typography.letterSpacing;
+    if (!isNaN(spacingValue)) {
+      styles.letterSpacing = spacingValue + 'px';
+    }
+  }
+
+  return styles;
+});
+
+// Inject custom CSS into document head
+function injectCustomCSS() {
+  // Remove old style tag if exists
+  const oldStyle = document.getElementById(`widget-custom-css-${props.widget.id}`);
+  if (oldStyle) {
+    oldStyle.remove();
+  }
+
+  // Add new style tag if custom CSS exists
+  if (props.widget.widgetType === 'heading' && settings.value.custom_css) {
+    const styleTag = document.createElement('style');
+    styleTag.id = `widget-custom-css-${props.widget.id}`;
+    styleTag.textContent = settings.value.custom_css;
+    document.head.appendChild(styleTag);
+  }
 }
+
+// Inject on mount and update
+onMounted(() => {
+  injectCustomCSS();
+});
+
+onUpdated(() => {
+  injectCustomCSS();
+});
+
+// Cleanup on unmount
+onBeforeUnmount(() => {
+  const styleTag = document.getElementById(`widget-custom-css-${props.widget.id}`);
+  if (styleTag) {
+    styleTag.remove();
+  }
+});
 
 function getTextEditorStyles() {
   return {

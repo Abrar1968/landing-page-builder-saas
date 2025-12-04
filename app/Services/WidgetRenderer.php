@@ -60,71 +60,122 @@ class WidgetRenderer
 
     protected function renderHeading(array $settings): string
     {
-        $title = e($settings['title'] ?? 'Heading');
+        // Allow HTML in title but sanitize for security
+        $title = $this->htmlSanitizer->sanitize($settings['title'] ?? 'Heading');
         $tag = $settings['size'] ?? 'h2';
-        $link = $settings['link'] ?? '';
-        $target = !empty($settings['target']) ? '_blank' : '_self';
-        $nofollow = !empty($settings['nofollow']) ? 'nofollow' : '';
-        
+
+        // Handle link as object/array (from Vue frontend)
+        $linkData = $settings['link'] ?? null;
+        $link = '';
+        $target = '_self';
+        $nofollow = false;
+
+        if (is_array($linkData)) {
+            $link = $linkData['url'] ?? '';
+            $target = !empty($linkData['is_external']) ? '_blank' : '_self';
+            $nofollow = !empty($linkData['nofollow']);
+        } elseif (is_string($linkData)) {
+            $link = $linkData;
+        }
+
         // Build inline styles
         $styles = [];
-        
+
         // Text color
         if (!empty($settings['text_color'])) {
             $styles[] = "color: {$settings['text_color']}";
         }
-        
+
         // Alignment
         if (!empty($settings['alignment'])) {
             $styles[] = "text-align: {$settings['alignment']}";
         }
-        
+
         // Typography settings
         if (!empty($settings['typography']) && is_array($settings['typography'])) {
             $typo = $settings['typography'];
-            
+
             if (!empty($typo['family']) && $typo['family'] !== 'Default') {
-                $styles[] = "font-family: {$typo['family']}";
+                // Wrap font names with spaces in quotes
+                $fontFamily = strpos($typo['family'], ' ') !== false
+                    ? "'{$typo['family']}', sans-serif"
+                    : "{$typo['family']}, sans-serif";
+                $styles[] = "font-family: {$fontFamily}";
             }
-            
+
             if (!empty($typo['size'])) {
                 $unit = $typo['sizeUnit'] ?? 'px';
                 $styles[] = "font-size: {$typo['size']}{$unit}";
             }
-            
-            if (!empty($typo['weight']) && $typo['weight'] !== 'Normal') {
+
+            if (!empty($typo['weight']) && $typo['weight'] !== 'Normal' && $typo['weight'] !== '400') {
                 $styles[] = "font-weight: {$typo['weight']}";
             }
-            
-            if (!empty($typo['transform']) && $typo['transform'] !== 'None') {
+
+            if (!empty($typo['transform']) && $typo['transform'] !== 'None' && strtolower($typo['transform']) !== 'none') {
                 $styles[] = "text-transform: " . strtolower($typo['transform']);
             }
-            
-            if (!empty($typo['style']) && $typo['style'] !== 'Normal') {
+
+            if (!empty($typo['style']) && $typo['style'] !== 'Normal' && strtolower($typo['style']) !== 'normal') {
                 $styles[] = "font-style: " . strtolower($typo['style']);
             }
-            
-            if (!empty($typo['lineHeight'])) {
+
+            if (!empty($typo['lineHeight']) && $typo['lineHeight'] != 0) {
                 $styles[] = "line-height: {$typo['lineHeight']}";
             }
-            
-            if (!empty($typo['letterSpacing'])) {
-                $unit = $typo['letterSpacingUnit'] ?? 'px';
-                $styles[] = "letter-spacing: {$typo['letterSpacing']}{$unit}";
+
+            if (isset($typo['letterSpacing']) && $typo['letterSpacing'] !== '' && $typo['letterSpacing'] !== null) {
+                $styles[] = "letter-spacing: {$typo['letterSpacing']}px";
             }
         }
-        
+
+        // Margin
+        if (!empty($settings['margin']) && is_array($settings['margin'])) {
+            $m = $settings['margin'];
+            $unit = $m['unit'] ?? 'px';
+            $top = $m['top'] ?? 0;
+            $right = $m['right'] ?? 0;
+            $bottom = $m['bottom'] ?? 0;
+            $left = $m['left'] ?? 0;
+            $styles[] = "margin: {$top}{$unit} {$right}{$unit} {$bottom}{$unit} {$left}{$unit}";
+        }
+
+        // Padding
+        if (!empty($settings['padding']) && is_array($settings['padding'])) {
+            $p = $settings['padding'];
+            $unit = $p['unit'] ?? 'px';
+            $top = $p['top'] ?? 0;
+            $right = $p['right'] ?? 0;
+            $bottom = $p['bottom'] ?? 0;
+            $left = $p['left'] ?? 0;
+            $styles[] = "padding: {$top}{$unit} {$right}{$unit} {$bottom}{$unit} {$left}{$unit}";
+        }
+
         $styleAttr = !empty($styles) ? ' style="' . implode('; ', $styles) . '"' : '';
-        
+
+        // CSS Classes and ID
+        $classAttr = !empty($settings['css_classes']) ? ' class="' . e($settings['css_classes']) . '"' : '';
+        $idAttr = !empty($settings['css_id']) ? ' id="' . e($settings['css_id']) . '"' : '';
+
         // Build the heading HTML
-        $headingContent = "<{$tag}{$styleAttr}>{$title}</{$tag}>";
-        
-        // Wrap in link if provided
+        $headingContent = "<{$tag}{$styleAttr}{$classAttr}{$idAttr}>";
+
+        // Wrap text in link if provided
         if (!empty($link)) {
             $relAttr = $nofollow ? ' rel="nofollow"' : '';
-            $headingContent = "<a href=\"{$link}\" target=\"{$target}\"{$relAttr}>{$headingContent}</a>";
+            $linkStyle = ' style="color: inherit; text-decoration: inherit;"';
+            $headingContent .= "<a href=\"" . e($link) . "\" target=\"{$target}\"{$relAttr}{$linkStyle}>{$title}</a>";
+        } else {
+            $headingContent .= $title;
         }
-        
+
+        $headingContent .= "</{$tag}>";
+
+        // Custom CSS
+        if (!empty($settings['custom_css'])) {
+            $headingContent .= "\n<style>" . $settings['custom_css'] . "</style>";
+        }
+
         return $headingContent;
     }
 
@@ -154,12 +205,12 @@ class WidgetRenderer
 
         $html = "<div style=\"text-align: {$alignment};\">";
         $html .= "<img src=\"{$url}\" alt=\"{$alt}\" style=\"width: {$width}%;\" />";
-        
+
         if (!empty($settings['caption'])) {
             $caption = e($settings['caption']);
             $html .= "<p style=\"margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;\">{$caption}</p>";
         }
-        
+
         $html .= "</div>";
 
         return $html;
@@ -228,14 +279,14 @@ class WidgetRenderer
         $alignment = $settings['alignment'] ?? 'center';
 
         $html = "<div style=\"text-align: {$alignment}; font-size: {$size}px; color: {$color};\">";
-        
+
         if (!empty($settings['link'])) {
             $link = e($settings['link']);
             $html .= "<a href=\"{$link}\" style=\"color: inherit;\">{$icon}</a>";
         } else {
             $html .= $icon;
         }
-        
+
         $html .= "</div>";
 
         return $html;
@@ -315,12 +366,12 @@ class WidgetRenderer
         $html = "<div style=\"text-align: {$alignment};\">";
         $html .= "<p style=\"color: {$contentColor}; font-style: italic; margin-bottom: 1rem;\">\"{$content}\"</p>";
         $html .= '<div style="display: flex; align-items: center; justify-content: center; gap: 0.75rem;">';
-        
+
         if (!empty($settings['image_url'])) {
             $imageUrl = e($settings['image_url']);
             $html .= "<img src=\"{$imageUrl}\" style=\"width: 3rem; height: 3rem; border-radius: 9999px; object-fit: cover;\" />";
         }
-        
+
         $html .= "<div>
             <div style=\"color: {$nameColor}; font-weight: 600;\">{$name}</div>
             <div style=\"color: #6b7280; font-size: 0.875rem;\">{$title}</div>
@@ -337,7 +388,7 @@ class WidgetRenderer
         $alignment = $settings['alignment'] ?? 'center';
 
         $html = "<div style=\"text-align: {$alignment};\">";
-        
+
         $platforms = ['facebook' => 'f', 'twitter' => '𝕏', 'instagram' => '📷', 'linkedin' => 'in'];
         foreach ($platforms as $platform => $icon) {
             if (!empty($settings[$platform])) {
@@ -345,7 +396,7 @@ class WidgetRenderer
                 $html .= "<a href=\"{$url}\" style=\"color: {$iconColor}; font-size: {$iconSize}px; margin: 0 0.5rem; text-decoration: none;\">{$icon}</a>";
             }
         }
-        
+
         $html .= "</div>";
 
         return $html;
@@ -369,11 +420,11 @@ class WidgetRenderer
 
         $html = "<div style=\"background-color: {$color['bg']}; color: {$color['text']}; border: 1px solid {$color['border']}; padding: 1rem; border-radius: 0.5rem;\">";
         $html .= '<div style="display: flex; align-items: flex-start; gap: 0.75rem;">';
-        
+
         if ($showIcon) {
             $html .= "<span style=\"font-size: 1.25rem;\">{$color['icon']}</span>";
         }
-        
+
         $html .= "<div>
             <div style=\"font-weight: 600;\">{$title}</div>
             <div style=\"margin-top: 0.25rem;\">{$content}</div>
@@ -392,16 +443,16 @@ class WidgetRenderer
         $contentColor = $settings['content_color'] ?? '#4b5563';
 
         $html = '<div style="border: 1px solid #e5e7eb; border-radius: 0.5rem; overflow: hidden;">';
-        
+
         for ($i = 1; $i <= 3; $i++) {
             $title = e($settings["item{$i}_title"] ?? "Toggle Item {$i}");
             $content = $settings["item{$i}_content"] ?? "<p>Content for toggle item {$i}.</p>";
-            
+
             $html .= "<div style=\"border-bottom: 1px solid #e5e7eb;\">";
             $html .= "<div style=\"background-color: {$titleBg}; color: {$titleColor}; padding: 0.75rem 1rem; font-weight: 500; cursor: pointer;\">{$title}</div>";
             $html .= "</div>";
         }
-        
+
         $html .= '</div>';
 
         return $html;
@@ -415,7 +466,7 @@ class WidgetRenderer
         $spacing = $settings['spacing'] ?? 12;
 
         $html = '<div>';
-        
+
         for ($i = 1; $i <= 3; $i++) {
             $icon = e($settings["item{$i}_icon"] ?? '✓');
             $text = e($settings["item{$i}_text"] ?? "List Item {$i}");
@@ -432,7 +483,7 @@ class WidgetRenderer
                 $html .= $itemHtml;
             }
         }
-        
+
         $html .= '</div>';
 
         return $html;
@@ -473,16 +524,16 @@ class WidgetRenderer
         $borderRadius = $settings['border_radius'] ?? 8;
 
         $html = '<div style="position: relative;"><div style="display: flex; gap: ' . $spacing . 'px; overflow: hidden;">';
-        
+
         for ($i = 1; $i <= $slidesToShow; $i++) {
             $width = (100 / $slidesToShow) - (($spacing * ($slidesToShow - 1)) / $slidesToShow);
-            
+
             if (!empty($settings["image{$i}"])) {
                 $imageUrl = e($settings["image{$i}"]);
                 $html .= "<div style=\"flex-shrink: 0; width: {$width}%;\"><img src=\"{$imageUrl}\" style=\"width: 100%; height: 12rem; object-fit: cover; border-radius: {$borderRadius}px;\" /></div>";
             }
         }
-        
+
         $html .= '</div></div>';
 
         return $html;
@@ -495,14 +546,14 @@ class WidgetRenderer
         $borderRadius = $settings['border_radius'] ?? 8;
 
         $html = "<div style=\"display: grid; grid-template-columns: repeat({$columns}, 1fr); gap: {$gap}px;\">";
-        
+
         for ($i = 1; $i <= 6; $i++) {
             if (!empty($settings["image{$i}"])) {
                 $imageUrl = e($settings["image{$i}"]);
                 $html .= "<div><img src=\"{$imageUrl}\" style=\"width: 100%; height: 10rem; object-fit: cover; border-radius: {$borderRadius}px;\" /></div>";
             }
         }
-        
+
         $html .= '</div>';
 
         return $html;

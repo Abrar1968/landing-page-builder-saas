@@ -121,9 +121,27 @@ class BuilderController extends Controller
     {
         foreach ($content as &$section) {
             if (isset($section['elements'])) {
-                foreach ($section['elements'] as &$column) {
-                    if (isset($column['elements'])) {
-                        foreach ($column['elements'] as &$widget) {
+                foreach ($section['elements'] as &$element) {
+                    // Handle both container (new 3-level) and column (old 2-level)
+                    if (isset($element['elType']) && $element['elType'] === 'container') {
+                        // New structure: Section → Container → Columns
+                        if (isset($element['elements'])) {
+                            foreach ($element['elements'] as &$column) {
+                                if (isset($column['elements'])) {
+                                    foreach ($column['elements'] as &$widget) {
+                                        if (isset($widget['settings'])) {
+                                            $widget['settings'] = $this->sanitizeWidgetSettings(
+                                                $widget['widgetType'] ?? '',
+                                                $widget['settings']
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } elseif (isset($element['elements'])) {
+                        // Old structure: Section → Columns directly
+                        foreach ($element['elements'] as &$widget) {
                             if (isset($widget['settings'])) {
                                 $widget['settings'] = $this->sanitizeWidgetSettings(
                                     $widget['widgetType'] ?? '',
