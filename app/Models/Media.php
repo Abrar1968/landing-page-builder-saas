@@ -27,7 +27,7 @@ class Media extends Model
         'thumbnails' => 'array',
     ];
 
-    protected $appends = ['url'];
+    protected $appends = ['url', 'thumbnail_url'];
 
     // Relationships
     public function user(): BelongsTo
@@ -39,6 +39,18 @@ class Media extends Model
     public function getUrlAttribute(): string
     {
         return Storage::url($this->path);
+    }
+
+    public function getThumbnailUrlAttribute(): ?string
+    {
+        if (!empty($this->thumbnails) && isset($this->thumbnails['thumb'])) {
+            return Storage::url($this->thumbnails['thumb']);
+        }
+        // Return main URL for images if no thumbnail
+        if ($this->isImage()) {
+            return $this->url;
+        }
+        return null;
     }
 
     // Scopes

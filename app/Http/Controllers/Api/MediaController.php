@@ -21,13 +21,13 @@ class MediaController extends Controller
         if ($request->filled('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
+                $q->where('filename', 'like', "%{$search}%")
                   ->orWhere('alt_text', 'like', "%{$search}%");
             });
         }
 
         if ($request->filled('type')) {
-            $query->where('type', $request->input('type'));
+            $query->where('mime_type', 'like', $request->input('type') . '%');
         }
 
         $sortBy = $request->input('sort_by', 'created_at');
@@ -79,9 +79,8 @@ class MediaController extends Controller
         $this->authorize('update', $media);
 
         $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
+            'filename' => 'sometimes|string|max:255',
             'alt_text' => 'nullable|string|max:500',
-            'caption' => 'nullable|string|max:1000',
         ]);
 
         $media->update($validated);

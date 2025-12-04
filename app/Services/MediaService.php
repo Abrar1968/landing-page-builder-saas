@@ -21,38 +21,34 @@ class MediaService
 
         $mimeType = $file->getMimeType();
         $size = $file->getSize();
-        $type = $this->determineType($mimeType);
-        $dimensions = null;
-        $thumbnailPath = null;
+        $thumbnails = [];
 
-        if ($type === 'image' && $this->isProcessableImage($mimeType)) {
-            $dimensions = $this->getImageDimensions($disk, $filePath);
-
+        if ($this->isProcessableImage($mimeType)) {
             if (config('media.thumbnails.enabled', true)) {
-                $thumbnailPath = $this->generateThumbnail($disk, $filePath, $path, $filename);
+                $thumbPath = $this->generateThumbnail($disk, $filePath, $path, $filename);
+                if ($thumbPath) {
+                    $thumbnails['thumb'] = $thumbPath;
+                }
             }
         }
 
         return Media::create([
             'user_id' => $user->id,
-            'name' => $file->getClientOriginalName(),
-            'filename' => $filename,
+            'filename' => $file->getClientOriginalName(),
             'path' => $filePath,
-            'thumbnail_path' => $thumbnailPath,
-            'disk' => $disk,
             'mime_type' => $mimeType,
-            'type' => $type,
             'size' => $size,
-            'dimensions' => $dimensions,
+            'thumbnails' => !empty($thumbnails) ? $thumbnails : null,
         ]);
     }
 
     public function delete(Media $media): void
     {
-        Storage::disk($media->disk)->delete($media->path);
+        $disk = config('media.disk', 'public');
+        Storage::disk($disk)->delete($media->path);
 
-        if ($media->thumbnail_path) {
-            Storage::disk($media->disk)->delete($media->thumbnail_path);
+        if (!empty($media->thumbnails) && isset($media->thumbnails['thumb'])) {
+            Storage::disk($disk)->delete($media->thumbnails['thumb']);
         }
 
         $media->delete();

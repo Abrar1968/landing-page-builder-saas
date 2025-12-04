@@ -1,5 +1,11 @@
 <template>
-  <div class="widget-content" :style="getCommonWrapperStyles()" :class="settings.css_classes" :id="settings.css_id">
+  <div
+    class="widget-content"
+    :style="getCommonWrapperStyles()"
+    :class="[settings.css_classes, responsiveVisibilityClasses, animationClasses]"
+    :id="settings.css_id"
+    ref="widgetRef"
+  >
     <!-- Heading Widget -->
     <h1
       v-if="widget.widgetType === 'heading' && headingTag === 'h1'"
@@ -112,18 +118,29 @@
     </div>
 
     <!-- Image Widget -->
-    <div v-else-if="widget.widgetType === 'image'" :style="getImageStyles()">
-      <img
-        v-if="settings.image_url"
-        :src="settings.image_url"
-        :alt="settings.alt_text ?? ''"
-        :style="{ width: (settings.width ?? 100) + '%' }"
-      />
-      <div v-else class="image-placeholder">
-        <span>🖼</span>
-        <span>Click to add image</span>
-      </div>
+    <div v-else-if="widget.widgetType === 'image'" :style="getImageContainerStyles()">
+      <component :is="settings.link ? 'a' : 'div'" :href="settings.link || undefined" :target="settings.link && settings.link_target ? '_blank' : undefined" class="inline-block">
+        <img
+          v-if="settings.image_url"
+          :src="settings.image_url"
+          :alt="settings.alt_text ?? ''"
+          :style="getImageElementStyles()"
+          :class="['transition-all duration-300', `image-widget-${widget.id}`, getImageHoverClass()]"
+        />
+        <div v-else class="image-placeholder">
+          <span>🖼</span>
+          <span>Click to add image</span>
+        </div>
+      </component>
       <p v-if="settings.caption" class="caption">{{ settings.caption }}</p>
+      <!-- Inject scoped hover styles -->
+      <component :is="'style'" v-if="settings.hover_animation && settings.hover_animation !== 'none'">
+        .image-widget-{{ widget.id }}.hover-zoom:hover { transform: scale(1.1); }
+        .image-widget-{{ widget.id }}.hover-zoom_out:hover { transform: scale(0.9); }
+        .image-widget-{{ widget.id }}.hover-grayscale:hover { filter: grayscale(100%); }
+        .image-widget-{{ widget.id }}.hover-blur:hover { filter: blur(3px); }
+        .image-widget-{{ widget.id }}.hover-brightness:hover { filter: brightness(1.2); }
+      </component>
     </div>
 
     <!-- Button Widget -->
@@ -132,10 +149,22 @@
         :href="settings.link || '#'"
         :target="settings.target ? '_blank' : '_self'"
         :style="getButtonStyles()"
-        class="inline-block px-6 py-3 font-medium"
+        :class="['inline-flex items-center font-medium transition-colors duration-200', `button-widget-${widget.id}`]"
+        @mouseenter="buttonHover = true"
+        @mouseleave="buttonHover = false"
       >
+        <span v-if="settings.icon && settings.icon_position !== 'right'" :style="{ marginRight: (settings.icon_spacing ?? 8) + 'px' }">{{ settings.icon }}</span>
         {{ settings.text ?? 'Click Me' }}
+        <span v-if="settings.icon && settings.icon_position === 'right'" :style="{ marginLeft: (settings.icon_spacing ?? 8) + 'px' }">{{ settings.icon }}</span>
       </a>
+      <!-- Inject scoped hover styles -->
+      <component :is="'style'" v-if="hasButtonHoverStyles">
+        .button-widget-{{ widget.id }}:hover {
+          background-color: {{ settings.hover_background_color ?? settings.background_color ?? '#4338ca' }} !important;
+          color: {{ settings.hover_text_color ?? settings.text_color ?? '#ffffff' }} !important;
+          border-color: {{ settings.hover_border_color ?? settings.border_color ?? '#4338ca' }} !important;
+        }
+      </component>
     </div>
 
     <!-- Video Widget -->
@@ -155,13 +184,22 @@
 
     <!-- Divider Widget -->
     <div v-else-if="widget.widgetType === 'divider'" :style="getDividerContainerStyles()">
-      <hr :style="getDividerStyles()" />
+      <!-- Simple divider (no element) -->
+      <hr v-if="!settings.divider_element || settings.divider_element === 'none'" :style="getDividerStyles()" />
+      <!-- Divider with element (text or icon) -->
+      <div v-else class="flex items-center" :style="getDividerWrapperStyles()">
+        <hr :style="getDividerLineStyles()" class="flex-1" />
+        <span :style="getDividerElementStyles()">
+          {{ settings.divider_element === 'text' ? (settings.element_text || 'OR') : (settings.element_icon || '★') }}
+        </span>
+        <hr :style="getDividerLineStyles()" class="flex-1" />
+      </div>
     </div>
 
     <!-- Spacer Widget -->
     <div
       v-else-if="widget.widgetType === 'spacer'"
-      :style="{ height: (settings.space ?? 50) + 'px' }"
+      :style="{ height: (settings.space ?? 50) + (settings.space_unit ?? 'px') }"
     ></div>
 
     <!-- Icon Widget -->
@@ -173,15 +211,32 @@
     </div>
 
     <!-- Icon Box Widget -->
-    <div v-else-if="widget.widgetType === 'icon-box'" :style="getIconBoxStyles()">
-      <div :style="{ fontSize: (settings.icon_size ?? 50) + 'px', color: settings.icon_color ?? '#4f46e5' }">
+    <component
+      :is="settings.link?.url ? 'a' : 'div'"
+      v-else-if="widget.widgetType === 'icon-box'"
+      :href="settings.link?.url"
+      :target="settings.link?.is_external ? '_blank' : undefined"
+      :style="getIconBoxStyles()"
+      :class="[`icon-box-widget-${widget.id}`, getIconBoxLayoutClass()]"
+      class="icon-box-wrapper block no-underline"
+    >
+      <div class="icon-box-icon" :style="getIconBoxIconStyles()">
         {{ settings.icon ?? '⚡' }}
       </div>
-      <h4 :style="{ color: settings.title_color ?? '#1f2937' }" class="font-semibold mt-3">
-        {{ settings.title ?? 'Icon Box' }}
-      </h4>
-      <p class="text-gray-600 mt-2">{{ settings.description ?? 'Click here to add your own text.' }}</p>
-    </div>
+      <div class="icon-box-content" :style="getIconBoxContentStyles()">
+        <h4 class="icon-box-title font-semibold" :style="{ color: settings.title_color ?? '#1f2937' }">
+          {{ settings.title ?? 'Icon Box' }}
+        </h4>
+        <p class="icon-box-description mt-2" :style="{ color: settings.description_color ?? '#6b7280' }">
+          {{ settings.description ?? 'Click here to add your own text.' }}
+        </p>
+      </div>
+    </component>
+    <!-- Icon Box hover styles -->
+    <component :is="'style'" v-if="widget.widgetType === 'icon-box' && (settings.hover_icon_color || settings.hover_title_color)">
+      .icon-box-widget-{{ widget.id }}:hover .icon-box-icon { color: {{ settings.hover_icon_color ?? settings.icon_color ?? '#4f46e5' }} !important; }
+      .icon-box-widget-{{ widget.id }}:hover .icon-box-title { color: {{ settings.hover_title_color ?? settings.title_color ?? '#1f2937' }} !important; }
+    </component>
 
     <!-- Counter Widget -->
     <div v-else-if="widget.widgetType === 'counter'" :style="getCounterStyles()">
@@ -251,12 +306,42 @@
     </div>
 
     <!-- Image Box Widget -->
-    <div v-else-if="widget.widgetType === 'image-box'" :style="getImageBoxStyles()" class="text-center">
-      <img v-if="settings.image_url" :src="settings.image_url" class="w-full h-40 object-cover rounded-lg mb-4" />
-      <div v-else class="w-full h-40 bg-gray-200 rounded-lg mb-4 flex items-center justify-center text-gray-400">🖼️</div>
-      <h4 :style="{ color: settings.title_color ?? '#1f2937' }" class="font-semibold text-lg">{{ settings.title ?? 'Image Box' }}</h4>
-      <p :style="{ color: settings.description_color ?? '#6b7280' }" class="mt-2">{{ settings.description ?? 'Click here to add your own text.' }}</p>
-    </div>
+    <component
+      :is="settings.link?.url ? 'a' : 'div'"
+      v-else-if="widget.widgetType === 'image-box'"
+      :href="settings.link?.url"
+      :target="settings.link?.is_external ? '_blank' : undefined"
+      :style="getImageBoxStyles()"
+      :class="[`image-box-widget-${widget.id}`, getImageBoxLayoutClass()]"
+      class="image-box-wrapper block no-underline"
+    >
+      <div class="image-box-image" :style="getImageBoxImageContainerStyles()">
+        <img
+          v-if="settings.image_url"
+          :src="settings.image_url"
+          class="object-cover rounded-lg transition-all duration-300"
+          :class="getImageBoxImageHoverClass()"
+          :style="getImageBoxImageStyles()"
+        />
+        <div v-else class="bg-gray-200 rounded-lg flex items-center justify-center text-gray-400" :style="getImageBoxImageStyles()">🖼️</div>
+      </div>
+      <div class="image-box-content" :style="getImageBoxContentStyles()">
+        <h4 class="image-box-title font-semibold text-lg" :style="{ color: settings.title_color ?? '#1f2937' }">
+          {{ settings.title ?? 'Image Box' }}
+        </h4>
+        <p class="image-box-description mt-2" :style="{ color: settings.description_color ?? '#6b7280' }">
+          {{ settings.description ?? 'Click here to add your own text.' }}
+        </p>
+      </div>
+    </component>
+    <!-- Image Box hover styles -->
+    <component :is="'style'" v-if="widget.widgetType === 'image-box' && (settings.hover_title_color || settings.hover_animation)">
+      .image-box-widget-{{ widget.id }}:hover .image-box-title { color: {{ settings.hover_title_color ?? settings.title_color ?? '#1f2937' }} !important; }
+      .image-box-widget-{{ widget.id }} .hover-zoom:hover { transform: scale(1.1); }
+      .image-box-widget-{{ widget.id }} .hover-zoom_out:hover { transform: scale(0.9); }
+      .image-box-widget-{{ widget.id }} .hover-grayscale:hover { filter: grayscale(100%); }
+      .image-box-widget-{{ widget.id }} .hover-blur:hover { filter: blur(3px); }
+    </component>
 
     <!-- Star Rating Widget -->
     <div v-else-if="widget.widgetType === 'star-rating'" :style="{ textAlign: settings.alignment ?? 'left' }">
@@ -591,7 +676,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUpdated, onBeforeUnmount } from 'vue';
+import { computed, onMounted, onUpdated, onBeforeUnmount, ref, nextTick } from 'vue';
 
 const props = defineProps({
   widget: {
@@ -601,6 +686,58 @@ const props = defineProps({
 });
 
 const settings = computed(() => props.widget.settings || {});
+
+// Ref for the widget element (for animation observation)
+const widgetRef = ref(null);
+
+// Track if entrance animation has been triggered
+const animationTriggered = ref(false);
+
+// Button hover state
+const buttonHover = ref(false);
+
+// Responsive visibility classes based on settings
+const responsiveVisibilityClasses = computed(() => {
+  const visibility = settings.value.responsive_visibility;
+  if (!visibility) return '';
+
+  const classes = [];
+  if (visibility.hide_desktop) classes.push('hidden-desktop');
+  if (visibility.hide_tablet) classes.push('hidden-tablet');
+  if (visibility.hide_mobile) classes.push('hidden-mobile');
+
+  return classes.join(' ');
+});
+
+// Entrance animation classes based on motion effects settings
+const animationClasses = computed(() => {
+  const motion = settings.value.motion_effects;
+  if (!motion || !motion.entrance_animation || motion.entrance_animation === 'none') return '';
+
+  // Only apply animation if triggered
+  if (!animationTriggered.value) return 'animation-hidden';
+
+  const classes = [`animate-${motion.entrance_animation}`];
+
+  // Animation duration
+  if (motion.animation_duration) {
+    classes.push(`animation-duration-${motion.animation_duration}`);
+  }
+
+  return classes.join(' ');
+});
+
+// Animation delay style (can't be done via class easily)
+const animationDelayStyle = computed(() => {
+  const motion = settings.value.motion_effects;
+  if (!motion || !motion.animation_delay) return {};
+  return { animationDelay: `${motion.animation_delay}ms` };
+});
+
+// Computed property to check if button has hover styles
+const hasButtonHoverStyles = computed(() => {
+  return settings.value.hover_background_color || settings.value.hover_text_color || settings.value.hover_border_color;
+});
 
 // Computed property for heading tag (H1-H6) - ensures reactivity
 const headingTag = computed(() => {
@@ -706,9 +843,39 @@ function injectCustomCSS() {
   }
 }
 
+// Intersection Observer for entrance animations
+let animationObserver = null;
+
+function setupAnimationObserver() {
+  const motion = settings.value.motion_effects;
+  if (!motion || !motion.entrance_animation || motion.entrance_animation === 'none') {
+    // No animation configured, trigger immediately
+    animationTriggered.value = true;
+    return;
+  }
+
+  // Create observer to trigger animation when widget enters viewport
+  animationObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !animationTriggered.value) {
+        animationTriggered.value = true;
+        // Disconnect after triggering (one-time animation)
+        animationObserver?.disconnect();
+      }
+    });
+  }, { threshold: 0.1 });
+
+  if (widgetRef.value) {
+    animationObserver.observe(widgetRef.value);
+  }
+}
+
 // Inject on mount and update
 onMounted(() => {
   injectCustomCSS();
+  nextTick(() => {
+    setupAnimationObserver();
+  });
 });
 
 onUpdated(() => {
@@ -721,6 +888,8 @@ onBeforeUnmount(() => {
   if (styleTag) {
     styleTag.remove();
   }
+  // Cleanup animation observer
+  animationObserver?.disconnect();
 });
 
 function getTextEditorStyles() {
@@ -730,6 +899,57 @@ function getTextEditorStyles() {
     margin: formatDimensions(settings.value.margin),
     padding: formatDimensions(settings.value.padding)
   };
+}
+
+function getImageContainerStyles() {
+  const alignment = settings.value.alignment ?? 'left';
+  return {
+    textAlign: alignment,
+    margin: formatDimensions(settings.value.margin),
+    padding: formatDimensions(settings.value.padding)
+  };
+}
+
+function getImageElementStyles() {
+  const styles = {
+    width: (settings.value.width ?? 100) + '%',
+    opacity: settings.value.opacity ?? 1,
+  };
+
+  // Max width
+  if (settings.value.max_width && settings.value.max_width > 0) {
+    styles.maxWidth = settings.value.max_width + 'px';
+  }
+
+  // Build CSS filter string
+  const filters = [];
+  if (settings.value.filter_blur && settings.value.filter_blur > 0) {
+    filters.push(`blur(${settings.value.filter_blur}px)`);
+  }
+  if (settings.value.filter_brightness && settings.value.filter_brightness !== 100) {
+    filters.push(`brightness(${settings.value.filter_brightness}%)`);
+  }
+  if (settings.value.filter_contrast && settings.value.filter_contrast !== 100) {
+    filters.push(`contrast(${settings.value.filter_contrast}%)`);
+  }
+  if (settings.value.filter_saturation && settings.value.filter_saturation !== 100) {
+    filters.push(`saturate(${settings.value.filter_saturation}%)`);
+  }
+  if (settings.value.filter_hue && settings.value.filter_hue > 0) {
+    filters.push(`hue-rotate(${settings.value.filter_hue}deg)`);
+  }
+
+  if (filters.length > 0) {
+    styles.filter = filters.join(' ');
+  }
+
+  return styles;
+}
+
+function getImageHoverClass() {
+  const animation = settings.value.hover_animation;
+  if (!animation || animation === 'none') return '';
+  return `hover-${animation}`;
 }
 
 function getImageStyles() {
@@ -749,11 +969,44 @@ function getButtonContainerStyles() {
 }
 
 function getButtonStyles() {
-  return {
+  const typography = settings.value.typography || {};
+  const styles = {
     backgroundColor: settings.value.background_color ?? '#4f46e5',
     color: settings.value.text_color ?? '#ffffff',
-    borderRadius: (settings.value.border_radius ?? 6) + 'px'
+    borderRadius: (settings.value.border_radius ?? 6) + 'px',
+    borderWidth: (settings.value.border_width ?? 0) + 'px',
+    borderStyle: settings.value.border_width > 0 ? 'solid' : 'none',
+    borderColor: settings.value.border_color ?? settings.value.background_color ?? '#4f46e5',
+    paddingLeft: (settings.value.padding_horizontal ?? 24) + 'px',
+    paddingRight: (settings.value.padding_horizontal ?? 24) + 'px',
+    paddingTop: (settings.value.padding_vertical ?? 12) + 'px',
+    paddingBottom: (settings.value.padding_vertical ?? 12) + 'px',
   };
+
+  // Apply typography settings
+  if (typography.family && typography.family !== 'Default') {
+    styles.fontFamily = typography.family.includes(' ')
+      ? `'${typography.family}', sans-serif`
+      : `${typography.family}, sans-serif`;
+  }
+  if (typography.size) {
+    const sizeValue = typeof typography.size === 'string' ? parseFloat(typography.size) : typography.size;
+    const unit = typography.sizeUnit || 'px';
+    if (!isNaN(sizeValue) && sizeValue > 0) {
+      styles.fontSize = sizeValue + unit;
+    }
+  }
+  if (typography.weight && typography.weight !== '400') {
+    styles.fontWeight = typography.weight;
+  }
+  if (typography.transform && typography.transform !== 'none') {
+    styles.textTransform = typography.transform.toLowerCase();
+  }
+  if (typography.letterSpacing) {
+    styles.letterSpacing = typography.letterSpacing + 'px';
+  }
+
+  return styles;
 }
 
 function getVideoStyles() {
@@ -771,25 +1024,75 @@ function getVideoEmbedUrl() {
   const url = settings.value.youtube_url;
   if (!url) return null;
 
+  // Build query parameters based on settings
+  const params = new URLSearchParams();
+
   // Extract YouTube video ID
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
-  if (match) {
-    return `https://www.youtube.com/embed/${match[1]}`;
+  const youtubeMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+  if (youtubeMatch) {
+    // YouTube parameters
+    if (settings.value.autoplay) params.set('autoplay', '1');
+    if (settings.value.mute) params.set('mute', '1');
+    if (settings.value.loop) {
+      params.set('loop', '1');
+      params.set('playlist', youtubeMatch[1]); // Required for loop to work
+    }
+    if (settings.value.controls === false) params.set('controls', '0');
+    if (settings.value.modest_branding) params.set('modestbranding', '1');
+    if (settings.value.start_time) params.set('start', settings.value.start_time.toString());
+    if (settings.value.end_time) params.set('end', settings.value.end_time.toString());
+
+    const queryString = params.toString();
+    return `https://www.youtube.com/embed/${youtubeMatch[1]}${queryString ? '?' + queryString : ''}`;
   }
 
   // Extract Vimeo video ID
   const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
   if (vimeoMatch) {
-    return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+    // Vimeo parameters
+    if (settings.value.autoplay) params.set('autoplay', '1');
+    if (settings.value.mute) params.set('muted', '1');
+    if (settings.value.loop) params.set('loop', '1');
+    if (settings.value.controls === false) params.set('controls', '0');
+
+    const queryString = params.toString();
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}${queryString ? '?' + queryString : ''}`;
   }
 
   return null;
 }
 
 function getDividerContainerStyles() {
+  const gap = settings.value.gap ?? 20;
   return {
     textAlign: settings.value.alignment ?? 'center',
-    textAlign: settings.value.alignment ?? 'center'
+    marginTop: gap + 'px',
+    marginBottom: gap + 'px',
+  };
+}
+
+function getDividerWrapperStyles() {
+  return {
+    width: (settings.value.width ?? 100) + '%',
+    margin: settings.value.alignment === 'center' ? '0 auto' : (settings.value.alignment === 'right' ? '0 0 0 auto' : '0'),
+  };
+}
+
+function getDividerLineStyles() {
+  return {
+    borderStyle: settings.value.style ?? 'solid',
+    borderColor: settings.value.color ?? '#e5e7eb',
+    borderWidth: '0',
+    borderTopWidth: (settings.value.weight ?? 1) + 'px',
+  };
+}
+
+function getDividerElementStyles() {
+  return {
+    color: settings.value.element_color ?? '#6b7280',
+    fontSize: (settings.value.element_size ?? 16) + 'px',
+    paddingLeft: (settings.value.element_spacing ?? 16) + 'px',
+    paddingRight: (settings.value.element_spacing ?? 16) + 'px',
   };
 }
 
@@ -818,10 +1121,67 @@ function getIconStyles() {
 }
 
 function getIconBoxStyles() {
-  return {
-    textAlign: settings.value.alignment ?? 'center',
-    textAlign: settings.value.alignment ?? 'center'
+  const position = settings.value.icon_position ?? 'top';
+  const alignment = settings.value.alignment ?? 'center';
+  const verticalAlign = settings.value.content_vertical_alignment ?? 'top';
+
+  const styles = {
+    textAlign: alignment,
   };
+
+  // Apply flex layout for left/right positions
+  if (position === 'left' || position === 'right') {
+    styles.display = 'flex';
+    styles.flexDirection = position === 'right' ? 'row-reverse' : 'row';
+    styles.textAlign = 'left';
+
+    // Vertical alignment
+    if (verticalAlign === 'center') {
+      styles.alignItems = 'center';
+    } else if (verticalAlign === 'bottom') {
+      styles.alignItems = 'flex-end';
+    } else {
+      styles.alignItems = 'flex-start';
+    }
+  }
+
+  return styles;
+}
+
+function getIconBoxLayoutClass() {
+  const position = settings.value.icon_position ?? 'top';
+  return `icon-position-${position}`;
+}
+
+function getIconBoxIconStyles() {
+  const position = settings.value.icon_position ?? 'top';
+  const spacing = settings.value.icon_spacing ?? 15;
+
+  const styles = {
+    fontSize: (settings.value.icon_size ?? 50) + 'px',
+    color: settings.value.icon_color ?? '#4f46e5',
+    transition: 'color 0.3s ease',
+  };
+
+  // Add spacing based on position
+  if (position === 'top') {
+    styles.marginBottom = spacing + 'px';
+  } else if (position === 'left') {
+    styles.marginRight = spacing + 'px';
+  } else if (position === 'right') {
+    styles.marginLeft = spacing + 'px';
+  }
+
+  return styles;
+}
+
+function getIconBoxContentStyles() {
+  const position = settings.value.icon_position ?? 'top';
+
+  if (position === 'left' || position === 'right') {
+    return { flex: '1' };
+  }
+  return {};
 }
 
 function getCounterStyles() {
@@ -888,12 +1248,31 @@ function getImageBoxStyles() {
   const bg = settings.value.background;
   const border = settings.value.border;
   const shadow = settings.value.box_shadow;
+  const position = settings.value.image_position ?? 'top';
+  const alignment = settings.value.alignment ?? 'center';
+  const verticalAlign = settings.value.content_vertical_alignment ?? 'top';
 
   const styles = {
-    textAlign: settings.value.alignment ?? 'center',
+    textAlign: alignment,
     margin: formatDimensions(settings.value.margin),
     padding: formatDimensions(settings.value.padding)
   };
+
+  // Apply flex layout for left/right positions
+  if (position === 'left' || position === 'right') {
+    styles.display = 'flex';
+    styles.flexDirection = position === 'right' ? 'row-reverse' : 'row';
+    styles.textAlign = 'left';
+
+    // Vertical alignment
+    if (verticalAlign === 'center') {
+      styles.alignItems = 'center';
+    } else if (verticalAlign === 'bottom') {
+      styles.alignItems = 'flex-end';
+    } else {
+      styles.alignItems = 'flex-start';
+    }
+  }
 
   if (bg?.color) styles.backgroundColor = bg.color;
   if (border?.style && border.style !== 'none') {
@@ -910,6 +1289,64 @@ function getImageBoxStyles() {
   }
 
   return styles;
+}
+
+function getImageBoxLayoutClass() {
+  const position = settings.value.image_position ?? 'top';
+  return `image-position-${position}`;
+}
+
+function getImageBoxImageContainerStyles() {
+  const position = settings.value.image_position ?? 'top';
+  const spacing = settings.value.image_spacing ?? 15;
+
+  const styles = {};
+
+  // Add spacing based on position
+  if (position === 'top') {
+    styles.marginBottom = spacing + 'px';
+  } else if (position === 'left') {
+    styles.marginRight = spacing + 'px';
+    styles.flexShrink = 0;
+  } else if (position === 'right') {
+    styles.marginLeft = spacing + 'px';
+    styles.flexShrink = 0;
+  }
+
+  return styles;
+}
+
+function getImageBoxImageStyles() {
+  const position = settings.value.image_position ?? 'top';
+
+  const styles = {
+    height: (settings.value.image_height ?? 160) + 'px',
+    transition: 'all 0.3s ease',
+  };
+
+  if (position === 'top') {
+    styles.width = (settings.value.image_width ?? 100) + '%';
+  } else {
+    // For left/right positions, use fixed width
+    styles.width = Math.min(settings.value.image_width ?? 100, 200) + 'px';
+  }
+
+  return styles;
+}
+
+function getImageBoxImageHoverClass() {
+  const animation = settings.value.hover_animation;
+  if (!animation || animation === 'none') return '';
+  return `hover-${animation}`;
+}
+
+function getImageBoxContentStyles() {
+  const position = settings.value.image_position ?? 'top';
+
+  if (position === 'left' || position === 'right') {
+    return { flex: '1' };
+  }
+  return {};
 }
 
 function getCtaStyles() {
@@ -1001,7 +1438,7 @@ function getCommonWrapperStyles() {
   // Z-Index
   if (settings.value.z_index) {
     styles.zIndex = settings.value.z_index;
-    styles.position = 'relative'; 
+    styles.position = 'relative';
   }
 
   // Position Control
@@ -1031,7 +1468,7 @@ function getCommonWrapperStyles() {
   if (border?.style && border.style !== 'none') {
     styles.borderStyle = border.style;
     styles.borderColor = border.color ?? '#e5e7eb';
-    styles.borderWidth = '1px'; 
+    styles.borderWidth = '1px';
   }
   if (border?.radius) {
     styles.borderRadius = `${border.radius.topLeft ?? 0}px ${border.radius.topRight ?? 0}px ${border.radius.bottomRight ?? 0}px ${border.radius.bottomLeft ?? 0}px`;
@@ -1099,6 +1536,138 @@ function getInnerSectionStyles() {
 </script>
 
 <style scoped>
+/* Responsive Visibility Classes */
+@media (min-width: 1025px) {
+  .hidden-desktop {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .hidden-tablet {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .hidden-mobile {
+    display: none !important;
+  }
+}
+
+/* Animation Base States */
+.animation-hidden {
+  opacity: 0;
+}
+
+/* Animation Duration Classes */
+.animation-duration-slow {
+  animation-duration: 2s;
+}
+
+.animation-duration-normal {
+  animation-duration: 1s;
+}
+
+.animation-duration-fast {
+  animation-duration: 0.5s;
+}
+
+/* Entrance Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes zoomIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes zoomOut {
+  from { opacity: 0; transform: scale(1.1); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(0.3); }
+  50% { opacity: 1; transform: scale(1.05); }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(100%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes rotateIn {
+  from { opacity: 0; transform: rotate(-200deg); }
+  to { opacity: 1; transform: rotate(0); }
+}
+
+@keyframes flipInX {
+  from { opacity: 0; transform: perspective(400px) rotateX(90deg); }
+  to { opacity: 1; transform: perspective(400px) rotateX(0); }
+}
+
+@keyframes flipInY {
+  from { opacity: 0; transform: perspective(400px) rotateY(90deg); }
+  to { opacity: 1; transform: perspective(400px) rotateY(0); }
+}
+
+/* Animation Classes */
+.animate-fadeIn { animation-name: fadeIn; animation-fill-mode: forwards; }
+.animate-fadeInDown { animation-name: fadeInDown; animation-fill-mode: forwards; }
+.animate-fadeInUp { animation-name: fadeInUp; animation-fill-mode: forwards; }
+.animate-fadeInLeft { animation-name: fadeInLeft; animation-fill-mode: forwards; }
+.animate-fadeInRight { animation-name: fadeInRight; animation-fill-mode: forwards; }
+.animate-zoomIn { animation-name: zoomIn; animation-fill-mode: forwards; }
+.animate-zoomOut { animation-name: zoomOut; animation-fill-mode: forwards; }
+.animate-bounceIn { animation-name: bounceIn; animation-fill-mode: forwards; }
+.animate-slideInDown { animation-name: slideInDown; animation-fill-mode: forwards; }
+.animate-slideInUp { animation-name: slideInUp; animation-fill-mode: forwards; }
+.animate-slideInLeft { animation-name: slideInLeft; animation-fill-mode: forwards; }
+.animate-slideInRight { animation-name: slideInRight; animation-fill-mode: forwards; }
+.animate-rotateIn { animation-name: rotateIn; animation-fill-mode: forwards; }
+.animate-flipInX { animation-name: flipInX; animation-fill-mode: forwards; }
+.animate-flipInY { animation-name: flipInY; animation-fill-mode: forwards; }
+
 .image-placeholder,
 .video-placeholder {
   display: flex;
@@ -1148,5 +1717,48 @@ function getInnerSectionStyles() {
 
 .gallery-item.hover-grayscale:hover img {
   filter: grayscale(100%);
+}
+
+/* Icon Box Widget Styles */
+.icon-box-wrapper {
+  transition: all 0.3s ease;
+}
+
+.icon-box-wrapper .icon-box-icon {
+  line-height: 1;
+}
+
+.icon-box-wrapper .icon-box-title {
+  transition: color 0.3s ease;
+}
+
+/* Image Box Widget Styles */
+.image-box-wrapper {
+  transition: all 0.3s ease;
+}
+
+.image-box-wrapper .image-box-title {
+  transition: color 0.3s ease;
+}
+
+.image-box-wrapper img {
+  overflow: hidden;
+}
+
+/* Image Box Hover Effects */
+.image-box-wrapper .hover-zoom {
+  transition: transform 0.3s ease;
+}
+
+.image-box-wrapper .hover-zoom_out {
+  transition: transform 0.3s ease;
+}
+
+.image-box-wrapper .hover-grayscale {
+  transition: filter 0.3s ease;
+}
+
+.image-box-wrapper .hover-blur {
+  transition: filter 0.3s ease;
 }
 </style>

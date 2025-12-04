@@ -37,6 +37,9 @@
 <body class="min-h-screen">
     {!! $html !!}
 
+    {{-- Interactive widgets JavaScript --}}
+    <script src="{{ asset('js/widgets.js') }}"></script>
+
     @if($page->settings['analytics_id'] ?? false)
         <!-- Google Analytics -->
         <script async src="https://www.googletagmanager.com/gtag/js?id={{ $page->settings['analytics_id'] }}"></script>

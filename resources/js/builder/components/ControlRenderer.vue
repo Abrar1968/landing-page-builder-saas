@@ -1377,6 +1377,44 @@
             </div>
         </div>
 
+        <!-- Responsive Visibility Control -->
+        <div v-else-if="control.type === 'responsive_visibility'" class="space-y-3 p-3 bg-gray-50 rounded-md">
+            <p class="text-xs text-gray-500 mb-2">Hide this element on specific devices</p>
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input
+                    type="checkbox"
+                    :checked="modelValue?.hide_desktop ?? false"
+                    @change="updateResponsiveVisibility('hide_desktop', $event.target.checked)"
+                    class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <span class="text-sm text-gray-700 flex items-center gap-2">
+                    <span class="text-lg">🖥️</span> Hide on Desktop
+                </span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input
+                    type="checkbox"
+                    :checked="modelValue?.hide_tablet ?? false"
+                    @change="updateResponsiveVisibility('hide_tablet', $event.target.checked)"
+                    class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <span class="text-sm text-gray-700 flex items-center gap-2">
+                    <span class="text-lg">📱</span> Hide on Tablet
+                </span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input
+                    type="checkbox"
+                    :checked="modelValue?.hide_mobile ?? false"
+                    @change="updateResponsiveVisibility('hide_mobile', $event.target.checked)"
+                    class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <span class="text-sm text-gray-700 flex items-center gap-2">
+                    <span class="text-lg">📲</span> Hide on Mobile
+                </span>
+            </label>
+        </div>
+
         <!-- Motion Effects Control -->
         <MotionEffects
             v-else-if="control.type === 'motion_effects'"
@@ -1568,6 +1606,15 @@ function updatePosition(key, value) {
 
 // Shape divider control helper
 function updateShapeDivider(key, value) {
+    const current = props.modelValue || {};
+    emit("update:modelValue", {
+        ...current,
+        [key]: value,
+    });
+}
+
+// Responsive visibility control helper
+function updateResponsiveVisibility(key, value) {
     const current = props.modelValue || {};
     emit("update:modelValue", {
         ...current,

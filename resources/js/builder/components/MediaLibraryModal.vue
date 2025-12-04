@@ -310,10 +310,11 @@ async function uploadFiles(files) {
     formData.append('file', file);
 
     try {
-      const response = await fetch('/api/media', {
+      const response = await fetch('/api/media/upload', {
         method: 'POST',
         body: formData,
         headers: {
+          'Accept': 'application/json',
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
         }
       });
@@ -324,9 +325,14 @@ async function uploadFiles(files) {
         recentlyUploaded.value.unshift(newItem);
         mediaItems.value.unshift(newItem);
         selectedItem.value = newItem;
+      } else {
+        const error = await response.json();
+        console.error('Upload failed:', error);
+        alert('Upload failed: ' + (error.message || 'Unknown error'));
       }
     } catch (error) {
       console.error('Upload failed:', error);
+      alert('Upload failed. Please try again.');
     }
 
     uploadProgress.value = Math.round(((i + 1) / files.length) * 100);

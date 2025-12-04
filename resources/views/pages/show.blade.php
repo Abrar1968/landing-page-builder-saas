@@ -111,5 +111,8 @@
             @endswitch
         @endforeach
     </div>
+
+    {{-- Interactive widgets JavaScript --}}
+    <script src="{{ asset('js/widgets.js') }}"></script>
 </body>
 </html>
