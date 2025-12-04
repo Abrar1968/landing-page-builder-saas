@@ -454,14 +454,20 @@ export const useBuilderStore = defineStore('builder', () => {
             column = findElement(selectedElement.value);
         } else if (selectedType.value === 'widget') {
             column = findParent(selectedElement.value);
-        } else if (content.value.length > 0 && content.value[0].elements?.length > 0) {
-            column = content.value[0].elements[0];
+        } else if (content.value.length > 0) {
+            // Navigate 3-level structure: Section → Container → Column
+            const section = content.value[0];
+            const container = section?.elements?.[0];
+            column = container?.elements?.[0];
         }
 
         if (!column) {
             addSection('100');
             if (content.value.length > 0) {
-                column = content.value[content.value.length - 1].elements[0];
+                // Navigate to the column of the newly created section
+                const section = content.value[content.value.length - 1];
+                const container = section?.elements?.[0];
+                column = container?.elements?.[0];
             }
         }
 
@@ -474,6 +480,11 @@ export const useBuilderStore = defineStore('builder', () => {
         selectedElement.value = id;
         selectedType.value = type;
         activeTab.value = 'content';
+    }
+
+    function clearSelection() {
+        selectedElement.value = null;
+        selectedType.value = null;
     }
 
     function getSetting(name) {
@@ -664,6 +675,7 @@ export const useBuilderStore = defineStore('builder', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
                 },
                 body: JSON.stringify({
@@ -674,9 +686,16 @@ export const useBuilderStore = defineStore('builder', () => {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                console.error('Save failed:', errorData);
-                alert(`Save failed: ${errorData.message || 'Unknown error'}`);
+                // Check content type to handle HTML vs JSON error responses
+                const contentType = response.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    const errorData = await response.json();
+                    console.error('Save failed:', errorData);
+                    alert(`Save failed: ${errorData.message || errorData.errors ? JSON.stringify(errorData.errors) : 'Unknown error'}`);
+                } else {
+                    console.error('Save failed: Server returned non-JSON response');
+                    alert(`Save failed: Server error (${response.status}). Please check if you're still logged in.`);
+                }
                 return;
             }
 
@@ -708,6 +727,7 @@ export const useBuilderStore = defineStore('builder', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
                 }
             });
@@ -809,6 +829,7 @@ export const useBuilderStore = defineStore('builder', () => {
         moveWidget,
         clickAddWidget,
         selectElement,
+        clearSelection,
         getSetting,
         updateSetting,
         deleteElement,

@@ -1,11 +1,9 @@
 <template>
-  <div class="widget-content">
+  <div class="widget-content" :style="getCommonWrapperStyles()" :class="settings.css_classes" :id="settings.css_id">
     <!-- Heading Widget -->
     <h1
       v-if="widget.widgetType === 'heading' && headingTag === 'h1'"
       :style="headingStyles"
-      :class="settings.css_classes"
-      :id="settings.css_id"
     >
       <a
         v-if="settings.link?.url"
@@ -23,8 +21,6 @@
     <h2
       v-else-if="widget.widgetType === 'heading' && headingTag === 'h2'"
       :style="headingStyles"
-      :class="settings.css_classes"
-      :id="settings.css_id"
     >
       <a
         v-if="settings.link?.url"
@@ -42,8 +38,6 @@
     <h3
       v-else-if="widget.widgetType === 'heading' && headingTag === 'h3'"
       :style="headingStyles"
-      :class="settings.css_classes"
-      :id="settings.css_id"
     >
       <a
         v-if="settings.link?.url"
@@ -61,8 +55,6 @@
     <h4
       v-else-if="widget.widgetType === 'heading' && headingTag === 'h4'"
       :style="headingStyles"
-      :class="settings.css_classes"
-      :id="settings.css_id"
     >
       <a
         v-if="settings.link?.url"
@@ -80,8 +72,6 @@
     <h5
       v-else-if="widget.widgetType === 'heading' && headingTag === 'h5'"
       :style="headingStyles"
-      :class="settings.css_classes"
-      :id="settings.css_id"
     >
       <a
         v-if="settings.link?.url"
@@ -99,8 +89,6 @@
     <h6
       v-else-if="widget.widgetType === 'heading' && headingTag === 'h6'"
       :style="headingStyles"
-      :class="settings.css_classes"
-      :id="settings.css_id"
     >
       <a
         v-if="settings.link?.url"
@@ -801,7 +789,7 @@ function getVideoEmbedUrl() {
 function getDividerContainerStyles() {
   return {
     textAlign: settings.value.alignment ?? 'center',
-    margin: formatDimensions(settings.value.margin)
+    textAlign: settings.value.alignment ?? 'center'
   };
 }
 
@@ -818,7 +806,7 @@ function getDividerStyles() {
 function getIconContainerStyles() {
   return {
     textAlign: settings.value.alignment ?? 'center',
-    margin: formatDimensions(settings.value.margin)
+    textAlign: settings.value.alignment ?? 'center'
   };
 }
 
@@ -832,30 +820,28 @@ function getIconStyles() {
 function getIconBoxStyles() {
   return {
     textAlign: settings.value.alignment ?? 'center',
-    margin: formatDimensions(settings.value.margin),
-    padding: formatDimensions(settings.value.padding)
+    textAlign: settings.value.alignment ?? 'center'
   };
 }
 
 function getCounterStyles() {
   return {
     textAlign: settings.value.alignment ?? 'center',
-    margin: formatDimensions(settings.value.margin)
+    textAlign: settings.value.alignment ?? 'center'
   };
 }
 
 function getTestimonialStyles() {
   return {
     textAlign: settings.value.alignment ?? 'center',
-    margin: formatDimensions(settings.value.margin),
-    padding: formatDimensions(settings.value.padding)
+    textAlign: settings.value.alignment ?? 'center'
   };
 }
 
 function getSocialIconsStyles() {
   return {
     textAlign: settings.value.alignment ?? 'center',
-    margin: formatDimensions(settings.value.margin)
+    textAlign: settings.value.alignment ?? 'center'
   };
 }
 
@@ -1001,17 +987,70 @@ function getSoundCloudEmbedUrl() {
   return `https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&visual=${visual}&auto_play=${autoPlay}&buying=${buying}&sharing=${sharing}&download=${download}`;
 }
 
-function getContainerStyles() {
+function getCommonWrapperStyles() {
   const bg = settings.value.background;
   const border = settings.value.border;
   const shadow = settings.value.box_shadow;
   const position = settings.value.position;
+
+  const styles = {
+    margin: formatDimensions(settings.value.margin),
+    padding: formatDimensions(settings.value.padding),
+  };
+
+  // Z-Index
+  if (settings.value.z_index) {
+    styles.zIndex = settings.value.z_index;
+    styles.position = 'relative'; 
+  }
+
+  // Position Control
+  if (position?.type && position.type !== 'default') {
+    styles.position = position.type;
+    if (position.top) styles.top = position.top + 'px';
+    if (position.right) styles.right = position.right + 'px';
+    if (position.bottom) styles.bottom = position.bottom + 'px';
+    if (position.left) styles.left = position.left + 'px';
+  }
+
+  // Background
+  if (bg?.type === 'gradient') {
+    styles.background = `linear-gradient(${bg.gradientAngle ?? 180}deg, ${bg.gradientColor1 ?? '#6366f1'}, ${bg.gradientColor2 ?? '#8b5cf6'})`;
+  } else if (bg?.color) {
+    styles.backgroundColor = bg.color;
+  }
+
+  if (bg?.image) {
+    styles.backgroundImage = `url(${bg.image})`;
+    styles.backgroundPosition = bg.position ?? 'center center';
+    styles.backgroundSize = bg.size ?? 'cover';
+    styles.backgroundRepeat = bg.repeat ?? 'no-repeat';
+  }
+
+  // Border
+  if (border?.style && border.style !== 'none') {
+    styles.borderStyle = border.style;
+    styles.borderColor = border.color ?? '#e5e7eb';
+    styles.borderWidth = '1px'; 
+  }
+  if (border?.radius) {
+    styles.borderRadius = `${border.radius.topLeft ?? 0}px ${border.radius.topRight ?? 0}px ${border.radius.bottomRight ?? 0}px ${border.radius.bottomLeft ?? 0}px`;
+  }
+
+  // Box Shadow
+  if (shadow && (shadow.horizontal || shadow.vertical || shadow.blur)) {
+    const inset = shadow.position === 'inset' ? 'inset ' : '';
+    styles.boxShadow = `${inset}${shadow.horizontal ?? 0}px ${shadow.vertical ?? 0}px ${shadow.blur ?? 0}px ${shadow.spread ?? 0}px ${shadow.color ?? 'rgba(0,0,0,0.1)'}`;
+  }
+
+  return styles;
+}
+
+function getContainerStyles() {
   const size = settings.value.size;
 
   const styles = {
     minHeight: (settings.value.min_height ?? 0) + 'px',
-    margin: formatDimensions(settings.value.margin),
-    padding: formatDimensions(settings.value.padding),
     // Flexbox layout
     display: 'flex',
     flexDirection: settings.value.flex_direction ?? 'row',
@@ -1051,78 +1090,11 @@ function getContainerStyles() {
     styles.order = settings.value.order;
   }
 
-  // Z-Index
-  if (settings.value.z_index) {
-    styles.zIndex = settings.value.z_index;
-  }
-
-  // Position
-  if (position?.type && position.type !== 'default') {
-    styles.position = position.type;
-    if (position.top) styles.top = position.top + 'px';
-    if (position.right) styles.right = position.right + 'px';
-    if (position.bottom) styles.bottom = position.bottom + 'px';
-    if (position.left) styles.left = position.left + 'px';
-  }
-
-  // Background
-  if (bg?.type === 'gradient') {
-    styles.background = `linear-gradient(${bg.gradientAngle ?? 180}deg, ${bg.gradientColor1 ?? '#6366f1'}, ${bg.gradientColor2 ?? '#8b5cf6'})`;
-  } else if (bg?.color) {
-    styles.backgroundColor = bg.color;
-  }
-
-  if (bg?.image) {
-    styles.backgroundImage = `url(${bg.image})`;
-    styles.backgroundPosition = bg.position ?? 'center center';
-    styles.backgroundSize = bg.size ?? 'cover';
-    styles.backgroundRepeat = bg.repeat ?? 'no-repeat';
-  }
-
-  // Border
-  if (border?.style && border.style !== 'none') {
-    styles.borderStyle = border.style;
-    styles.borderColor = border.color ?? '#e5e7eb';
-    styles.borderWidth = '1px';
-  }
-  if (border?.radius) {
-    styles.borderRadius = `${border.radius.topLeft ?? 0}px ${border.radius.topRight ?? 0}px ${border.radius.bottomRight ?? 0}px ${border.radius.bottomLeft ?? 0}px`;
-  }
-
-  // Box Shadow
-  if (shadow && (shadow.horizontal || shadow.vertical || shadow.blur)) {
-    const inset = shadow.position === 'inset' ? 'inset ' : '';
-    styles.boxShadow = `${inset}${shadow.horizontal ?? 0}px ${shadow.vertical ?? 0}px ${shadow.blur ?? 0}px ${shadow.spread ?? 0}px ${shadow.color ?? 'rgba(0,0,0,0.1)'}`;
-  }
-
   return styles;
 }
 
 function getInnerSectionStyles() {
-  const bg = settings.value.background;
-  const border = settings.value.border;
-
-  const styles = {
-    margin: formatDimensions(settings.value.margin),
-    padding: formatDimensions(settings.value.padding)
-  };
-
-  if (bg?.type === 'gradient') {
-    styles.background = `linear-gradient(${bg.gradientAngle ?? 180}deg, ${bg.gradientColor1 ?? '#6366f1'}, ${bg.gradientColor2 ?? '#8b5cf6'})`;
-  } else if (bg?.color) {
-    styles.backgroundColor = bg.color;
-  }
-
-  if (border?.style && border.style !== 'none') {
-    styles.borderStyle = border.style;
-    styles.borderColor = border.color ?? '#e5e7eb';
-    styles.borderWidth = '1px';
-  }
-  if (border?.radius) {
-    styles.borderRadius = `${border.radius.topLeft ?? 0}px ${border.radius.topRight ?? 0}px ${border.radius.bottomRight ?? 0}px ${border.radius.bottomLeft ?? 0}px`;
-  }
-
-  return styles;
+  return {};
 }
 </script>
 

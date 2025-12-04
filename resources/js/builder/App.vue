@@ -65,9 +65,74 @@
 
     <!-- Main Content -->
     <div class="flex-1 flex overflow-hidden">
-      <!-- Left Panel - Widgets -->
-      <aside class="w-72 bg-white border-r flex flex-col shrink-0">
-        <!-- Tabs -->
+      <!-- Left Panel - Widgets/Settings -->
+      <aside class="w-72 bg-white border-r flex flex-col shrink-0 overflow-hidden">
+        <!-- Settings Panel (when element is selected) -->
+        <transition name="slide-settings">
+          <div v-if="store.selectedElementData" class="flex flex-col h-full absolute inset-0 bg-white z-10" style="width: 288px;">
+            <!-- Back Button & Header -->
+            <div class="p-3 border-b bg-gray-50">
+              <button 
+                @click="store.clearSelection()" 
+                class="flex items-center gap-2 text-sm text-gray-600 hover:text-indigo-600 transition-colors mb-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                <span>Back to Widgets</span>
+              </button>
+              <h3 class="font-semibold text-gray-900 text-base">
+                {{
+                  store.selectedType === 'widget' ? 'Widget Settings' :
+                  store.selectedType === 'section' ? 'Section Settings' :
+                  store.selectedType === 'container' ? 'Container Settings' :
+                  'Column Settings'
+                }}
+              </h3>
+            </div>
+
+            <!-- Content/Style/Advanced Tabs -->
+            <div class="flex border-b">
+              <button @click="store.activeTab = 'content'" :class="store.activeTab === 'content' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'" class="flex-1 py-2 text-sm font-medium border-b-2">Content</button>
+              <button @click="store.activeTab = 'style'" :class="store.activeTab === 'style' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'" class="flex-1 py-2 text-sm font-medium border-b-2">Style</button>
+              <button @click="store.activeTab = 'advanced'" :class="store.activeTab === 'advanced' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'" class="flex-1 py-2 text-sm font-medium border-b-2">Advanced</button>
+            </div>
+
+            <!-- Hover State & Responsive Controls (Only show in Style tab) -->
+            <div v-if="store.activeTab === 'style'" class="p-3 border-b space-y-3 bg-gray-50">
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Hover State</label>
+                <HoverStateToggle
+                  :state="store.hoverState"
+                  @update:state="store.hoverState = $event"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-700 mb-1">Responsive</label>
+                <ResponsiveToggle
+                  :device="store.responsiveDevice"
+                  @update:device="store.responsiveDevice = $event"
+                />
+              </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex-1 overflow-y-auto p-4">
+              <div v-for="control in store.currentControls" :key="control.name">
+                <ControlRenderer
+                  :control="control"
+                  :modelValue="store.getSetting(control.name) ?? control.default"
+                  @update:modelValue="store.updateSetting(control.name, $event)"
+                  @openMedia="store.openMediaLibrary(control.name)"
+                />
+              </div>
+              <div v-if="store.currentControls.length === 0" class="text-sm text-gray-400 text-center py-4">
+                No settings for this tab
+              </div>
+            </div>
+          </div>
+        </transition>
+
+        <!-- Tabs (Widgets/Navigator) -->
         <div class="flex border-b">
           <button @click="store.leftPanel = 'widgets'" :class="store.leftPanel === 'widgets' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'" class="flex-1 py-3 text-sm font-medium border-b-2">Widgets</button>
           <button @click="store.leftPanel = 'navigator'" :class="store.leftPanel === 'navigator' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'" class="flex-1 py-3 text-sm font-medium border-b-2">Navigator</button>
@@ -133,9 +198,9 @@
       </aside>
 
       <!-- Canvas -->
-      <main class="flex-1 bg-gray-200 overflow-auto p-8">
-        <div :class="store.previewMode === 'desktop' ? 'max-w-5xl' : store.previewMode === 'tablet' ? 'max-w-lg' : 'max-w-sm'" class="mx-auto transition-all">
-          <div class="bg-white min-h-[600px] shadow-lg">
+      <main class="flex-1 bg-gray-200 overflow-auto">
+        <div class="h-full">
+          <div class="bg-white min-h-full">
             <!-- Empty state -->
             <div v-if="store.content.length === 0" class="flex flex-col items-center justify-center h-96 text-gray-400">
               <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
@@ -156,15 +221,32 @@
 
             <!-- Sections with drop zones -->
             <template v-for="(section, sectionIndex) in store.content" :key="section.id">
-              <!-- Drop zone before section -->
-              <div
-                v-if="(draggedSectionIndex !== null && draggedSectionIndex !== sectionIndex) || draggedSectionLayout !== null"
-                @dragover.prevent
-                @drop="onDropSection($event, sectionIndex)"
-                @dragenter="handleDragEnter($event)"
-                @dragleave="handleDragLeave($event)"
-                class="drop-zone-section h-8 border-2 border-dashed border-indigo-300 hover:border-indigo-500 hover:h-16 hover:bg-indigo-100 transition-all flex items-center justify-center text-sm text-indigo-600 rounded-lg">
-                <span class="opacity-50 hover:opacity-100">Drop section here</span>
+              <!-- Add Section divider (between sections) -->
+              <div class="add-section-divider group/divider relative py-2">
+                <!-- Drop zone (only visible when dragging) -->
+                <div
+                  v-if="(draggedSectionIndex !== null && draggedSectionIndex !== sectionIndex) || draggedSectionLayout !== null"
+                  @dragover.prevent
+                  @drop="onDropSection($event, sectionIndex)"
+                  @dragenter="handleDragEnter($event)"
+                  @dragleave="handleDragLeave($event)"
+                  class="drop-zone-section h-8 border-2 border-dashed border-indigo-300 hover:border-indigo-500 hover:h-16 hover:bg-indigo-100 transition-all flex items-center justify-center text-sm text-indigo-600 rounded-lg">
+                  <span class="opacity-50 hover:opacity-100">Drop section here</span>
+                </div>
+                <!-- Add Section button (visible on hover when not dragging) -->
+                <div 
+                  v-else
+                  class="h-1 flex items-center justify-center opacity-0 group-hover/divider:opacity-100 transition-all">
+                  <div class="absolute left-0 right-0 h-px bg-indigo-300"></div>
+                  <button 
+                    @click="store.addSectionAtIndex('100', sectionIndex)"
+                    class="relative z-10 flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-full shadow-lg transition-all hover:scale-105">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Add Section
+                  </button>
+                </div>
               </div>
 
               <!-- Section -->
@@ -178,7 +260,7 @@
                 @dragstart="onDragStartSectionReorder($event, sectionIndex)"
                 @dragend="onDragEndSection">
                 <!-- Section toolbar -->
-                <div class="absolute -top-8 left-0 opacity-0 group-hover:opacity-100 z-10">
+                <div v-smart-toolbar class="element-toolbar absolute -top-8 left-0 opacity-0 group-hover:opacity-100 z-10">
                   <div class="flex items-center gap-1 bg-indigo-600 text-white text-xs px-2 py-1 rounded shadow">
                     <svg class="w-3 h-3 cursor-move" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
@@ -205,7 +287,7 @@
                        ]"
                        class="container-wrapper relative group/container">
                     <!-- Container toolbar -->
-                    <div class="absolute -top-8 left-0 opacity-0 group-hover/container:opacity-100 z-10">
+                    <div class="absolute top-2 right-2 opacity-0 group-hover/container:opacity-100 z-20 transition-opacity">
                       <div class="flex items-center gap-1 bg-purple-600 text-white text-xs px-2 py-1 rounded shadow">
                         <span>Container</span>
                         <button @click.stop="store.duplicateElement(container.id)" class="hover:text-purple-200">
@@ -266,7 +348,7 @@
                          @dragstart="onDragStartWidget($event, column.id, widgetIndex, widget.id)"
                          @dragend="onDragEndWidget">
                         <!-- Widget toolbar -->
-                        <div class="absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover/widget:opacity-100 z-10">
+                        <div v-smart-toolbar class="element-toolbar absolute -top-6 left-1/2 -translate-x-1/2 opacity-0 group-hover/widget:opacity-100 z-10" data-position="center">
                           <div class="flex items-center gap-1 bg-green-600 text-white text-xs px-2 py-1 rounded shadow">
                             <svg class="w-3 h-3 cursor-move" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
@@ -302,82 +384,36 @@
               </div> <!-- close section-container -->
             </template> <!-- close sections template loop -->
 
-            <!-- Drop zone after last section -->
-            <div
-              v-if="draggedSectionIndex !== null"
-              @dragover.prevent
-              @drop="onDropSection($event, store.content.length)"
-              @dragenter="handleDragEnter($event)"
-              @dragleave="handleDragLeave($event)"
-              class="drop-zone-section h-8 border-2 border-dashed border-transparent hover:border-indigo-400 hover:bg-indigo-50 transition-all flex items-center justify-center text-xs text-gray-400">
-              <span class="opacity-0 hover:opacity-100">Drop section here</span>
+            <!-- Add Section button after last section -->
+            <div v-if="store.content.length > 0" class="add-section-divider group/divider relative py-4">
+              <!-- Drop zone (only visible when dragging) -->
+              <div
+                v-if="draggedSectionIndex !== null || draggedSectionLayout !== null"
+                @dragover.prevent
+                @drop="onDropSection($event, store.content.length)"
+                @dragenter="handleDragEnter($event)"
+                @dragleave="handleDragLeave($event)"
+                class="drop-zone-section h-8 border-2 border-dashed border-indigo-300 hover:border-indigo-500 hover:h-16 hover:bg-indigo-100 transition-all flex items-center justify-center text-sm text-indigo-600 rounded-lg">
+                <span class="opacity-50 hover:opacity-100">Drop section here</span>
+              </div>
+              <!-- Add Section button (always visible after last section) -->
+              <div 
+                v-else
+                class="flex items-center justify-center">
+                <div class="absolute left-0 right-0 h-px bg-gray-200"></div>
+                <button 
+                  @click="store.addSection('100')"
+                  class="relative z-10 flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-full shadow-lg transition-all hover:scale-105">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                  </svg>
+                  Add Section
+                </button>
+              </div>
             </div>
           </div> <!-- close bg-white min-h-[600px] shadow-lg -->
         </div> <!-- close max-w-* mx-auto transition-all -->
       </main>
-
-      <!-- Right Panel - Properties -->
-      <aside class="w-80 bg-white border-l flex flex-col shrink-0">
-        <div v-if="store.selectedElementData" class="flex flex-col h-full">
-          <!-- Header -->
-          <div class="p-4 border-b flex items-center justify-between">
-            <h3 class="font-medium text-gray-900">
-              {{
-                store.selectedType === 'widget' ? 'Widget Settings' :
-                store.selectedType === 'section' ? 'Section Settings' :
-                store.selectedType === 'container' ? 'Container Settings' :
-                'Column Settings'
-              }}
-            </h3>
-            <button @click="store.selectedElement = null; store.selectedType = null" class="text-gray-400 hover:text-gray-600">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-            </button>
-          </div>
-
-          <!-- Tabs -->
-          <div class="flex border-b">
-            <button @click="store.activeTab = 'content'" :class="store.activeTab === 'content' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'" class="flex-1 py-2 text-sm font-medium border-b-2">Content</button>
-            <button @click="store.activeTab = 'style'" :class="store.activeTab === 'style' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'" class="flex-1 py-2 text-sm font-medium border-b-2">Style</button>
-            <button @click="store.activeTab = 'advanced'" :class="store.activeTab === 'advanced' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500'" class="flex-1 py-2 text-sm font-medium border-b-2">Advanced</button>
-          </div>
-
-          <!-- Hover State & Responsive Controls (Only show in Style tab) -->
-          <div v-if="store.activeTab === 'style'" class="p-3 border-b space-y-3 bg-gray-50">
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-1">Hover State</label>
-              <HoverStateToggle
-                :state="store.hoverState"
-                @update:state="store.hoverState = $event"
-              />
-            </div>
-            <div>
-              <label class="block text-xs font-medium text-gray-700 mb-1">Responsive</label>
-              <ResponsiveToggle
-                :device="store.responsiveDevice"
-                @update:device="store.responsiveDevice = $event"
-              />
-            </div>
-          </div>
-
-          <!-- Controls -->
-          <div class="flex-1 overflow-y-auto p-4">
-            <div v-for="control in store.currentControls" :key="control.name">
-              <ControlRenderer
-                :control="control"
-                :modelValue="store.getSetting(control.name) ?? control.default"
-                @update:modelValue="store.updateSetting(control.name, $event)"
-                @openMedia="store.openMediaLibrary(control.name)"
-              />
-            </div>
-            <div v-if="store.currentControls.length === 0" class="text-sm text-gray-400 text-center py-4">
-              No settings for this tab
-            </div>
-          </div>
-        </div>
-        <div v-else class="flex-1 flex items-center justify-center text-gray-400">
-          <p class="text-sm">Select an element to edit</p>
-        </div>
-      </aside>
     </div>
 
     <!-- Media Library Modal -->
@@ -672,6 +708,92 @@ const draggedSectionIndex = ref(null);
 const draggedSectionLayout = ref(null);
 const draggedWidget = ref(null);
 const isDraggingWidget = ref(false);
+
+// Smart toolbar positioning - adjusts toolbars to stay within canvas bounds
+const vSmartToolbar = {
+  mounted(el, binding) {
+    const adjustPosition = () => {
+      const canvas = document.querySelector('main.flex-1');
+      if (!canvas) return;
+      
+      const canvasRect = canvas.getBoundingClientRect();
+      const toolbarRect = el.getBoundingClientRect();
+      const parentRect = el.parentElement?.getBoundingClientRect();
+      
+      if (!parentRect) return;
+      
+      // Check if visible (opacity > 0)
+      const style = window.getComputedStyle(el);
+      if (style.opacity === '0' || style.display === 'none') return;
+      
+      // Reset classes first to get natural position
+      el.classList.remove('toolbar-flipped', 'toolbar-left-adjusted', 'toolbar-right-adjusted');
+      
+      // Re-measure after reset
+      const freshToolbarRect = el.getBoundingClientRect();
+      
+      // Check if toolbar would overflow at top
+      if (freshToolbarRect.top < canvasRect.top) {
+        el.classList.add('toolbar-flipped');
+      }
+      
+      // Check if toolbar would overflow on the left
+      if (freshToolbarRect.left < canvasRect.left) {
+        el.classList.add('toolbar-left-adjusted');
+      }
+      
+      // Check if toolbar would overflow on the right
+      if (freshToolbarRect.right > canvasRect.right) {
+        el.classList.add('toolbar-right-adjusted');
+      }
+    };
+    
+    // Trigger on parent hover
+    const parent = el.parentElement;
+    if (parent) {
+      parent.addEventListener('mouseenter', () => {
+        // Small delay to allow CSS transition to start/display to update
+        requestAnimationFrame(() => {
+          requestAnimationFrame(adjustPosition);
+        });
+      });
+      
+      // Also check periodically while hovering in case of scroll/changes
+      parent.addEventListener('mousemove', () => {
+        // Debounce or just run if needed? 
+        // For now, just rely on mouseenter + scroll/resize
+      });
+    }
+    
+    // Adjust on scroll
+    const canvas = document.querySelector('main.flex-1');
+    if (canvas) {
+      canvas.addEventListener('scroll', adjustPosition, { passive: true });
+    }
+    
+    // Adjust on resize
+    const resizeObserver = new ResizeObserver(() => {
+      adjustPosition();
+    });
+    resizeObserver.observe(document.body);
+    
+    // Store cleanup function
+    el._smartToolbarCleanup = () => {
+      if (parent) {
+        parent.removeEventListener('mouseenter', adjustPosition);
+      }
+      if (canvas) {
+        canvas.removeEventListener('scroll', adjustPosition);
+      }
+      resizeObserver.disconnect();
+    };
+  },
+  unmounted(el) {
+    if (el._smartToolbarCleanup) {
+      el._smartToolbarCleanup();
+    }
+  }
+};
 
 // Initialize from page data
 onMounted(() => {
@@ -1116,3 +1238,59 @@ function addSectionWithLayout(layout) {
   }, 100);
 }
 </script>
+
+<style scoped>
+/* Settings panel slide transition */
+.slide-settings-enter-active,
+.slide-settings-leave-active {
+  transition: transform 0.25s ease-out, opacity 0.2s ease-out;
+}
+
+.slide-settings-enter-from {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.slide-settings-leave-to {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.slide-settings-enter-to,
+.slide-settings-leave-from {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Smart toolbar positioning - flips and adjusts based on canvas bounds */
+.element-toolbar {
+  transition: top 0.15s ease-out, bottom 0.15s ease-out, left 0.15s ease-out, right 0.15s ease-out;
+}
+
+/* Flip toolbar to bottom when it would overflow at top */
+.element-toolbar.toolbar-flipped {
+  top: auto !important;
+  bottom: -32px !important;
+}
+
+/* Adjust toolbar when it would overflow on left */
+.element-toolbar.toolbar-left-adjusted {
+  left: 0 !important;
+  right: auto !important;
+  transform: none !important;
+}
+
+/* Adjust toolbar when it would overflow on right */
+.element-toolbar.toolbar-right-adjusted {
+  left: auto !important;
+  right: 0 !important;
+  transform: none !important;
+}
+
+/* For centered toolbars that need right adjustment */
+.element-toolbar.toolbar-right-adjusted[data-position="center"] {
+  left: auto !important;
+  right: 0 !important;
+  transform: none !important;
+}
+</style>

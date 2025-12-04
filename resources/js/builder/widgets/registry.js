@@ -62,13 +62,40 @@ widgetRegistry.register("heading", {
                 label: "Text Color",
                 default: "#1f2937",
             },
-            { name: "typography", type: "typography", label: "Typography" },
+            {
+                name: "typography",
+                type: "typography",
+                label: "Typography",
+                options: {
+                    line_height: true,
+                    letter_spacing: true,
+                    text_transform: true,
+                    text_decoration: true,
+                    font_style: true
+                }
+            },
         ],
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
             { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
             { name: "css_id", type: "text", label: "CSS ID" },
+            { 
+                name: "background", 
+                type: "background", 
+                label: "Background" 
+            },
+            { 
+                name: "border", 
+                type: "border", 
+                label: "Border" 
+            },
+            { 
+                name: "box_shadow", 
+                type: "box_shadow", 
+                label: "Box Shadow" 
+            },
             { name: "custom_css", type: "code", label: "Custom CSS" },
         ],
     },
@@ -110,6 +137,12 @@ widgetRegistry.register("text-editor", {
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
             { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
+            { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -148,6 +181,12 @@ widgetRegistry.register("image", {
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
             { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
+            { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -201,7 +240,16 @@ widgetRegistry.register("button", {
                 unit: "px",
             },
         ],
-        advanced: [{ name: "margin", type: "dimensions", label: "Margin" }],
+        advanced: [
+            { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
+            { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
+        ],
     },
 });
 
@@ -238,7 +286,16 @@ widgetRegistry.register("video", {
                 unit: "%",
             },
         ],
-        advanced: [{ name: "margin", type: "dimensions", label: "Margin" }],
+        advanced: [
+            { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
+            { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
+        ],
     },
 });
 
@@ -293,7 +350,16 @@ widgetRegistry.register("divider", {
                 },
             },
         ],
-        advanced: [{ name: "margin", type: "dimensions", label: "Margin" }],
+        advanced: [
+            { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
+            { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
+        ],
     },
 });
 
@@ -314,7 +380,16 @@ widgetRegistry.register("spacer", {
             },
         ],
         style: [],
-        advanced: [],
+        advanced: [
+            { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
+            { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
+        ],
     },
 });
 
@@ -355,7 +430,16 @@ widgetRegistry.register("icon", {
                 unit: "px",
             },
         ],
-        advanced: [{ name: "margin", type: "dimensions", label: "Margin" }],
+        advanced: [
+            { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
+            { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
+        ],
     },
 });
 
@@ -417,6 +501,12 @@ widgetRegistry.register("icon-box", {
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
             { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
+            { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -476,7 +566,16 @@ widgetRegistry.register("counter", {
                 },
             },
         ],
-        advanced: [{ name: "margin", type: "dimensions", label: "Margin" }],
+        advanced: [
+            { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
+            { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
+        ],
     },
 });
 
@@ -531,7 +630,16 @@ widgetRegistry.register("progress-bar", {
                 unit: "px",
             },
         ],
-        advanced: [{ name: "margin", type: "dimensions", label: "Margin" }],
+        advanced: [
+            { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
+            { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
+        ],
     },
 });
 
@@ -585,6 +693,12 @@ widgetRegistry.register("testimonial", {
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
             { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
+            { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -628,7 +742,16 @@ widgetRegistry.register("social-icons", {
                 unit: "px",
             },
         ],
-        advanced: [{ name: "margin", type: "dimensions", label: "Margin" }],
+        advanced: [
+            { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
+            { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
+        ],
     },
 });
 
@@ -672,8 +795,13 @@ widgetRegistry.register("alert", {
         style: [],
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
             { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -732,8 +860,12 @@ widgetRegistry.register("image-box", {
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
             { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
             { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -798,7 +930,13 @@ widgetRegistry.register("star-rating", {
         ],
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -864,7 +1002,12 @@ widgetRegistry.register("tabs", {
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
             { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -941,7 +1084,13 @@ widgetRegistry.register("accordion", {
         ],
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -1023,7 +1172,13 @@ widgetRegistry.register("countdown", {
         ],
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -1063,7 +1218,13 @@ widgetRegistry.register("google-maps", {
         ],
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -1132,7 +1293,12 @@ widgetRegistry.register("call-to-action", {
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
             { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -1232,7 +1398,13 @@ widgetRegistry.register("flip-box", {
         ],
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -1321,7 +1493,12 @@ widgetRegistry.register("price-table", {
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
             { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -1420,7 +1597,12 @@ widgetRegistry.register("form", {
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
             { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -1648,7 +1830,13 @@ widgetRegistry.register("toggle", {
         ],
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -1733,7 +1921,13 @@ widgetRegistry.register("icon-list", {
         ],
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -1790,7 +1984,13 @@ widgetRegistry.register("text-path", {
         ],
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -1882,7 +2082,13 @@ widgetRegistry.register("image-carousel", {
         ],
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -1948,7 +2154,13 @@ widgetRegistry.register("basic-gallery", {
         ],
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -2009,7 +2221,13 @@ widgetRegistry.register("soundcloud", {
         ],
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -2128,8 +2346,11 @@ widgetRegistry.register("container", {
                 default: { type: "default" },
             },
             { name: "z_index", type: "number", label: "Z-Index", default: 0 },
-            { name: "css_id", type: "text", label: "CSS ID" },
             { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -2169,7 +2390,12 @@ widgetRegistry.register("inner-section", {
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
             { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -2189,7 +2415,16 @@ widgetRegistry.register("menu-anchor", {
             },
         ],
         style: [],
-        advanced: [],
+        advanced: [
+            { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
+            { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
+        ],
     },
 });
 
@@ -2214,7 +2449,13 @@ widgetRegistry.register("sidebar", {
         style: [],
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
@@ -2234,7 +2475,16 @@ widgetRegistry.register("html", {
             },
         ],
         style: [],
-        advanced: [{ name: "css_classes", type: "text", label: "CSS Classes" }],
+        advanced: [
+            { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
+            { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
+        ],
     },
 });
 
@@ -2255,7 +2505,13 @@ widgetRegistry.register("shortcode", {
         style: [],
         advanced: [
             { name: "margin", type: "dimensions", label: "Margin" },
+            { name: "padding", type: "dimensions", label: "Padding" },
+            { name: "z_index", type: "number", label: "Z-Index", default: 0 },
             { name: "css_classes", type: "text", label: "CSS Classes" },
+            { name: "css_id", type: "text", label: "CSS ID" },
+            { name: "background", type: "background", label: "Background" },
+            { name: "border", type: "border", label: "Border" },
+            { name: "box_shadow", type: "box_shadow", label: "Box Shadow" },
         ],
     },
 });
