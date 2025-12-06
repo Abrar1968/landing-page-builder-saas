@@ -113,9 +113,9 @@ class BuilderComponentTest extends TestCase
                 'settings' => []
             ]);
 
-        $response->assertStatus(200);
-        $this->page->refresh();
-        $this->assertNotEmpty($this->page->content);
+        // Invalid widget types should be rejected with 422
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['content']);
     }
 
     /** @test */

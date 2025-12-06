@@ -280,7 +280,7 @@
         <div v-else-if="control.type === 'url'" class="space-y-2">
             <input
                 type="url"
-                :value="modelValue?.url || modelValue || ''"
+                :value="getUrlValue()"
                 @input="updateUrl('url', $event.target.value)"
                 placeholder="https://"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
@@ -289,7 +289,7 @@
                 <label class="flex items-center gap-2 cursor-pointer">
                     <input
                         type="checkbox"
-                        :checked="modelValue?.is_external"
+                        :checked="modelValue?.is_external ?? false"
                         @change="
                             updateUrl('is_external', $event.target.checked)
                         "
@@ -300,7 +300,7 @@
                 <label class="flex items-center gap-2 cursor-pointer">
                     <input
                         type="checkbox"
-                        :checked="modelValue?.nofollow"
+                        :checked="modelValue?.nofollow ?? false"
                         @change="updateUrl('nofollow', $event.target.checked)"
                         class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                     />
@@ -1620,5 +1620,14 @@ function updateResponsiveVisibility(key, value) {
         ...current,
         [key]: value,
     });
+}
+
+// URL control helper - extracts URL string from object or string value
+function getUrlValue() {
+    const val = props.modelValue;
+    if (!val) return '';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'object' && val.url) return val.url;
+    return '';
 }
 </script>

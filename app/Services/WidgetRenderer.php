@@ -9,6 +9,209 @@ class WidgetRenderer
     ) {}
 
     /**
+     * Build CSS classes for responsive visibility and motion effects
+     */
+    protected function buildWrapperClasses(array $settings): string
+    {
+        $classes = [];
+
+        // CSS Classes from settings
+        if (!empty($settings['css_classes'])) {
+            $classes[] = e($settings['css_classes']);
+        }
+
+        // Responsive visibility classes
+        if (!empty($settings['responsive_visibility'])) {
+            $visibility = $settings['responsive_visibility'];
+            if (!empty($visibility['hide_desktop'])) {
+                $classes[] = 'hidden-desktop';
+            }
+            if (!empty($visibility['hide_tablet'])) {
+                $classes[] = 'hidden-tablet';
+            }
+            if (!empty($visibility['hide_mobile'])) {
+                $classes[] = 'hidden-mobile';
+            }
+        }
+
+        // Motion effects - entrance animation
+        if (!empty($settings['motion_effects'])) {
+            $motion = $settings['motion_effects'];
+
+            // Entrance animation
+            if (!empty($motion['entrance_animation']) && $motion['entrance_animation'] !== 'none') {
+                $animation = $motion['entrance_animation'];
+                $duration = $motion['animation_duration'] ?? 'normal';
+                $classes[] = "animate-{$animation}";
+                if ($duration !== 'normal') {
+                    $classes[] = "animate-{$duration}";
+                }
+            }
+
+            // Sticky effect
+            if (!empty($motion['sticky']) && $motion['sticky'] !== 'none') {
+                $classes[] = 'sticky-element';
+            }
+
+            // Parallax effect
+            if (!empty($motion['scrolling_effect']) && $motion['scrolling_effect'] === 'parallax') {
+                $classes[] = 'parallax-element';
+            }
+        }
+
+        return implode(' ', $classes);
+    }
+
+    /**
+     * Build inline styles for wrapper element
+     */
+    protected function buildWrapperStyles(array $settings): string
+    {
+        $styles = [];
+
+        // Margin
+        if (!empty($settings['margin']) && is_array($settings['margin'])) {
+            $m = $settings['margin'];
+            $unit = $m['unit'] ?? 'px';
+            $top = $m['top'] ?? 0;
+            $right = $m['right'] ?? 0;
+            $bottom = $m['bottom'] ?? 0;
+            $left = $m['left'] ?? 0;
+            if ($top || $right || $bottom || $left) {
+                $styles[] = "margin: {$top}{$unit} {$right}{$unit} {$bottom}{$unit} {$left}{$unit}";
+            }
+        }
+
+        // Padding
+        if (!empty($settings['padding']) && is_array($settings['padding'])) {
+            $p = $settings['padding'];
+            $unit = $p['unit'] ?? 'px';
+            $top = $p['top'] ?? 0;
+            $right = $p['right'] ?? 0;
+            $bottom = $p['bottom'] ?? 0;
+            $left = $p['left'] ?? 0;
+            if ($top || $right || $bottom || $left) {
+                $styles[] = "padding: {$top}{$unit} {$right}{$unit} {$bottom}{$unit} {$left}{$unit}";
+            }
+        }
+
+        // Background color
+        if (!empty($settings['background_color'])) {
+            $styles[] = "background-color: {$settings['background_color']}";
+        }
+
+        // Border
+        if (!empty($settings['border']) && is_array($settings['border'])) {
+            $border = $settings['border'];
+            if (!empty($border['type']) && $border['type'] !== 'none') {
+                $borderColor = $border['color'] ?? '#000000';
+                $borderType = $border['type'];
+                $borderWidth = 1;
+
+                if (!empty($border['width']) && is_array($border['width'])) {
+                    $borderWidth = $border['width']['top'] ?? 1;
+                } elseif (!empty($border['width'])) {
+                    $borderWidth = $border['width'];
+                }
+
+                $styles[] = "border: {$borderWidth}px {$borderType} {$borderColor}";
+            }
+        }
+
+        // Border radius
+        if (!empty($settings['border_radius']) && is_array($settings['border_radius'])) {
+            $br = $settings['border_radius'];
+            $unit = $br['unit'] ?? 'px';
+            $topLeft = $br['topLeft'] ?? 0;
+            $topRight = $br['topRight'] ?? 0;
+            $bottomRight = $br['bottomRight'] ?? 0;
+            $bottomLeft = $br['bottomLeft'] ?? 0;
+            if ($topLeft || $topRight || $bottomRight || $bottomLeft) {
+                $styles[] = "border-radius: {$topLeft}{$unit} {$topRight}{$unit} {$bottomRight}{$unit} {$bottomLeft}{$unit}";
+            }
+        }
+
+        // Box shadow
+        if (!empty($settings['box_shadow']) && is_array($settings['box_shadow'])) {
+            $shadow = $settings['box_shadow'];
+            if (!empty($shadow['color'])) {
+                $h = $shadow['horizontal'] ?? 0;
+                $v = $shadow['vertical'] ?? 0;
+                $blur = $shadow['blur'] ?? 10;
+                $spread = $shadow['spread'] ?? 0;
+                $color = $shadow['color'];
+                $position = !empty($shadow['position']) && $shadow['position'] === 'inset' ? 'inset ' : '';
+                $styles[] = "box-shadow: {$position}{$h}px {$v}px {$blur}px {$spread}px {$color}";
+            }
+        }
+
+        // Z-index
+        if (!empty($settings['z_index'])) {
+            $styles[] = "z-index: {$settings['z_index']}";
+        }
+
+        // Motion effects - sticky offset
+        if (!empty($settings['motion_effects']['sticky']) && $settings['motion_effects']['sticky'] !== 'none') {
+            $offset = $settings['motion_effects']['sticky_offset'] ?? 0;
+            $sticky = $settings['motion_effects']['sticky'];
+            if ($sticky === 'top') {
+                $styles[] = "position: sticky";
+                $styles[] = "top: {$offset}px";
+            } elseif ($sticky === 'bottom') {
+                $styles[] = "position: sticky";
+                $styles[] = "bottom: {$offset}px";
+            }
+        }
+
+        // Animation delay
+        if (!empty($settings['motion_effects']['animation_delay'])) {
+            $delay = $settings['motion_effects']['animation_delay'];
+            $styles[] = "animation-delay: {$delay}ms";
+        }
+
+        return implode('; ', $styles);
+    }
+
+    /**
+     * Build complete wrapper attributes string
+     */
+    protected function buildWrapperAttributes(array $settings): string
+    {
+        $attrs = [];
+
+        // ID
+        if (!empty($settings['css_id'])) {
+            $attrs[] = 'id="' . e($settings['css_id']) . '"';
+        }
+
+        // Classes
+        $classes = $this->buildWrapperClasses($settings);
+        if (!empty($classes)) {
+            $attrs[] = 'class="' . $classes . '"';
+        }
+
+        // Styles
+        $styles = $this->buildWrapperStyles($settings);
+        if (!empty($styles)) {
+            $attrs[] = 'style="' . $styles . '"';
+        }
+
+        // Data attributes for motion effects
+        if (!empty($settings['motion_effects'])) {
+            $motion = $settings['motion_effects'];
+            if (!empty($motion['entrance_animation']) && $motion['entrance_animation'] !== 'none') {
+                $attrs[] = 'data-animation="' . e($motion['entrance_animation']) . '"';
+            }
+            if (!empty($motion['scrolling_effect']) && $motion['scrolling_effect'] === 'parallax') {
+                $speed = $motion['parallax_speed'] ?? 0.5;
+                $attrs[] = 'data-parallax-speed="' . e($speed) . '"';
+            }
+        }
+
+        return implode(' ', $attrs);
+    }
+
+    /**
      * Render a widget to HTML
      */
     public function render(array $widget): string
@@ -176,6 +379,12 @@ class WidgetRenderer
             $headingContent .= "\n<style>" . $settings['custom_css'] . "</style>";
         }
 
+        // Wrap with responsive visibility and motion effects
+        $wrapperAttrs = $this->buildWrapperAttributes($settings);
+        if (!empty($wrapperAttrs)) {
+            $headingContent = "<div {$wrapperAttrs}>{$headingContent}</div>";
+        }
+
         return $headingContent;
     }
 
@@ -189,7 +398,16 @@ class WidgetRenderer
         $color = $settings['text_color'] ?? '#4b5563';
         $alignment = $settings['alignment'] ?? 'left';
 
-        return "<div style=\"color: {$color}; text-align: {$alignment};\">{$content}</div>";
+        // Build wrapper classes for responsive visibility and motion effects
+        $wrapperClasses = $this->buildWrapperClasses($settings);
+        $wrapperStyles = $this->buildWrapperStyles($settings);
+        $classAttr = !empty($wrapperClasses) ? ' class="' . $wrapperClasses . '"' : '';
+        $styleAttr = "color: {$color}; text-align: {$alignment};";
+        if (!empty($wrapperStyles)) {
+            $styleAttr .= ' ' . $wrapperStyles;
+        }
+
+        return "<div{$classAttr} style=\"{$styleAttr}\">{$content}</div>";
     }
 
     protected function renderImage(array $settings): string
@@ -276,6 +494,15 @@ class WidgetRenderer
 
         $html .= "</div>";
 
+        // Add responsive visibility and motion effects wrapper
+        $wrapperClasses = $this->buildWrapperClasses($settings);
+        $wrapperStyles = $this->buildWrapperStyles($settings);
+        if (!empty($wrapperClasses) || !empty($wrapperStyles)) {
+            $classAttr = !empty($wrapperClasses) ? ' class="' . $wrapperClasses . '"' : '';
+            $styleAttr = !empty($wrapperStyles) ? ' style="' . $wrapperStyles . '"' : '';
+            $html = "<div{$classAttr}{$styleAttr}>{$html}</div>";
+        }
+
         return $html;
     }
 
@@ -337,7 +564,13 @@ class WidgetRenderer
         // Add inline hover style via CSS
         $hoverCss = "<style>#{$btnId}:hover{background-color:{$hoverBgColor}!important;color:{$hoverTextColor}!important;border-color:{$hoverBorderColor}!important;}</style>";
 
-        return "{$hoverCss}<div style=\"text-align: {$alignment};\"><a id=\"{$btnId}\" href=\"{$link}\" target=\"{$target}\" style=\"{$styles}\">{$buttonContent}</a></div>";
+        // Build wrapper classes and styles
+        $wrapperClasses = $this->buildWrapperClasses($settings);
+        $wrapperStyles = $this->buildWrapperStyles($settings);
+        $wrapperClassAttr = !empty($wrapperClasses) ? ' class="' . $wrapperClasses . '"' : '';
+        $wrapperStyleAttr = !empty($wrapperStyles) ? ' ' . $wrapperStyles : '';
+
+        return "{$hoverCss}<div{$wrapperClassAttr} style=\"text-align: {$alignment};{$wrapperStyleAttr}\"><a id=\"{$btnId}\" href=\"{$link}\" target=\"{$target}\" style=\"{$styles}\">{$buttonContent}</a></div>";
     }
 
     protected function renderVideo(array $settings): string

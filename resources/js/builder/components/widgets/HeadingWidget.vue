@@ -2,6 +2,7 @@
   <component
     :is="headingTag"
     :style="headingStyles"
+    :class="[`heading-widget-${widgetId}`, 'transition-all duration-300']"
   >
     <a
       v-if="settings.link?.url"
@@ -16,15 +17,25 @@
       {{ settings.title ?? 'Heading' }}
     </template>
   </component>
+  <!-- Inject scoped hover styles -->
+  <component :is="'style'" v-if="hasHoverStyles">
+    .heading-widget-{{ widgetId }}:hover {
+      {{ hoverStylesCSS }}
+    }
+  </component>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 
 const props = defineProps({
   settings: {
     type: Object,
     required: true
+  },
+  hoverSettings: {
+    type: Object,
+    default: () => ({})
   },
   widgetId: {
     type: String,
@@ -32,29 +43,26 @@ const props = defineProps({
   }
 });
 
-// Format dimensions helper
-const formatDimensions = (dims) => {
-  if (!dims) return '';
-  if (dims.linked) {
-    const val = dims.top ?? 0;
-    return `${val}px`;
-  }
-  return `${dims.top ?? 0}px ${dims.right ?? 0}px ${dims.bottom ?? 0}px ${dims.left ?? 0}px`;
-};
+// DEBUG: Watch for settings changes
+watch(() => props.settings, (newVal, oldVal) => {
+  console.log('[HeadingWidget] Settings changed for', props.widgetId);
+  console.log('[HeadingWidget] New settings:', JSON.stringify(newVal));
+}, { deep: true });
 
 // Computed property for heading tag (H1-H6)
 const headingTag = computed(() => {
   return props.settings.size || props.settings.tag || 'h2';
 });
 
-// Computed property for heading styles
+// Computed property for heading styles (text-specific only - wrapper handles margin/padding/background/border)
 const headingStyles = computed(() => {
   const typography = props.settings.typography || {};
   const styles = {
     color: props.settings.text_color ?? '#1f2937',
     textAlign: props.settings.alignment ?? 'left',
-    margin: formatDimensions(props.settings.margin),
-    padding: formatDimensions(props.settings.padding)
+    // Remove default margin on heading elements
+    margin: 0,
+    padding: 0
   };
 
   // Font Family
@@ -88,12 +96,9 @@ const headingStyles = computed(() => {
     }
   }
 
-  // Font Weight
+  // Font Weight - always apply if set
   if (typography.weight) {
-    const weight = typeof typography.weight === 'string' ? typography.weight : String(typography.weight);
-    if (weight && weight !== '400' && weight !== 'Normal') {
-      styles.fontWeight = weight;
-    }
+    styles.fontWeight = typography.weight;
   }
 
   // Line Height
@@ -130,5 +135,37 @@ const headingStyles = computed(() => {
   }
 
   return styles;
+});
+
+// Check if we have any hover styles
+const hasHoverStyles = computed(() => {
+  const h = props.hoverSettings;
+  return h && (h.text_color || h.typography);
+});
+
+// Generate hover CSS string
+const hoverStylesCSS = computed(() => {
+  const h = props.hoverSettings;
+  if (!h) return '';
+
+  const rules = [];
+
+  if (h.text_color) {
+    rules.push(`color: ${h.text_color} !important`);
+  }
+
+  if (h.typography) {
+    const t = h.typography;
+    if (t.size) rules.push(`font-size: ${t.size}${t.sizeUnit || 'px'} !important`);
+    if (t.weight) rules.push(`font-weight: ${t.weight} !important`);
+    if (t.letterSpacing) rules.push(`letter-spacing: ${t.letterSpacing}px !important`);
+  }
+
+  if (h.text_shadow) {
+    const s = h.text_shadow;
+    rules.push(`text-shadow: ${s.horizontal ?? 0}px ${s.vertical ?? 0}px ${s.blur ?? 0}px ${s.color ?? 'rgba(0,0,0,0.3)'} !important`);
+  }
+
+  return rules.join('; ');
 });
 </script>

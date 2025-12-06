@@ -72,8 +72,8 @@
           <div v-if="store.selectedElementData" class="flex flex-col h-full absolute inset-0 bg-white z-10" style="width: 288px;">
             <!-- Back Button & Header -->
             <div class="p-3 border-b bg-gray-50">
-              <button 
-                @click="store.clearSelection()" 
+              <button
+                @click="store.clearSelection()"
                 class="flex items-center gap-2 text-sm text-gray-600 hover:text-indigo-600 transition-colors mb-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -198,9 +198,12 @@
       </aside>
 
       <!-- Canvas -->
-      <main class="flex-1 bg-gray-200 overflow-auto">
-        <div class="h-full">
-          <div class="bg-white min-h-full">
+      <main class="flex-1 bg-gray-200 overflow-auto flex justify-center">
+        <div
+          class="h-full transition-all duration-300"
+          :style="canvasWidthStyle"
+        >
+          <div class="bg-white min-h-full shadow-lg">
             <!-- Empty state -->
             <div v-if="store.content.length === 0" class="flex flex-col items-center justify-center h-96 text-gray-400">
               <svg class="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
@@ -234,11 +237,11 @@
                   <span class="opacity-50 hover:opacity-100">Drop section here</span>
                 </div>
                 <!-- Add Section button (visible on hover when not dragging) -->
-                <div 
+                <div
                   v-else
                   class="h-1 flex items-center justify-center opacity-0 group-hover/divider:opacity-100 transition-all">
                   <div class="absolute left-0 right-0 h-px bg-indigo-300"></div>
-                  <button 
+                  <button
                     @click="store.addSectionAtIndex('100', sectionIndex)"
                     class="relative z-10 flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-full shadow-lg transition-all hover:scale-105">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -397,11 +400,11 @@
                 <span class="opacity-50 hover:opacity-100">Drop section here</span>
               </div>
               <!-- Add Section button (always visible after last section) -->
-              <div 
+              <div
                 v-else
                 class="flex items-center justify-center">
                 <div class="absolute left-0 right-0 h-px bg-gray-200"></div>
-                <button 
+                <button
                   @click="store.addSection('100')"
                   class="relative z-10 flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-full shadow-lg transition-all hover:scale-105">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -682,7 +685,7 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { onMounted, onUnmounted, reactive, ref, computed } from 'vue';
 import { useBuilderStore } from './stores/builder';
 import WidgetRenderer from './components/WidgetRenderer.vue';
 import ControlRenderer from './components/ControlRenderer.vue';
@@ -694,6 +697,18 @@ import Navigator from './components/Navigator.vue';
 
 const store = useBuilderStore();
 const backUrl = '/pages';
+
+// Canvas width based on preview mode
+const canvasWidthStyle = computed(() => {
+  switch (store.previewMode) {
+    case 'tablet':
+      return { width: '768px', maxWidth: '100%' };
+    case 'mobile':
+      return { width: '375px', maxWidth: '100%' };
+    default: // desktop
+      return { width: '100%' };
+  }
+});
 
 // Context menu state
 const contextMenu = reactive({
@@ -715,39 +730,39 @@ const vSmartToolbar = {
     const adjustPosition = () => {
       const canvas = document.querySelector('main.flex-1');
       if (!canvas) return;
-      
+
       const canvasRect = canvas.getBoundingClientRect();
       const toolbarRect = el.getBoundingClientRect();
       const parentRect = el.parentElement?.getBoundingClientRect();
-      
+
       if (!parentRect) return;
-      
+
       // Check if visible (opacity > 0)
       const style = window.getComputedStyle(el);
       if (style.opacity === '0' || style.display === 'none') return;
-      
+
       // Reset classes first to get natural position
       el.classList.remove('toolbar-flipped', 'toolbar-left-adjusted', 'toolbar-right-adjusted');
-      
+
       // Re-measure after reset
       const freshToolbarRect = el.getBoundingClientRect();
-      
+
       // Check if toolbar would overflow at top
       if (freshToolbarRect.top < canvasRect.top) {
         el.classList.add('toolbar-flipped');
       }
-      
+
       // Check if toolbar would overflow on the left
       if (freshToolbarRect.left < canvasRect.left) {
         el.classList.add('toolbar-left-adjusted');
       }
-      
+
       // Check if toolbar would overflow on the right
       if (freshToolbarRect.right > canvasRect.right) {
         el.classList.add('toolbar-right-adjusted');
       }
     };
-    
+
     // Trigger on parent hover
     const parent = el.parentElement;
     if (parent) {
@@ -757,26 +772,26 @@ const vSmartToolbar = {
           requestAnimationFrame(adjustPosition);
         });
       });
-      
+
       // Also check periodically while hovering in case of scroll/changes
       parent.addEventListener('mousemove', () => {
-        // Debounce or just run if needed? 
+        // Debounce or just run if needed?
         // For now, just rely on mouseenter + scroll/resize
       });
     }
-    
+
     // Adjust on scroll
     const canvas = document.querySelector('main.flex-1');
     if (canvas) {
       canvas.addEventListener('scroll', adjustPosition, { passive: true });
     }
-    
+
     // Adjust on resize
     const resizeObserver = new ResizeObserver(() => {
       adjustPosition();
     });
     resizeObserver.observe(document.body);
-    
+
     // Store cleanup function
     el._smartToolbarCleanup = () => {
       if (parent) {

@@ -29,3 +29,163 @@
 
   --shadow-glow: 0 0 20px rgb(99 102 241 / 0.3);
 }
+
+/* ============================================
+   Responsive Visibility Classes
+   ============================================ */
+
+/* Desktop: >= 1025px */
+@media (min-width: 1025px) {
+  .hidden-desktop {
+    display: none !important;
+  }
+}
+
+/* Tablet: 768px - 1024px */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .hidden-tablet {
+    display: none !important;
+  }
+}
+
+/* Mobile: < 768px */
+@media (max-width: 767px) {
+  .hidden-mobile {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   Animation Classes for Motion Effects
+   ============================================ */
+
+/* Hidden state before animation triggers */
+.animation-hidden {
+  opacity: 0;
+}
+
+/* Entrance Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slideInUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes zoomIn {
+  from { opacity: 0; transform: scale(0.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes zoomOut {
+  from { opacity: 0; transform: scale(1.5); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(0.3); }
+  50% { transform: scale(1.05); }
+  70% { transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes rotateIn {
+  from { opacity: 0; transform: rotate(-200deg); }
+  to { opacity: 1; transform: rotate(0); }
+}
+
+@keyframes flipInX {
+  from { opacity: 0; transform: perspective(400px) rotateX(90deg); }
+  to { opacity: 1; transform: perspective(400px) rotateX(0); }
+}
+
+@keyframes flipInY {
+  from { opacity: 0; transform: perspective(400px) rotateY(90deg); }
+  to { opacity: 1; transform: perspective(400px) rotateY(0); }
+}
+
+/* Animation Classes */
+.animate-fadeIn { animation: fadeIn 1s ease-out forwards; }
+.animate-fadeInDown { animation: fadeInDown 1s ease-out forwards; }
+.animate-fadeInUp { animation: fadeInUp 1s ease-out forwards; }
+.animate-fadeInLeft { animation: fadeInLeft 1s ease-out forwards; }
+.animate-fadeInRight { animation: fadeInRight 1s ease-out forwards; }
+.animate-slideInDown { animation: slideInDown 1s ease-out forwards; }
+.animate-slideInUp { animation: slideInUp 1s ease-out forwards; }
+.animate-slideInLeft { animation: slideInLeft 1s ease-out forwards; }
+.animate-slideInRight { animation: slideInRight 1s ease-out forwards; }
+.animate-zoomIn { animation: zoomIn 1s ease-out forwards; }
+.animate-zoomOut { animation: zoomOut 1s ease-out forwards; }
+.animate-bounceIn { animation: bounceIn 1s ease-out forwards; }
+.animate-rotateIn { animation: rotateIn 1s ease-out forwards; }
+.animate-flipInX { animation: flipInX 1s ease-out forwards; }
+.animate-flipInY { animation: flipInY 1s ease-out forwards; }
+
+/* Animation Duration Variants */
+.animation-duration-500 { animation-duration: 500ms !important; }
+.animation-duration-600 { animation-duration: 600ms !important; }
+.animation-duration-700 { animation-duration: 700ms !important; }
+.animation-duration-800 { animation-duration: 800ms !important; }
+.animation-duration-900 { animation-duration: 900ms !important; }
+.animation-duration-1000 { animation-duration: 1000ms !important; }
+.animation-duration-1100 { animation-duration: 1100ms !important; }
+.animation-duration-1200 { animation-duration: 1200ms !important; }
+.animation-duration-1500 { animation-duration: 1500ms !important; }
+.animation-duration-2000 { animation-duration: 2000ms !important; }
+
+/* Sticky Positioning */
+.sticky-top {
+  position: sticky !important;
+  top: 0;
+  z-index: 100;
+}
+
+.sticky-bottom {
+  position: sticky !important;
+  bottom: 0;
+  z-index: 100;
+}
+
+/* Parallax Effect Base */
+.parallax-scroll {
+  will-change: transform;
+}
+

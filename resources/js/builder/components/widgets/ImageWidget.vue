@@ -1,31 +1,34 @@
 <template>
-  <div :style="containerStyles">
+  <div :style="containerStyles" :class="alignmentClass">
     <component
       :is="settings.link ? 'a' : 'div'"
       :href="settings.link || undefined"
       :target="settings.link && settings.link_target ? '_blank' : undefined"
-      class="inline-block"
+      :rel="settings.link && settings.link_target ? 'noopener noreferrer' : undefined"
+      class="inline-block image-link-wrapper"
     >
       <img
         v-if="settings.image_url"
         :src="settings.image_url"
         :alt="settings.alt_text ?? ''"
         :style="imageStyles"
-        :class="['transition-all duration-300', `image-widget-${widgetId}`, hoverClass]"
+        :class="['transition-all duration-300', imageWidgetClass, hoverClass]"
       />
       <div v-else class="image-placeholder">
         <span>🖼</span>
         <span>Click to add image</span>
       </div>
     </component>
-    <p v-if="settings.caption" class="caption">{{ settings.caption }}</p>
+    <p v-if="settings.caption" :style="captionStyles" class="caption">{{ settings.caption }}</p>
     <!-- Inject scoped hover styles -->
-    <component :is="'style'" v-if="settings.hover_animation && settings.hover_animation !== 'none'">
-      .image-widget-{{ widgetId }}.hover-zoom:hover { transform: scale(1.1); }
-      .image-widget-{{ widgetId }}.hover-zoom_out:hover { transform: scale(0.9); }
-      .image-widget-{{ widgetId }}.hover-grayscale:hover { filter: grayscale(100%); }
-      .image-widget-{{ widgetId }}.hover-blur:hover { filter: blur(3px); }
-      .image-widget-{{ widgetId }}.hover-brightness:hover { filter: brightness(1.2); }
+    <component :is="'style'" v-if="hasHoverAnimation">
+      .{{ imageWidgetClass }}.hover-zoom:hover { transform: scale(1.1) !important; }
+      .{{ imageWidgetClass }}.hover-zoom_out:hover { transform: scale(0.9) !important; }
+      .{{ imageWidgetClass }}.hover-grayscale:hover { filter: grayscale(100%) !important; }
+      .{{ imageWidgetClass }}.hover-blur:hover { filter: blur(3px) !important; }
+      .{{ imageWidgetClass }}.hover-brightness:hover { filter: brightness(1.2) !important; }
+      .{{ imageWidgetClass }}.hover-sepia:hover { filter: sepia(100%) !important; }
+      .{{ imageWidgetClass }}.hover-rotate:hover { transform: rotate(5deg) !important; }
     </component>
   </div>
 </template>
@@ -41,39 +44,71 @@ const props = defineProps({
   widgetId: {
     type: String,
     required: true
+  },
+  hoverSettings: {
+    type: Object,
+    default: () => ({})
   }
 });
 
-// Format dimensions helper
-const formatDimensions = (dims) => {
-  if (!dims) return '';
-  if (dims.linked) {
-    const val = dims.top ?? 0;
-    return `${val}px`;
-  }
-  return `${dims.top ?? 0}px ${dims.right ?? 0}px ${dims.bottom ?? 0}px ${dims.left ?? 0}px`;
-};
+// Unique class for this widget instance
+const imageWidgetClass = computed(() => `image-widget-${props.widgetId}`);
 
-// Container styles
+// Check if hover animation is enabled
+const hasHoverAnimation = computed(() => {
+  const animation = props.settings.hover_animation;
+  return animation && animation !== 'none';
+});
+
+// Alignment class for flex container
+const alignmentClass = computed(() => {
+  const alignment = props.settings.alignment;
+  if (!alignment || alignment === 'left') return 'text-left';
+  if (alignment === 'center') return 'text-center';
+  if (alignment === 'right') return 'text-right';
+  return '';
+});
+
+// Container styles (minimal - WidgetRenderer handles most)
 const containerStyles = computed(() => {
-  const alignment = props.settings.alignment ?? 'left';
+  return {};
+});
+
+// Caption styles
+const captionStyles = computed(() => {
   return {
-    textAlign: alignment,
-    margin: formatDimensions(props.settings.margin),
-    padding: formatDimensions(props.settings.padding)
+    marginTop: '0.5rem',
+    fontSize: '0.875rem',
+    color: props.settings.caption_color ?? '#6b7280',
+    textAlign: props.settings.alignment ?? 'center'
   };
 });
 
 // Image element styles
 const imageStyles = computed(() => {
   const styles = {
-    width: (props.settings.width ?? 100) + '%',
-    opacity: props.settings.opacity ?? 1,
+    maxWidth: '100%',
+    height: 'auto',
+    display: 'block'
   };
 
-  // Max width
+  // Width percentage
+  const width = props.settings.width;
+  if (width !== undefined && width !== null) {
+    styles.width = width + '%';
+  } else {
+    styles.width = '100%';
+  }
+
+  // Max width in pixels
   if (props.settings.max_width && props.settings.max_width > 0) {
     styles.maxWidth = props.settings.max_width + 'px';
+  }
+
+  // Opacity
+  const opacity = props.settings.opacity;
+  if (opacity !== undefined && opacity !== null && opacity !== 1) {
+    styles.opacity = opacity;
   }
 
   // Build CSS filter string
@@ -96,6 +131,11 @@ const imageStyles = computed(() => {
 
   if (filters.length > 0) {
     styles.filter = filters.join(' ');
+  }
+
+  // Border radius for image itself
+  if (props.settings.image_border_radius) {
+    styles.borderRadius = props.settings.image_border_radius + 'px';
   }
 
   return styles;
@@ -131,6 +171,21 @@ const hoverClass = computed(() => {
   margin-top: 0.5rem;
   font-size: 0.875rem;
   color: #6b7280;
+}
+
+.image-link-wrapper {
+  display: inline-block;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-center {
   text-align: center;
+}
+
+.text-right {
+  text-align: right;
 }
 </style>

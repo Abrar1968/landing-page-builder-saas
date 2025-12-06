@@ -511,7 +511,13 @@ export const useBuilderStore = defineStore('builder', () => {
 
     function updateSetting(name, value) {
         const el = selectedElementData.value;
-        if (!el) return;
+        if (!el) {
+            console.error('[updateSetting] No element selected!');
+            return;
+        }
+
+        console.log('[updateSetting] Setting:', name, '=', JSON.stringify(value));
+        console.log('[updateSetting] Element ID:', el.id, 'Type:', el.elType);
 
         addToHistory();
 
@@ -541,13 +547,19 @@ export const useBuilderStore = defineStore('builder', () => {
             };
         }
 
+        console.log('[updateSetting] New settings:', JSON.stringify(el.settings));
+
         // Update settings hash to trigger additional reactivity
         el.settingsHash = Date.now();
+
+        console.log('[updateSetting] New settingsHash:', el.settingsHash);
 
         // Force Vue reactivity by updating the content array reference
         content.value = [...content.value];
 
         isDirty.value = true;
+        
+        console.log('[updateSetting] Done. isDirty:', isDirty.value);
     }
 
     function deleteElement(id) {
