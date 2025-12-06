@@ -110,6 +110,36 @@ export const useBuilderStore = defineStore('builder', () => {
         return undefined;
     }
 
+    // Deep clone helper for proper reactivity
+    function deepClone(obj) {
+        if (obj === null || typeof obj !== 'object') return obj;
+        if (Array.isArray(obj)) return obj.map(item => deepClone(item));
+        const cloned = {};
+        for (const key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                cloned[key] = deepClone(obj[key]);
+            }
+        }
+        return cloned;
+    }
+
+    // Replace element in nested content structure with new reference
+    function replaceElementInContent(id, newElement, elements) {
+        for (let i = 0; i < elements.length; i++) {
+            if (elements[i].id === id) {
+                elements[i] = newElement;
+                return true;
+            }
+            if (elements[i].elements) {
+                // Clone the parent element too if child is found
+                if (replaceElementInContent(id, newElement, elements[i].elements)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     function getWidgetDefaults(widgetType) {
         const widget = widgetRegistry.get(widgetType);
         if (!widget) return {};
@@ -521,44 +551,44 @@ export const useBuilderStore = defineStore('builder', () => {
 
         addToHistory();
 
+        // Create a new element object with updated settings for proper Vue reactivity
+        const newElement = {
+            ...el,
+            settings: { ...(el.settings || {}) },
+            hover_settings: { ...(el.hover_settings || {}) },
+            settingsHash: Date.now()
+        };
+
         // Update hover state settings
         if (hoverState.value === 'hover') {
-            // Create new object to trigger reactivity
-            el.hover_settings = {
-                ...(el.hover_settings || {}),
-                [name]: value
-            };
+            newElement.hover_settings[name] = value;
         }
         // Update responsive device settings
         else if (responsiveDevice.value !== 'desktop') {
             const deviceKey = `${name}_${responsiveDevice.value}`;
-            // Create new settings object to trigger reactivity
-            el.settings = {
-                ...(el.settings || {}),
-                [deviceKey]: value
-            };
+            newElement.settings[deviceKey] = value;
         }
         // Update normal desktop settings
         else {
-            // Create new settings object to trigger reactivity
-            el.settings = {
-                ...(el.settings || {}),
-                [name]: value
-            };
+            newElement.settings[name] = value;
         }
 
-        console.log('[updateSetting] New settings:', JSON.stringify(el.settings));
+        // If element has nested elements, preserve them
+        if (el.elements) {
+            newElement.elements = el.elements;
+        }
 
-        // Update settings hash to trigger additional reactivity
-        el.settingsHash = Date.now();
+        console.log('[updateSetting] New settings:', JSON.stringify(newElement.settings));
+        console.log('[updateSetting] New settingsHash:', newElement.settingsHash);
 
-        console.log('[updateSetting] New settingsHash:', el.settingsHash);
+        // Replace the element in the content tree with the new reference
+        replaceElementInContent(el.id, newElement, content.value);
 
-        // Force Vue reactivity by updating the content array reference
+        // Force Vue reactivity by creating new array reference
         content.value = [...content.value];
 
         isDirty.value = true;
-        
+
         console.log('[updateSetting] Done. isDirty:', isDirty.value);
     }
 
