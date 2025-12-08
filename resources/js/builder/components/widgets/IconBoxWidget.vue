@@ -4,7 +4,7 @@
     :href="settings.link?.url"
     :target="settings.link?.is_external ? '_blank' : undefined"
     :style="containerStyles"
-    :class="['icon-box-wrapper block no-underline', layoutClass, `icon-box-${widgetId}`]"
+    :class="['icon-box-wrapper block no-underline', layoutClass, `icon-box-${widgetId}`, hoverAnimationClass]"
   >
     <div class="icon-box-icon" :style="iconStyles">{{ settings.icon ?? '⚡' }}</div>
     <div class="icon-box-content" :style="contentStyles">
@@ -75,6 +75,13 @@ const descriptionStyles = computed(() => ({
 }));
 
 const hasHoverStyles = computed(() =>
-  props.settings.hover_icon_color || props.settings.hover_title_color
+  props.settings.hover_icon_color || props.settings.hover_title_color || props.settings.hover_animation
 );
+
+// Hover animation class
+const hoverAnimationClass = computed(() => {
+  const animation = props.settings.hover_animation;
+  if (!animation || animation === 'none') return '';
+  return `icon-box-hover-${animation}`;
+});
 </script>

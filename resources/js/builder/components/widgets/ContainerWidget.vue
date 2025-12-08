@@ -23,15 +23,49 @@ const contentWidthClass = computed(() =>
   props.settings.content_width === 'boxed' ? 'max-w-7xl mx-auto px-4' : 'w-full'
 );
 
-const containerStyles = computed(() => ({
-  minHeight: (props.settings.min_height ?? 100) + 'px',
-  backgroundColor: props.settings.background_color ?? 'transparent',
-  backgroundImage: props.settings.background_image ? `url(${props.settings.background_image})` : 'none',
-  backgroundSize: props.settings.background_size ?? 'cover',
-  backgroundPosition: props.settings.background_position ?? 'center',
-  padding: formatDimensions(props.settings.padding),
-  margin: formatDimensions(props.settings.margin)
-}));
+const containerStyles = computed(() => {
+  const s = props.settings;
+  const styles = {};
+
+  // Layout
+  if (s.container_layout === 'flex' || s.flex_direction) {
+    styles.display = 'flex';
+  }
+  if (s.flex_direction) styles.flexDirection = s.flex_direction;
+  if (s.justify_content) styles.justifyContent = s.justify_content;
+  if (s.align_items) styles.alignItems = s.align_items;
+  if (s.flex_wrap) styles.flexWrap = s.flex_wrap;
+  if (s.gaps) {
+    const gap = s.gaps;
+    styles.gap = `${gap.row ?? 20}px ${gap.column ?? 20}px`;
+  }
+
+  // Size
+  if (s.width) styles.width = s.width + (s.width_unit ?? 'px');
+  if (s.min_height) styles.minHeight = s.min_height + 'px';
+  if (s.min_width) styles.minWidth = s.min_width + 'px';
+  if (s.max_width) styles.maxWidth = s.max_width + 'px';
+
+  // Self alignment (for nested containers)
+  if (s.align_self) styles.alignSelf = s.align_self;
+  if (s.order) styles.order = s.order;
+  if (s.size) styles.flex = s.size === 'grow' ? '1 1 auto' : s.size === 'shrink' ? '0 1 auto' : 'none';
+
+  // Position
+  if (s.position && s.position !== 'default') {
+    styles.position = s.position;
+  }
+
+  // Background (for real-time preview)
+  if (s.background_color) styles.backgroundColor = s.background_color;
+  if (s.background_image) {
+    styles.backgroundImage = `url(${s.background_image})`;
+    styles.backgroundSize = s.background_size ?? 'cover';
+    styles.backgroundPosition = s.background_position ?? 'center';
+  }
+
+  return styles;
+});
 
 const formatDimensions = (dims) => {
   if (!dims) return '0';

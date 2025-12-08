@@ -35,17 +35,25 @@ const containerStyles = computed(() => ({
   flexWrap: 'wrap'
 }));
 
-const iconStyles = computed(() => ({
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: (props.settings.icon_size ?? 40) + 'px',
-  height: (props.settings.icon_size ?? 40) + 'px',
-  fontSize: (props.settings.icon_size ?? 40) * 0.5 + 'px',
-  color: props.settings.icon_color ?? '#ffffff',
-  backgroundColor: props.settings.background_color ?? '#4f46e5',
-  borderRadius: props.settings.shape === 'circle' ? '50%' : (props.settings.border_radius ?? 4) + 'px',
-  textDecoration: 'none',
-  transition: 'all 0.3s ease'
-}));
+const iconStyles = computed(() => {
+  const shape = props.settings.shape ?? 'circle';
+  let borderRadius = '0';
+  if (shape === 'circle') borderRadius = '50%';
+  else if (shape === 'rounded') borderRadius = '8px';
+  else if (shape === 'square') borderRadius = '0';
+  
+  return {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: (props.settings.icon_size ?? 40) + 'px',
+    height: (props.settings.icon_size ?? 40) + 'px',
+    fontSize: (props.settings.icon_size ?? 40) * 0.5 + 'px',
+    color: props.settings.icon_color ?? '#ffffff',
+    backgroundColor: props.settings.background_color ?? '#4f46e5',
+    borderRadius: borderRadius,
+    textDecoration: 'none',
+    transition: 'all 0.3s ease'
+  };
+});
 </script>

@@ -30,16 +30,36 @@ const containerStyles = computed(() => ({
   padding: '20px'
 }));
 
-const contentStyles = computed(() => ({
-  color: props.settings.content_color ?? '#4b5563',
-  fontSize: (props.settings.content_size ?? 16) + 'px'
-}));
+const contentStyles = computed(() => {
+  const typo = props.settings.content_typography || {};
+  return {
+    color: props.settings.content_color ?? '#4b5563',
+    fontSize: (typo.size ?? props.settings.content_size ?? 16) + 'px',
+    fontFamily: typo.family && typo.family !== 'inherit' ? typo.family : 'inherit',
+    fontWeight: typo.weight ?? '400',
+    lineHeight: typo.lineHeight ?? '1.5'
+  };
+});
 
-const nameStyles = computed(() => ({
-  color: props.settings.name_color ?? '#1f2937'
-}));
+const nameStyles = computed(() => {
+  const typo = props.settings.name_typography || {};
+  return {
+    color: props.settings.name_color ?? '#1f2937',
+    fontSize: (typo.size ?? 18) + 'px',
+    fontFamily: typo.family && typo.family !== 'inherit' ? typo.family : 'inherit',
+    fontWeight: typo.weight ?? '600',
+    lineHeight: typo.lineHeight ?? '1.2'
+  };
+});
 
-const titleTextStyles = computed(() => ({
-  color: props.settings.title_color ?? '#6b7280'
-}));
+const titleTextStyles = computed(() => {
+  const typo = props.settings.title_typography || {};
+  return {
+    color: props.settings.title_color ?? '#6b7280',
+    fontSize: (typo.size ?? 14) + 'px',
+    fontFamily: typo.family && typo.family !== 'inherit' ? typo.family : 'inherit',
+    fontWeight: typo.weight ?? '400',
+    lineHeight: typo.lineHeight ?? '1.2'
+  };
+});
 </script>

@@ -71,6 +71,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/widgets', [\App\Http\Controllers\Api\WidgetController::class, 'index'])->name('api.widgets.index');
     Route::get('/api/widgets/{type}', [\App\Http\Controllers\Api\WidgetController::class, 'show'])->name('api.widgets.show');
     Route::get('/api/widgets/category/{category}', [\App\Http\Controllers\Api\WidgetController::class, 'byCategory'])->name('api.widgets.category');
+    Route::get('/api/dynamic-tags', [\App\Http\Controllers\Api\DynamicDataController::class, 'getTags'])->name('api.dynamic-tags');
 
     // Domain routes
     Route::get('/domains', [DomainController::class, 'index'])->name('domains.index');

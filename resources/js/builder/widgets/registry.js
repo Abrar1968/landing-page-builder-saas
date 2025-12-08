@@ -93,6 +93,17 @@ widgetRegistry.register("heading", {
                     font_style: true
                 }
             },
+            {
+                name: "text_shadow",
+                type: "box_shadow",
+                label: "Text Shadow",
+                default: {
+                    horizontal: 0,
+                    vertical: 0,
+                    blur: 0,
+                    color: "rgba(0,0,0,0)"
+                }
+            }
         ],
         advanced: getAdvancedControls([
             { name: "custom_css", type: "code", label: "Custom CSS" },
@@ -253,6 +264,20 @@ widgetRegistry.register("image", {
                     brightness: "Brighten",
                 },
             },
+            {
+                name: "image_border_radius",
+                type: "slider",
+                label: "Border Radius",
+                min: 0,
+                max: 100,
+                default: 0,
+                unit: "px",
+            },
+            {
+                name: "box_shadow",
+                type: "box_shadow",
+                label: "Image Shadow",
+            },
         ],
         advanced: getAdvancedControls(),
     },
@@ -272,12 +297,11 @@ widgetRegistry.register("button", {
                 placeholder: "https://",
             },
             { name: "target", type: "switcher", label: "Open in new window" },
-            // Icon Settings
             {
                 name: "icon",
-                type: "text",
+                type: "icon",
                 label: "Icon",
-                placeholder: "e.g., ★ or →",
+                placeholder: "Select icon",
                 default: "",
             },
             {
@@ -351,6 +375,18 @@ widgetRegistry.register("button", {
                 type: "color",
                 label: "Hover Border Color",
                 default: "#4338ca",
+            },
+            {
+                name: "hover_animation",
+                type: "select",
+                label: "Hover Animation",
+                default: "none",
+                options: {
+                    none: "None",
+                    grow: "Grow",
+                    shrink: "Shrink",
+                    pulse: "Pulse",
+                },
             },
             // Common Style Controls
             {
@@ -735,6 +771,19 @@ widgetRegistry.register("icon-box", {
                 unit: "px",
             },
             {
+                name: "hover_animation",
+                type: "select",
+                label: "Hover Animation",
+                default: "none",
+                options: {
+                    none: "None",
+                    grow: "Grow",
+                    shrink: "Shrink",
+                    pulse: "Pulse",
+                    wobble: "Wobble",
+                },
+            },
+            {
                 name: "title_color",
                 type: "color",
                 label: "Title Color",
@@ -938,6 +987,39 @@ widgetRegistry.register("testimonial", {
                 label: "Name Color",
                 default: "#1f2937",
             },
+            {
+                name: "content_typography",
+                type: "typography",
+                label: "Content Typography",
+                default: {
+                    family: "inherit",
+                    size: 16,
+                    weight: "400",
+                    lineHeight: "1.5",
+                },
+            },
+            {
+                name: "name_typography",
+                type: "typography",
+                label: "Name Typography",
+                default: {
+                    family: "inherit",
+                    size: 18,
+                    weight: "600",
+                    lineHeight: "1.2",
+                },
+            },
+            {
+                name: "title_typography",
+                type: "typography",
+                label: "Title Typography",
+                default: {
+                    family: "inherit",
+                    size: 14,
+                    weight: "400",
+                    lineHeight: "1.2",
+                },
+            },
         ],
         advanced: getAdvancedControls(),
     },
@@ -953,6 +1035,27 @@ widgetRegistry.register("social-icons", {
             { name: "twitter", type: "text", label: "Twitter URL" },
             { name: "instagram", type: "text", label: "Instagram URL" },
             { name: "linkedin", type: "text", label: "LinkedIn URL" },
+            {
+                name: "shape",
+                type: "select",
+                label: "Shape",
+                default: "circle",
+                options: {
+                    circle: "Circle",
+                    square: "Square",
+                    rounded: "Rounded",
+                },
+            },
+            {
+                name: "color_type",
+                type: "select",
+                label: "Color Type",
+                default: "official",
+                options: {
+                    official: "Official Colors",
+                    custom: "Custom Colors",
+                },
+            },
         ],
         style: [
             {
@@ -1101,6 +1204,7 @@ widgetRegistry.register("image-box", {
                     zoom_out: "Zoom Out",
                     grayscale: "Grayscale",
                     blur: "Blur",
+                    slide_up: "Slide Up",
                 },
             },
             {
@@ -1254,6 +1358,7 @@ widgetRegistry.register("tabs", {
                 label: "Tab 3 Content",
                 default: "<p>Tab 3 content goes here.</p>",
             },
+            { name: "active_icon", type: "icon", label: "Active Tab Icon" },
         ],
         style: [
             {
@@ -1322,6 +1427,10 @@ widgetRegistry.register("accordion", {
                 label: "First Item Open",
                 default: true,
             },
+            { name: "icon", type: "icon", label: "Icon" },
+            { name: "active_icon", type: "icon", label: "Active Icon" },
+            { name: "icon", type: "icon", label: "Icon" },
+            { name: "active_icon", type: "icon", label: "Active Icon" },
         ],
         style: [
             {
@@ -1335,6 +1444,18 @@ widgetRegistry.register("accordion", {
                 type: "color",
                 label: "Title Background",
                 default: "#f3f4f6",
+            },
+            {
+                name: "active_title_color",
+                type: "color",
+                label: "Active Title Color",
+                default: "#4f46e5",
+            },
+            {
+                name: "active_title_background",
+                type: "color",
+                label: "Active Title Background",
+                default: "#e0e7ff",
             },
             {
                 name: "content_color",
@@ -1781,6 +1902,24 @@ widgetRegistry.register("form", {
                 default: "#1f2937",
             },
             {
+                name: "input_border_radius",
+                type: "slider",
+                label: "Input Border Radius",
+                min: 0,
+                max: 50,
+                default: 4,
+                unit: "px",
+            },
+            {
+                name: "input_padding",
+                type: "slider",
+                label: "Input Padding",
+                min: 0,
+                max: 50,
+                default: 10,
+                unit: "px",
+            },
+            {
                 name: "button_background",
                 type: "color",
                 label: "Button Background",
@@ -1790,6 +1929,18 @@ widgetRegistry.register("form", {
                 name: "button_text",
                 type: "color",
                 label: "Button Text",
+                default: "#ffffff",
+            },
+            {
+                name: "button_hover_background",
+                type: "color",
+                label: "Button Hover Background",
+                default: "#4338ca",
+            },
+            {
+                name: "button_hover_text_color",
+                type: "color",
+                label: "Button Hover Text",
                 default: "#ffffff",
             },
             {
@@ -1918,6 +2069,29 @@ widgetRegistry.register("slider", {
                 default: "rgba(0,0,0,0.3)",
             },
             {
+                name: "background_size",
+                type: "select",
+                label: "Background Size",
+                default: "cover",
+                options: {
+                    cover: "Cover",
+                    contain: "Contain",
+                    auto: "Auto",
+                },
+            },
+            {
+                name: "content_animation",
+                type: "select",
+                label: "Content Animation",
+                default: "fadeInUp",
+                options: {
+                    none: "None",
+                    fadeInUp: "Fade In Up",
+                    fadeInDown: "Fade In Down",
+                    zoomIn: "Zoom In",
+                },
+            },
+            {
                 name: "title_color",
                 type: "color",
                 label: "Title Color",
@@ -2002,6 +2176,8 @@ widgetRegistry.register("toggle", {
                 label: "Item 3 Content",
                 default: "<p>Content for toggle item 3.</p>",
             },
+            { name: "icon", type: "icon", label: "Icon" },
+            { name: "active_icon", type: "icon", label: "Active Icon" },
         ],
         style: [
             {
@@ -2015,6 +2191,18 @@ widgetRegistry.register("toggle", {
                 type: "color",
                 label: "Title Background",
                 default: "#f3f4f6",
+            },
+            {
+                name: "active_title_color",
+                type: "color",
+                label: "Active Title Color",
+                default: "#4f46e5",
+            },
+            {
+                name: "active_title_background",
+                type: "color",
+                label: "Active Title Background",
+                default: "#e0e7ff",
             },
             {
                 name: "content_color",
@@ -2422,16 +2610,46 @@ widgetRegistry.register("container", {
                 default: "row",
             },
             {
+                name: "flex_direction_tablet",
+                type: "flexbox_direction",
+                label: "Direction (Tablet)",
+            },
+            {
+                name: "flex_direction_mobile",
+                type: "flexbox_direction",
+                label: "Direction (Mobile)",
+            },
+            {
                 name: "justify_content",
                 type: "flexbox_justify",
                 label: "Justify Content",
                 default: "flex-start",
             },
             {
+                name: "justify_content_tablet",
+                type: "flexbox_justify",
+                label: "Justify (Tablet)",
+            },
+            {
+                name: "justify_content_mobile",
+                type: "flexbox_justify",
+                label: "Justify (Mobile)",
+            },
+            {
                 name: "align_items",
                 type: "flexbox_align",
                 label: "Align Items",
                 default: "flex-start",
+            },
+            {
+                name: "align_items_tablet",
+                type: "flexbox_align",
+                label: "Align (Tablet)",
+            },
+            {
+                name: "align_items_mobile",
+                type: "flexbox_align",
+                label: "Align (Mobile)",
             },
             {
                 name: "gaps",
@@ -2445,6 +2663,16 @@ widgetRegistry.register("container", {
                 type: "flexbox_wrap",
                 label: "Wrap",
                 default: "nowrap",
+            },
+            {
+                name: "flex_wrap_tablet",
+                type: "flexbox_wrap",
+                label: "Wrap (Tablet)",
+            },
+            {
+                name: "flex_wrap_mobile",
+                type: "flexbox_wrap",
+                label: "Wrap (Mobile)",
             },
             {
                 name: "html_tag",

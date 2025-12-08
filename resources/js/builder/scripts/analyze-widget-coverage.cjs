@@ -1,6 +1,6 @@
 /**
- * Widget Property Coverage Analyzer
- * Checks if all registry controls are used in their respective widget Vue components
+ * Widget Property Coverage Analyzer (CommonJS compatible)
+ * Run with: node --no-warnings resources/js/builder/scripts/analyze-widget-coverage.cjs
  */
 
 const fs = require('fs');
@@ -10,29 +10,15 @@ const path = require('path');
 const widgetsDir = path.join(__dirname, '../components/widgets');
 const registryPath = path.join(__dirname, '../widgets/registry.js');
 
-// Mock registry for Node.js
-const widgetRegistry = {
-    widgets: {},
-    register(name, config) {
-        this.widgets[name] = config;
-    },
-    getAll() { return this.widgets; }
-};
+// Read registry and extract widget definitions using regex
+const registryContent = fs.readFileSync(registryPath, 'utf8');
 
-// Parse registry
-let registryContent = fs.readFileSync(registryPath, 'utf8');
-global.widgetRegistry = widgetRegistry;
-
-// Remove ES6 imports/exports for eval
-registryContent = registryContent.replace(/import\s+.*?from\s+['"].*?['"];?/g, '');
-registryContent = registryContent.replace(/export\s+\{.*?\};?/g, '');
-registryContent = registryContent.replace(/export\s+default\s+.*?;?/g, '');
-
-try {
-    eval(registryContent);
-} catch (e) {
-    console.error('Failed to parse registry:', e.message);
-    process.exit(1);
+// Parse widget registrations: widgetRegistry.register("widget-name", { ... })
+const widgetRegex = /widgetRegistry\.register\s*\(\s*["']([^"']+)["']\s*,\s*\{/g;
+const widgets = [];
+let match;
+while ((match = widgetRegex.exec(registryContent)) !== null) {
+    widgets.push(match[1]);
 }
 
 // Map widget types to Vue file names
@@ -76,6 +62,35 @@ const widgetFileMap = {
     'video': 'VideoWidget.vue'
 };
 
+// Extract controls for a widget from registry content
+function extractControls(widgetType) {
+    // Find the widget registration block
+    const startRegex = new RegExp(`widgetRegistry\\.register\\s*\\(\\s*["']${widgetType}["']\\s*,\\s*\\{`, 'g');
+    const startMatch = startRegex.exec(registryContent);
+    if (!startMatch) return [];
+
+    // Find matching closing brace
+    let depth = 1;
+    let pos = startMatch.index + startMatch[0].length;
+    while (depth > 0 && pos < registryContent.length) {
+        if (registryContent[pos] === '{') depth++;
+        else if (registryContent[pos] === '}') depth--;
+        pos++;
+    }
+
+    const widgetBlock = registryContent.slice(startMatch.index, pos);
+    
+    // Extract control names using regex
+    const controlRegex = /name:\s*["']([^"']+)["']/g;
+    const controls = [];
+    let controlMatch;
+    while ((controlMatch = controlRegex.exec(widgetBlock)) !== null) {
+        controls.push(controlMatch[1]);
+    }
+    
+    return controls;
+}
+
 // Controls to skip (handled globally by WidgetRenderer wrapper)
 const globalControls = [
     'margin', 'padding', 'z_index', 'css_classes', 'css_id', 
@@ -83,23 +98,19 @@ const globalControls = [
     'responsive_visibility'
 ];
 
-// Control types to skip (complex controls handled elsewhere)
-const skipControlTypes = ['dimensions', 'typography', 'background', 'border', 'box_shadow', 'motion_effects'];
-
-const widgets = widgetRegistry.getAll();
-const report = [];
-let totalControls = 0;
-let coveredControls = 0;
-
 console.log('='.repeat(60));
 console.log('WIDGET PROPERTY COVERAGE ANALYSIS');
 console.log('='.repeat(60));
 console.log('');
 
-Object.entries(widgets).forEach(([type, config]) => {
+const report = [];
+let totalControls = 0;
+let coveredControls = 0;
+
+widgets.forEach(type => {
     const fileName = widgetFileMap[type];
     if (!fileName) {
-        console.log(`⚠️  ${type}: No Vue component mapping found`);
+        console.log(`⚠️  ${type}: No Vue component mapping`);
         return;
     }
 
@@ -110,33 +121,23 @@ Object.entries(widgets).forEach(([type, config]) => {
     }
 
     const vueContent = fs.readFileSync(filePath, 'utf8');
+    const controls = extractControls(type);
     const missingSettings = [];
-    const controls = [
-        ...(config.controls.content || []),
-        ...(config.controls.style || []),
-        // Skip advanced controls - they're handled by WidgetRenderer wrapper
-    ];
 
-    controls.forEach(control => {
-        const settingName = control.name;
+    controls.forEach(settingName => {
+        // Skip global controls
+        if (globalControls.includes(settingName)) return;
         
-        // Skip global/complex controls
-        if (globalControls.includes(settingName) || skipControlTypes.includes(control.type)) {
-            return;
-        }
+        // Skip _tablet and _mobile responsive variants
+        if (settingName.endsWith('_tablet') || settingName.endsWith('_mobile')) return;
 
         totalControls++;
 
         // Check for setting usage patterns
-        const patterns = [
-            `settings.${settingName}`,
-            `settings['${settingName}']`,
-            `settings["${settingName}"]`,
-            `props.settings.${settingName}`,
-            `props.settings['${settingName}']`
-        ];
-
-        const found = patterns.some(pattern => vueContent.includes(pattern));
+        const found = vueContent.includes(`settings.${settingName}`) ||
+                      vueContent.includes(`settings['${settingName}']`) ||
+                      vueContent.includes(`settings["${settingName}"]`) ||
+                      vueContent.includes(`props.settings.${settingName}`);
         
         if (found) {
             coveredControls++;
@@ -146,11 +147,7 @@ Object.entries(widgets).forEach(([type, config]) => {
     });
 
     if (missingSettings.length > 0) {
-        report.push({
-            widget: type,
-            file: fileName,
-            missing: missingSettings
-        });
+        report.push({ widget: type, file: fileName, missing: missingSettings });
         console.log(`❌ ${type} (${fileName}): ${missingSettings.length} missing`);
         missingSettings.forEach(s => console.log(`   - ${s}`));
     } else {
@@ -162,13 +159,14 @@ console.log('');
 console.log('='.repeat(60));
 console.log('SUMMARY');
 console.log('='.repeat(60));
-console.log(`Total widgets checked: ${Object.keys(widgets).length}`);
-console.log(`Total controls analyzed: ${totalControls}`);
-console.log(`Controls covered: ${coveredControls}/${totalControls} (${((coveredControls/totalControls)*100).toFixed(1)}%)`);
+console.log(`Total widgets: ${widgets.length}`);
+console.log(`Coverage: ${coveredControls}/${totalControls} (${((coveredControls/totalControls)*100).toFixed(1)}%)`);
 console.log(`Widgets with gaps: ${report.length}`);
-console.log('');
 
 if (report.length > 0) {
-    console.log('DETAILED GAP REPORT:');
-    console.log(JSON.stringify(report, null, 2));
+    console.log('');
+    console.log('GAPS TO FIX:');
+    report.forEach(r => {
+        console.log(`  ${r.widget}: ${r.missing.join(', ')}`);
+    });
 }

@@ -146,6 +146,16 @@ class WidgetCssGenerator
             $styles[] = "padding: {$top}{$unit} {$right}{$unit} {$bottom}{$unit} {$left}{$unit}";
         }
 
+        // Generic properties
+        foreach ($settings as $key => $value) {
+            if (is_scalar($value)) {
+                $cssProperty = $this->settingToCssProperty($key);
+                if ($cssProperty) {
+                    $styles[] = "{$cssProperty}: " . $this->sanitizeCssValue($value);
+                }
+            }
+        }
+
         if (empty($styles)) {
             return '';
         }
@@ -274,6 +284,11 @@ class WidgetCssGenerator
             'height' => 'height',
             'max_width' => 'max-width',
             'min_height' => 'min-height',
+            'flex_direction' => 'flex-direction',
+            'justify_content' => 'justify-content',
+            'align_items' => 'align-items',
+            'gap' => 'gap',
+            'flex_wrap' => 'flex-wrap',
             default => null,
         };
     }

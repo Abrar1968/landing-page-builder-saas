@@ -2,12 +2,12 @@
   <div class="toggle-widget border rounded-lg overflow-hidden" :style="containerStyles">
     <div v-for="(item, index) in items" :key="index" class="border-b last:border-b-0">
       <div
-        :style="titleContainerStyles"
+        :style="openItems.includes(index) ? activeTitleContainerStyles : titleContainerStyles"
         class="px-4 py-3 font-medium flex justify-between items-center cursor-pointer"
         @click="toggleItem(index)"
       >
         <span>{{ item.title }}</span>
-        <span>{{ openItems.includes(index) ? '−' : '+' }}</span>
+        <span>{{ openItems.includes(index) ? (settings.active_icon ?? '−') : (settings.icon ?? '+') }}</span>
       </div>
       <div
         v-show="openItems.includes(index)"
@@ -48,6 +48,11 @@ const containerStyles = computed(() => ({
 const titleContainerStyles = computed(() => ({
   backgroundColor: props.settings.title_background ?? '#f3f4f6',
   color: props.settings.title_color ?? '#1f2937'
+}));
+
+const activeTitleContainerStyles = computed(() => ({
+  backgroundColor: props.settings.active_title_background ?? props.settings.title_background ?? '#e0e7ff',
+  color: props.settings.active_title_color ?? props.settings.title_color ?? '#4f46e5'
 }));
 
 const contentStyles = computed(() => ({

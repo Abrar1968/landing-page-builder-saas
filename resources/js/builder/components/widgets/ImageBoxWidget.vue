@@ -33,6 +33,7 @@
     .image-box-{{ widgetId }} .hover-zoom_out:hover { transform: scale(0.9); }
     .image-box-{{ widgetId }} .hover-grayscale:hover { filter: grayscale(100%); }
     .image-box-{{ widgetId }} .hover-blur:hover { filter: blur(3px); }
+    .image-box-{{ widgetId }} .hover-slide_up:hover { transform: translateY(-10px); }
   </component>
 </template>
 

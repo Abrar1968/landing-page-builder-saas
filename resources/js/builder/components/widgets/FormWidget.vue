@@ -100,12 +100,16 @@ const fieldStyles = computed(() => ({
   backgroundColor: props.settings.field_background ?? '#ffffff',
   borderColor: props.settings.field_border ?? '#d1d5db',
   color: props.settings.field_text ?? '#1f2937',
-  marginBottom: (props.settings.spacing ?? 16) + 'px'
+  marginBottom: (props.settings.spacing ?? 16) + 'px',
+  borderRadius: (props.settings.input_border_radius ?? 4) + 'px',
+  padding: (props.settings.input_padding ?? 10) + 'px'
 }));
 
 const buttonStyles = computed(() => ({
   backgroundColor: props.settings.button_background ?? '#4f46e5',
   color: props.settings.button_text_color ?? '#ffffff',
-  width: props.settings.button_full_width ? '100%' : 'auto'
+  width: props.settings.button_full_width ? '100%' : 'auto',
+  '--hover-bg': props.settings.button_hover_background ?? '#4338ca',
+  '--hover-color': props.settings.button_hover_text_color ?? '#ffffff'
 }));
 </script>

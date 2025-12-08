@@ -36,8 +36,9 @@ const tabContainerStyles = computed(() => ({
 }));
 
 const activeTabStyles = computed(() => ({
-  color: props.settings.tab_color ?? '#4f46e5',
-  borderBottom: `2px solid ${props.settings.tab_color ?? '#4f46e5'}`,
+  color: props.settings.active_tab_color ?? props.settings.tab_color ?? '#4f46e5',
+  backgroundColor: props.settings.active_content_color ?? 'transparent',
+  borderBottom: `2px solid ${props.settings.active_tab_color ?? props.settings.tab_color ?? '#4f46e5'}`,
   marginBottom: '-1px'
 }));
 

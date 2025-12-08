@@ -5,15 +5,15 @@
       <div
         v-if="currentSlide.image"
         class="absolute inset-0 bg-cover bg-center"
-        :style="{ backgroundImage: `url(${currentSlide.image})` }"
+        :style="{ backgroundImage: `url(${currentSlide.image})`, backgroundSize: settings.background_size ?? 'cover' }"
       ></div>
       <div class="absolute inset-0" :style="overlayStyles"></div>
 
       <div class="relative z-10 px-8 max-w-3xl">
-        <h2 class="text-4xl font-bold mb-4" :style="titleStyles">
+        <h2 class="text-4xl font-bold mb-4" :style="titleStyles" :class="contentAnimationClass">
           {{ currentSlide.title }}
         </h2>
-        <p class="text-lg mb-6" :style="descriptionStyles">
+        <p class="text-lg mb-6" :style="descriptionStyles" :class="contentAnimationClass">
           {{ currentSlide.description }}
         </p>
         <a
@@ -136,4 +136,10 @@ const arrowStyles = computed(() => ({
   backgroundColor: 'rgba(0,0,0,0.3)',
   color: props.settings.arrows_color ?? '#ffffff'
 }));
+
+const contentAnimationClass = computed(() => {
+  const animation = props.settings.content_animation;
+  if (!animation || animation === 'none') return '';
+  return `animate-${animation}`;
+});
 </script>
