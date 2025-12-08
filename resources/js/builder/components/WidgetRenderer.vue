@@ -1,8 +1,15 @@
 <template>
   <div
-    class="widget-content"
+    v-show="!shouldHideInPreview"
+    :class="[
+      'widget-content',
+      widgetWrapperClass,
+      settings.css_classes,
+      responsiveClasses,
+      animationClasses,
+      { 'opacity-50': shouldHideInPreview }
+    ]"
     :style="wrapperStyles"
-    :class="[settings.css_classes, responsiveClasses, animationClasses]"
     :id="settings.css_id"
     ref="widgetRef"
   >
@@ -16,6 +23,13 @@
     <div v-else class="p-4 bg-yellow-50 border border-yellow-200 rounded text-center text-yellow-700">
       <span class="font-medium">Unknown widget:</span> {{ widget.widgetType }}
     </div>
+    
+    <!-- Inject hover styles for common advanced hover effects -->
+    <component :is="'style'" v-if="hasAdvancedHoverStyles">
+      .{{ widgetWrapperClass }}:hover {
+        {{ hoverCssRules }}
+      }
+    </component>
   </div>
 </template>
 
@@ -27,6 +41,10 @@ const props = defineProps({
   widget: {
     type: Object,
     required: true
+  },
+  previewDevice: {
+    type: String,
+    default: 'desktop' // 'desktop', 'tablet', 'mobile'
   }
 });
 
@@ -35,10 +53,66 @@ const hoverSettings = computed(() => props.widget.hover_settings || {});
 const widgetRef = ref(null);
 const animationTriggered = ref(false);
 
+// Unique class for this widget wrapper
+const widgetWrapperClass = computed(() => `widget-${props.widget.id}`);
+
+// Check if there are advanced hover styles to apply
+const hasAdvancedHoverStyles = computed(() => {
+  const hs = hoverSettings.value;
+  if (!hs) return false;
+  return hs.background || hs.border || hs.box_shadow || hs.text_color;
+});
+
+// Generate hover CSS rules from hoverSettings
+const hoverCssRules = computed(() => {
+  const hs = hoverSettings.value;
+  if (!hs) return '';
+  
+  const rules = [];
+  
+  // Background hover
+  if (hs.background?.color) {
+    rules.push(`background-color: ${hs.background.color} !important;`);
+  }
+  if (hs.background?.type === 'gradient' && hs.background?.gradientColor1) {
+    const angle = hs.background.gradientAngle ?? 180;
+    rules.push(`background-image: linear-gradient(${angle}deg, ${hs.background.gradientColor1}, ${hs.background.gradientColor2}) !important;`);
+  }
+  
+  // Border hover
+  if (hs.border?.color) {
+    rules.push(`border-color: ${hs.border.color} !important;`);
+  }
+  
+  // Box shadow hover
+  if (hs.box_shadow) {
+    const sh = hs.box_shadow;
+    const h = sh.horizontal ?? 0;
+    const v = sh.vertical ?? 0;
+    const b = sh.blur ?? 0;
+    const sp = sh.spread ?? 0;
+    const c = sh.color ?? 'rgba(0,0,0,0.15)';
+    if (h !== 0 || v !== 0 || b !== 0 || sp !== 0) {
+      rules.push(`box-shadow: ${h}px ${v}px ${b}px ${sp}px ${c} !important;`);
+    }
+  }
+  
+  // Text color hover
+  if (hs.text_color) {
+    rules.push(`color: ${hs.text_color} !important;`);
+  }
+  
+  return rules.join(' ');
+});
+
 // DEBUG: Watch for widget.settings changes at WidgetRenderer level
 watch(() => props.widget.settings, (newVal) => {
   console.log('[WidgetRenderer] widget.settings changed for', props.widget.widgetType, props.widget.id);
   console.log('[WidgetRenderer] New settings:', JSON.stringify(newVal));
+  // Debug motion effects
+  if (newVal?.motion_effects) {
+    console.log('[WidgetRenderer] Motion effects:', JSON.stringify(newVal.motion_effects));
+  }
 }, { deep: true });
 
 // Get the widget component from the map
@@ -85,9 +159,11 @@ const wrapperStyles = computed(() => {
   // Background - handle nested object structure
   const bg = s.background;
   if (bg) {
-    if (bg.type === 'gradient' && bg.color1 && bg.color2) {
-      const angle = bg.angle ?? 180;
-      styles.backgroundImage = `linear-gradient(${angle}deg, ${bg.color1}, ${bg.color2})`;
+    if (bg.type === 'gradient' && bg.gradientColor1 && bg.gradientColor2) {
+      const angle = bg.gradientAngle ?? 180;
+      styles.backgroundImage = `linear-gradient(${angle}deg, ${bg.gradientColor1}, ${bg.gradientColor2})`;
+    } else if (bg.type === 'classic' && bg.color) {
+      styles.backgroundColor = bg.color;
     } else if (bg.color) {
       styles.backgroundColor = bg.color;
     }
@@ -171,7 +247,8 @@ const wrapperStyles = computed(() => {
   return styles;
 });
 
-// Responsive visibility classes
+// Responsive visibility classes (for published pages via CSS media queries)
+// Also handles builder preview device simulation
 const responsiveClasses = computed(() => {
   const v = settings.value.responsive_visibility;
   if (!v) return '';
@@ -180,6 +257,18 @@ const responsiveClasses = computed(() => {
   if (v.hide_tablet) classes.push('hidden-tablet');
   if (v.hide_mobile) classes.push('hidden-mobile');
   return classes.join(' ');
+});
+
+// Check if element should be hidden in builder preview based on device mode
+const shouldHideInPreview = computed(() => {
+  const v = settings.value.responsive_visibility;
+  if (!v) return false;
+  
+  const device = props.previewDevice;
+  if (device === 'desktop' && v.hide_desktop) return true;
+  if (device === 'tablet' && v.hide_tablet) return true;
+  if (device === 'mobile' && v.hide_mobile) return true;
+  return false;
 });
 
 // Animation classes
@@ -235,14 +324,91 @@ const setupAnimationObserver = () => {
   }
 };
 
+// Parallax scroll effect
+let parallaxScrollHandler = null;
+let parallaxScrollContainer = null;
+
+const setupParallaxEffect = () => {
+  const motion = settings.value.motion_effects;
+  if (!motion?.parallax || !widgetRef.value) return;
+
+  const speed = motion.parallax_speed ?? 0.5;
+  
+  // Find the scroll container - look for canvas main element or any overflow scroll/auto parent
+  const findScrollContainer = () => {
+    let element = widgetRef.value;
+    while (element && element !== document.body) {
+      const style = getComputedStyle(element);
+      if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+        return element;
+      }
+      element = element.parentElement;
+    }
+    return window;
+  };
+  
+  const scrollContainer = findScrollContainer();
+  
+  parallaxScrollHandler = () => {
+    if (!widgetRef.value) return;
+    
+    const rect = widgetRef.value.getBoundingClientRect();
+    const viewportHeight = scrollContainer === window ? window.innerHeight : scrollContainer.clientHeight;
+    
+    // Calculate how far the element is from the center of the viewport
+    const elementCenter = rect.top + rect.height / 2;
+    const viewportCenter = viewportHeight / 2;
+    const distanceFromCenter = elementCenter - viewportCenter;
+    
+    // Apply parallax transform based on distance and speed
+    // Speed < 1 = slower than scroll (element lags behind)
+    // Speed > 1 = faster than scroll (element moves ahead)
+    const parallaxOffset = distanceFromCenter * (1 - speed) * 0.3;
+    
+    widgetRef.value.style.transform = `translateY(${parallaxOffset}px)`;
+  };
+
+  // Store reference for cleanup
+  parallaxScrollContainer = scrollContainer;
+  scrollContainer.addEventListener('scroll', parallaxScrollHandler, { passive: true });
+  
+  // Also trigger on initial load
+  parallaxScrollHandler();
+};
+
+const cleanupParallaxEffect = () => {
+  if (parallaxScrollHandler) {
+    if (parallaxScrollContainer) {
+      parallaxScrollContainer.removeEventListener('scroll', parallaxScrollHandler);
+    }
+    parallaxScrollHandler = null;
+    parallaxScrollContainer = null;
+    // Reset transform
+    if (widgetRef.value) {
+      widgetRef.value.style.transform = '';
+    }
+  }
+};
+
+// Watch for parallax setting changes
+watch(() => settings.value.motion_effects?.parallax, (newVal) => {
+  if (newVal) {
+    nextTick(() => setupParallaxEffect());
+  } else {
+    cleanupParallaxEffect();
+  }
+});
+
 onMounted(() => {
   nextTick(() => {
     setupAnimationObserver();
+    setupParallaxEffect();
   });
 });
 
 onBeforeUnmount(() => {
   animationObserver?.disconnect();
+  cleanupParallaxEffect();
 });
 </script>
 
@@ -313,4 +479,14 @@ onBeforeUnmount(() => {
 /* Sticky positioning */
 .sticky-top { position: sticky; top: 0; z-index: 100; }
 .sticky-bottom { position: sticky; bottom: 0; z-index: 100; }
+
+/* Widget content base styles for hover transitions and parallax */
+.widget-content {
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease, transform 0.3s ease;
+}
+
+/* Parallax optimization */
+.parallax-scroll {
+  will-change: transform;
+}
 </style>

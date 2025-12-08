@@ -226,8 +226,9 @@
                 <div
                     ref="wysiwygEditor"
                     contenteditable="true"
+                    dir="ltr"
                     @input="onWysiwygInput"
-                    class="p-3 min-h-[100px] focus:outline-none"
+                    class="p-3 min-h-[100px] focus:outline-none text-left"
                     v-html="modelValue"
                 ></div>
             </div>

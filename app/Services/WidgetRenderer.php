@@ -48,14 +48,15 @@ class WidgetRenderer
                 }
             }
 
-            // Sticky effect
-            if (!empty($motion['sticky']) && $motion['sticky'] !== 'none') {
-                $classes[] = 'sticky-element';
+            // Sticky effect - Vue stores: sticky: true/false
+            if (!empty($motion['sticky']) && $motion['sticky'] === true) {
+                $stickyPos = $motion['sticky_position'] ?? 'top';
+                $classes[] = "sticky-{$stickyPos}";
             }
 
-            // Parallax effect
-            if (!empty($motion['scrolling_effect']) && $motion['scrolling_effect'] === 'parallax') {
-                $classes[] = 'parallax-element';
+            // Parallax effect - Vue stores: parallax: true/false
+            if (!empty($motion['parallax']) && $motion['parallax'] === true) {
+                $classes[] = 'parallax-scroll';
             }
         }
 
@@ -98,6 +99,17 @@ class WidgetRenderer
         // Background color
         if (!empty($settings['background_color'])) {
             $styles[] = "background-color: {$settings['background_color']}";
+        }
+
+        // Background Image (Parity Fix)
+        if (!empty($settings['background_image'])) {
+            $styles[] = "background-image: url('" . $settings['background_image'] . "')";
+            $styles[] = 'background-size: ' . ($settings['background_size'] ?? 'cover');
+            $styles[] = 'background-position: ' . ($settings['background_position'] ?? 'center');
+            $styles[] = 'background-repeat: ' . ($settings['background_repeat'] ?? 'no-repeat');
+            if (!empty($settings['background_attachment'])) {
+                $styles[] = 'background-attachment: ' . $settings['background_attachment'];
+            }
         }
 
         // Border
@@ -151,16 +163,17 @@ class WidgetRenderer
         }
 
         // Motion effects - sticky offset
-        if (!empty($settings['motion_effects']['sticky']) && $settings['motion_effects']['sticky'] !== 'none') {
+        // Vue stores: sticky: true/false, sticky_position: 'top'/'bottom'
+        if (!empty($settings['motion_effects']['sticky']) && $settings['motion_effects']['sticky'] === true) {
             $offset = $settings['motion_effects']['sticky_offset'] ?? 0;
-            $sticky = $settings['motion_effects']['sticky'];
-            if ($sticky === 'top') {
-                $styles[] = "position: sticky";
-                $styles[] = "top: {$offset}px";
-            } elseif ($sticky === 'bottom') {
-                $styles[] = "position: sticky";
+            $stickyPosition = $settings['motion_effects']['sticky_position'] ?? 'top';
+            $styles[] = "position: sticky";
+            if ($stickyPosition === 'bottom') {
                 $styles[] = "bottom: {$offset}px";
+            } else {
+                $styles[] = "top: {$offset}px";
             }
+            $styles[] = "z-index: 100";
         }
 
         // Animation delay
@@ -179,9 +192,12 @@ class WidgetRenderer
     {
         $attrs = [];
 
-        // ID
+        // ID - use widget ID for hover targeting, or css_id if set
+        $widgetId = $settings['_widget_id'] ?? null;
         if (!empty($settings['css_id'])) {
             $attrs[] = 'id="' . e($settings['css_id']) . '"';
+        } elseif ($widgetId) {
+            $attrs[] = 'id="' . e($widgetId) . '"';
         }
 
         // Classes
@@ -202,7 +218,8 @@ class WidgetRenderer
             if (!empty($motion['entrance_animation']) && $motion['entrance_animation'] !== 'none') {
                 $attrs[] = 'data-animation="' . e($motion['entrance_animation']) . '"';
             }
-            if (!empty($motion['scrolling_effect']) && $motion['scrolling_effect'] === 'parallax') {
+            // Parallax data attribute
+            if (!empty($motion['parallax']) && $motion['parallax'] === true) {
                 $speed = $motion['parallax_speed'] ?? 0.5;
                 $attrs[] = 'data-parallax-speed="' . e($speed) . '"';
             }
@@ -212,14 +229,78 @@ class WidgetRenderer
     }
 
     /**
+     * Generate hover CSS for advanced hover settings
+     */
+    protected function generateHoverCss(string $elementId, array $hoverSettings): string
+    {
+        if (empty($hoverSettings)) {
+            return '';
+        }
+
+        $rules = [];
+
+        // Background hover
+        if (!empty($hoverSettings['background']['color'])) {
+            $rules[] = "background-color: {$hoverSettings['background']['color']} !important;";
+        }
+        if (!empty($hoverSettings['background']['type']) && $hoverSettings['background']['type'] === 'gradient') {
+            $color1 = $hoverSettings['background']['gradientColor1'] ?? '#6366f1';
+            $color2 = $hoverSettings['background']['gradientColor2'] ?? '#8b5cf6';
+            $angle = $hoverSettings['background']['gradientAngle'] ?? 180;
+            $rules[] = "background-image: linear-gradient({$angle}deg, {$color1}, {$color2}) !important;";
+        }
+
+        // Border hover
+        if (!empty($hoverSettings['border']['color'])) {
+            $rules[] = "border-color: {$hoverSettings['border']['color']} !important;";
+        }
+
+        // Box shadow hover
+        if (!empty($hoverSettings['box_shadow'])) {
+            $sh = $hoverSettings['box_shadow'];
+            $h = $sh['horizontal'] ?? 0;
+            $v = $sh['vertical'] ?? 0;
+            $b = $sh['blur'] ?? 0;
+            $sp = $sh['spread'] ?? 0;
+            $c = $sh['color'] ?? 'rgba(0,0,0,0.15)';
+            if ($h || $v || $b || $sp) {
+                $rules[] = "box-shadow: {$h}px {$v}px {$b}px {$sp}px {$c} !important;";
+            }
+        }
+
+        // Text color hover
+        if (!empty($hoverSettings['text_color'])) {
+            $rules[] = "color: {$hoverSettings['text_color']} !important;";
+        }
+
+        if (empty($rules)) {
+            return '';
+        }
+
+        return "<style>#{$elementId}:hover { " . implode(' ', $rules) . " }</style>";
+    }
+
+    /**
      * Render a widget to HTML
      */
     public function render(array $widget): string
     {
         $type = $widget['widgetType'] ?? 'unknown';
         $settings = $widget['settings'] ?? [];
+        $hoverSettings = $widget['hover_settings'] ?? [];
+        $widgetId = $widget['id'] ?? uniqid('widget-');
 
-        return match ($type) {
+        // Determine the ID to be used for the widget (custom or default)
+        $effectiveWidgetId = !empty($settings['css_id']) ? $settings['css_id'] : "widget-" . $widgetId;
+
+        // Generate hover CSS if there are hover settings
+        $hoverCss = $this->generateHoverCss($effectiveWidgetId, $hoverSettings);
+
+        // Add widget ID to settings for wrapper
+        $settings['_widget_id'] = $effectiveWidgetId;
+        $settings['_hover_settings'] = $hoverSettings;
+
+        $html = match ($type) {
             'heading' => $this->renderHeading($settings),
             'text-editor' => $this->renderTextEditor($settings),
             'image' => $this->renderImage($settings),
@@ -259,7 +340,11 @@ class WidgetRenderer
             'shortcode' => $this->renderShortcode($settings),
             default => $this->renderUnknown($type),
         };
+
+        // Wrap with hover CSS if present
+        return $hoverCss . $html;
     }
+
 
     protected function renderHeading(array $settings): string
     {

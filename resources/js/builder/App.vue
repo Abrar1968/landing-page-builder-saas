@@ -366,7 +366,7 @@
                           </div>
                         </div>
                         <!-- Widget content -->
-                        <WidgetRenderer :widget="widget" :key="`widget-${widget.id}-${widget.settingsHash || JSON.stringify(widget.settings)}`" />
+                        <WidgetRenderer :widget="widget" :preview-device="store.responsiveDevice" :key="`widget-${widget.id}-${widget.settingsHash || JSON.stringify(widget.settings)}`" />
                       </div>
 
                       <!-- Drop zone after last widget -->
