@@ -96,7 +96,34 @@ class WidgetRenderer
             }
         }
 
-        // Background color
+        // Background (Advanced Control)
+        if (!empty($settings['background']) && is_array($settings['background'])) {
+            $bg = $settings['background'];
+
+            // Gradient
+            if (!empty($bg['type']) && $bg['type'] === 'gradient' && !empty($bg['gradientColor1']) && !empty($bg['gradientColor2'])) {
+                $angle = $bg['gradientAngle'] ?? 180;
+                $styles[] = "background-image: linear-gradient({$angle}deg, {$bg['gradientColor1']}, {$bg['gradientColor2']})";
+            }
+            // Classic Color
+            elseif (!empty($bg['type']) && $bg['type'] === 'classic' && !empty($bg['color'])) {
+                $styles[] = "background-color: {$bg['color']}";
+            }
+            // Fallback Color
+            elseif (!empty($bg['color'])) {
+                $styles[] = "background-color: {$bg['color']}";
+            }
+
+            // Background Image within Advanced Control
+            if (!empty($bg['image'])) {
+                $styles[] = "background-image: url('" . $bg['image'] . "')";
+                $styles[] = 'background-size: ' . ($bg['size'] ?? 'cover');
+                $styles[] = 'background-position: ' . ($bg['position'] ?? 'center center');
+                $styles[] = 'background-repeat: ' . ($bg['repeat'] ?? 'no-repeat');
+            }
+        }
+
+        // Background color (Legacy/Flat)
         if (!empty($settings['background_color'])) {
             $styles[] = "background-color: {$settings['background_color']}";
         }
@@ -277,7 +304,11 @@ class WidgetRenderer
             return '';
         }
 
-        return "<style>#{$elementId}:hover { " . implode(' ', $rules) . " }</style>";
+        // Target the element (wrapper) and its direct child (the actual widget content)
+        // #id:hover for wrapper properties (bg, border)
+        // #id:hover > * for text properties on the inner element (h2, div, etc)
+        // We use > * (direct child) to avoid cascading issues with relative units (em) on deeper elements
+        return "<style>#{$elementId}:hover { " . implode(' ', $rules) . " } #{$elementId}:hover > * { " . implode(' ', $rules) . " }</style>";
     }
 
     /**
@@ -415,6 +446,22 @@ class WidgetRenderer
             if (isset($typo['letterSpacing']) && $typo['letterSpacing'] !== '' && $typo['letterSpacing'] !== null) {
                 $styles[] = "letter-spacing: {$typo['letterSpacing']}px";
             }
+
+            if (!empty($typo['decoration']) && $typo['decoration'] !== 'none' && strtolower($typo['decoration']) !== 'none') {
+                 $styles[] = "text-decoration: " . strtolower($typo['decoration']);
+            }
+        }
+
+        // Text Shadow (Parity Fix)
+        if (!empty($settings['text_shadow'])) {
+            $ts = $settings['text_shadow'];
+            if (!empty($ts['color']) || !empty($ts['horizontal']) || !empty($ts['vertical']) || !empty($ts['blur'])) {
+                $h = $ts['horizontal'] ?? 0;
+                $v = $ts['vertical'] ?? 0;
+                $b = $ts['blur'] ?? 0;
+                $c = $ts['color'] ?? 'rgba(0,0,0,0.3)';
+                $styles[] = "text-shadow: {$h}px {$v}px {$b}px {$c}";
+            }
         }
 
         // Margin
@@ -441,9 +488,14 @@ class WidgetRenderer
 
         $styleAttr = !empty($styles) ? ' style="' . implode('; ', $styles) . '"' : '';
 
+
         // CSS Classes and ID
+        // Note: ID is applied to the wrapper by buildWrapperAttributes. 
+        // We should NOT apply it here to the H tag to avoid invalid HTML (duplicate IDs).
         $classAttr = !empty($settings['css_classes']) ? ' class="' . e($settings['css_classes']) . '"' : '';
-        $idAttr = !empty($settings['css_id']) ? ' id="' . e($settings['css_id']) . '"' : '';
+        // $idAttr = !empty($settings['css_id']) ? ' id="' . e($settings['css_id']) . '"' : ''; 
+        $idAttr = ''; // Removed to prevent duplicate ID
+
 
         // Build the heading HTML
         $headingContent = "<{$tag}{$styleAttr}{$classAttr}{$idAttr}>";
